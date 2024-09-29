@@ -37,10 +37,6 @@ namespace NPOIPlusConsoleExample
 
 					ISheet sheet1 = workbook.Workbook.GetSheet("Sheet1");
 
-					workbook.SetExcelCell(sheet1, "你好", ExcelColumns.C, 5, (style) =>
-					{
-						style.Alignment = HorizontalAlignment.Center;
-					});
 
 					// 1. 創建 DataTable
 					DataTable dataTable = new DataTable("ExampleTable");
@@ -54,6 +50,11 @@ namespace NPOIPlusConsoleExample
 					dataTable.Rows.Add(1, "Alice", new DateTime(1990, 1, 1));
 					dataTable.Rows.Add(2, "Bob", new DateTime(1985, 5, 23));
 					dataTable.Rows.Add(3, "Charlie", new DateTime(2000, 10, 15));
+
+					workbook.SetExcelCell(sheet1, dataTable, 1, "ID", ExcelColumns.D, 12, (value) =>
+					{
+						return $"{value}st";
+					});
 
 					workbook.SetColExcelCells(sheet1, dataTable, 1, new List<ExcelCellParam>
 					{

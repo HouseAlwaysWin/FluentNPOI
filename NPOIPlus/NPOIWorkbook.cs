@@ -59,8 +59,9 @@ namespace NPOIPlus
 		}
 
 
-		private void SetCellValueBasedOnType(ICell cell, object value)
+		private void SetCellValueBasedOnType(ICell cell, object value, Func<object, object> valueAction = null)
 		{
+			value = valueAction?.Invoke(value) ?? value;
 			switch (value)
 			{
 				case int i:
@@ -89,6 +90,17 @@ namespace NPOIPlus
 			}
 		}
 
+
+		private void SetCellStyle(ICell cell, object cellValue, Action<ICellStyle> colStyle = null, Action<ICellStyle> rowStyle = null)
+		{
+			ICellStyle newCellStyle = Workbook.CreateCellStyle();
+			SetGlobalCellStyle(newCellStyle);
+			SetCellStyleBasedOnType(cellValue, newCellStyle);
+			rowStyle?.Invoke(newCellStyle);
+			colStyle?.Invoke(newCellStyle);
+			cell.CellStyle = newCellStyle;
+		}
+
 		/// <summary>
 		/// For set single cell
 		/// </summary>
@@ -107,18 +119,14 @@ namespace NPOIPlus
 			SetCellValueBasedOnType(cell, cellValue);
 		}
 
-		private void SetCellStyle(ICell cell, object cellValue, Action<ICellStyle> colStyle = null, Action<ICellStyle> rowStyle = null)
-		{
-			ICellStyle newCellStyle = Workbook.CreateCellStyle();
-			SetGlobalCellStyle(newCellStyle);
-			SetCellStyleBasedOnType(cellValue, newCellStyle);
-			rowStyle?.Invoke(newCellStyle);
-			colStyle?.Invoke(newCellStyle);
-			cell.CellStyle = newCellStyle;
-		}
 		public void SetExcelCell(ISheet sheet, DataTable dataTable, int tableIndex, string tableColName, ExcelColumns column, int rownum = 1, object cellValue = null, Action<ICellStyle> colStyle = null, bool? isFormula = null)
 		{
-			SetExcelCell(sheet, dataTable, tableIndex, tableColName, column, rownum, cellValue, colStyle, null, isFormula);
+			SetExcelCell(sheet, dataTable, tableIndex, tableColName, column, rownum, cellValue, colStyle, null, null, isFormula, null);
+		}
+
+		public void SetExcelCell(ISheet sheet, DataTable dataTable, int tableIndex, string tableColName, ExcelColumns column, int rownum = 1, Func<object, object> cellValueAction = null, Action<ICellStyle> colStyle = null, bool? isFormula = null)
+		{
+			SetExcelCell(sheet, dataTable, tableIndex, tableColName, column, rownum, null, colStyle, null, cellValueAction, isFormula, null);
 		}
 
 
@@ -133,7 +141,7 @@ namespace NPOIPlus
 		/// <param name="rownum"></param>
 		/// <param name="cellValue"></param>
 		/// <exception cref="Exception"></exception>
-		private void SetExcelCell(ISheet sheet, DataTable dataTable, int tableIndex, string tableColName, ExcelColumns colnum, int rownum = 1, object cellValue = null, Action<ICellStyle> colStyle = null, Action<ICellStyle> rowStyle = null, bool? isFormula = false, FormulaCellValueType formulaCellValueType = null)
+		private void SetExcelCell(ISheet sheet, DataTable dataTable, int tableIndex, string tableColName, ExcelColumns colnum, int rownum = 1, object cellValue = null, Action<ICellStyle> colStyle = null, Action<ICellStyle> rowStyle = null, Func<object, object> cellValueAction = null, bool? isFormula = false, FormulaCellValueType formulaCellValueType = null)
 		{
 			if (rownum < 1) rownum = 1;
 			int zeroBaseIndex = rownum - 1;
@@ -151,7 +159,7 @@ namespace NPOIPlus
 				}
 			}
 
-			SetCellValueBasedOnType(cell, newValue);
+			SetCellValueBasedOnType(cell, newValue, cellValueAction);
 		}
 
 		public void SetColExcelCells(ISheet sheet, DataTable dataTable, int tableIndex, List<ExcelCellParam> param, ExcelColumns startColnum, int rownum = 1, Action<ICellStyle> rowStyle = null, bool? isFormula = null)
@@ -161,7 +169,7 @@ namespace NPOIPlus
 				var colnum = colIndex + startColnum;
 				var col = param[colIndex];
 				var isFormulaValue = col.IsFormula.HasValue ? col.IsFormula : isFormula;
-				SetExcelCell(sheet, dataTable, tableIndex, col.ColumnName, colnum, rownum, col.CellValue, col.CellStyle, rowStyle, isFormulaValue, col.FormulaCellValue);
+				SetExcelCell(sheet, dataTable, tableIndex, col.ColumnName, colnum, rownum, col.CellValue, col.CellStyle, rowStyle, col.CellValueAction, isFormulaValue, col.FormulaCellValue);
 			}
 		}
 

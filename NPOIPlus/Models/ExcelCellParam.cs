@@ -13,8 +13,16 @@ namespace NPOIPlus.Models
 		public object CellValue { get; set; }
 		public string ColumnName { get; set; }
 		public Action<ICellStyle> CellStyle { get; set; }
+		public Func<object, object> CellValueAction { get; set; }
 		public FormulaCellValueType FormulaCellValue { get; set; }
 		public bool? IsFormula { get; set; }
+
+		public ExcelCellParam(Func<object, object> cellValueAction, Action<ICellStyle> style = null)
+		{
+			CellValueAction = cellValueAction;
+			CellStyle = style;
+			IsFormula = false;
+		}
 		public ExcelCellParam(FormulaCellValueType cellValue, Action<ICellStyle> style = null)
 		{
 			FormulaCellValue = cellValue;
