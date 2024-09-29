@@ -17,7 +17,7 @@ namespace NPOIPlusConsoleExample
 		{
 			try
 			{
-				var filePath = @"D:\Test.xlsx";
+				var filePath = @$"{AppDomain.CurrentDomain.BaseDirectory}\Resources\Test.xlsx";
 				// 打開 Excel 文件
 				using (FileStream file = new FileStream(filePath, FileMode.Open, FileAccess.Read))
 				{
@@ -25,21 +25,14 @@ namespace NPOIPlusConsoleExample
 
 					workbook.SetGlobalCellStyle = (style) =>
 					{
-						style.Alignment = HorizontalAlignment.Right;
-						style.BorderBottom = BorderStyle.Thin;
-						style.BorderLeft = BorderStyle.Thin;
-						style.BorderRight = BorderStyle.Thin;
-						style.BorderTop = BorderStyle.Thin;
-						IFont font = workbook.Workbook.CreateFont();
-						font.FontName = "Calibri";  // 
-						font.FontHeightInPoints = 10;  // 
-						style.SetFont(font);
+						style.SetAligment(VerticalAlignment.Center);
+						style.SetBorderAllStyle(BorderStyle.None);
+						style.SetFontInfo(workbook.Workbook, "Calibri", 10);
 					};
 
 					workbook.SetDefaultDateTimeCellStyle = (style) =>
 					{
-						IDataFormat dataFormat = workbook.Workbook.CreateDataFormat();
-						style.DataFormat = dataFormat.GetFormat("yyyy-MM-dd");
+						style.SetDateFormat(workbook.Workbook, "yyyy-MM-dd");
 					};
 
 					ISheet sheet1 = workbook.Workbook.GetSheet("Sheet1");
@@ -65,7 +58,8 @@ namespace NPOIPlusConsoleExample
 					workbook.SetColExcelCells(sheet1, dataTable, 1, new List<ExcelCellParam>
 					{
 						new("ID",null,(style)=>{
-							style.Alignment = HorizontalAlignment.Left;
+							//style.Alignment = HorizontalAlignment.Left;
+							style.SetAligment(HorizontalAlignment.Left);
 						}),
 						new("Name"),
 						new("DateOfBirth"),
@@ -79,12 +73,18 @@ namespace NPOIPlusConsoleExample
 						new("ID" ,
 						null,(style)=>{
 							style.Alignment = HorizontalAlignment.Center;
-							style.BorderBottom = BorderStyle.Thick;
+							//style.BorderBottom = BorderStyle.Thick;
+							style.SetBorderStyle(bottom:BorderStyle.Thick);
 						}
 						),
 						new("Name",
 						null,(style)=>{
 							style.Alignment = HorizontalAlignment.Left;
+							// 設定單元格背景色（RGB 顏色）
+							style.FillPattern = FillPattern.SolidForeground;
+							//style.FillForegroundColor = IndexedColors.Grey25Percent.Index;
+							style.SetCellFillForegroundColor(IndexedColors.Grey25Percent);
+							//style.SetCellFillForegroundColor("#FF5733");
 						}
 						),
 						new("DateOfBirth",
@@ -94,11 +94,13 @@ namespace NPOIPlusConsoleExample
 						),
 						new((row, col, value) =>
 						{
-							return $"{col}{row}:{col}{row+1}";
+							return $"{col-3}{row}:{col-3}{row+1}";
 						})
 					}, ExcelColumns.E, 1, (style) =>
 					{
 						style.BorderBottom = BorderStyle.Double;
+						style.FillPattern = FillPattern.SolidForeground;
+						style.SetCellFillForegroundColor(100, 100, 0);
 					});
 
 

@@ -3,9 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.6.33829.357
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NPOIPlus", "NPOIPlus\NPOIPlus.csproj", "{B49A3330-DB74-4A37-9D37-BBB199F93B1F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NPOIPlus", "NPOIPlus\NPOIPlus.csproj", "{B49A3330-DB74-4A37-9D37-BBB199F93B1F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NPOIPlusConsoleExample", "NPOIPlusConsoleExample\NPOIPlusConsoleExample.csproj", "{F2B5EDD6-9040-465D-A230-C8192ABA3A9E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NPOIPlusConsoleExample", "NPOIPlusConsoleExample\NPOIPlusConsoleExample.csproj", "{F2B5EDD6-9040-465D-A230-C8192ABA3A9E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NPOIPlusUnitTest", "NPOIPlusUnitTest\NPOIPlusUnitTest.csproj", "{A975CC7A-68DF-47BD-A285-E3D2864B564A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +23,10 @@ Global
 		{F2B5EDD6-9040-465D-A230-C8192ABA3A9E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F2B5EDD6-9040-465D-A230-C8192ABA3A9E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F2B5EDD6-9040-465D-A230-C8192ABA3A9E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A975CC7A-68DF-47BD-A285-E3D2864B564A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A975CC7A-68DF-47BD-A285-E3D2864B564A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A975CC7A-68DF-47BD-A285-E3D2864B564A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A975CC7A-68DF-47BD-A285-E3D2864B564A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -136,7 +136,8 @@ namespace NPOIPlus
 		private void SetExcelCell(ISheet sheet, DataTable dataTable, int tableIndex, string tableColName, ExcelColumns colnum, int rownum = 1, object cellValue = null, Action<ICellStyle> colStyle = null, Action<ICellStyle> rowStyle = null, bool? isFormula = false, FormulaCellValueType formulaCellValueType = null)
 		{
 			if (rownum < 1) rownum = 1;
-			IRow row = sheet.GetRow(rownum - 1) ?? sheet.CreateRow(rownum - 1);
+			int zeroBaseIndex = rownum - 1;
+			IRow row = sheet.GetRow(zeroBaseIndex) ?? sheet.CreateRow(zeroBaseIndex);
 			ICell cell = row.CreateCell((int)colnum);
 			var newValue = formulaCellValueType ?? cellValue ?? dataTable.Rows[tableIndex][tableColName];
 			SetCellStyle(cell, newValue, colStyle, rowStyle);
