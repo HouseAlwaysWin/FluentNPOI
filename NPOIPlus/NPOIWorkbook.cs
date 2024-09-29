@@ -1,13 +1,14 @@
 ﻿using NPOI.SS.Formula.Functions;
 using NPOI.SS.UserModel;
 using NPOI.Util;
+using NPOI.XSSF.Streaming.Values;
+using NPOIPlus.Models;
 using System;
 using System.Collections.Generic;
 using System.Data;
 
 namespace NPOIPlus
 {
-	public delegate T DefaultType<T>(T value);
 
 	public class NPOIWorkbook
 	{
@@ -18,6 +19,7 @@ namespace NPOIPlus
 		public DefaultType<bool> SetDefaultBoolCellValue = (value) => value;
 		public DefaultType<string> SetDefaultStringCellValue = (value) => value;
 		public DefaultType<DateTime> SetDefaultDateTimeCellValue = (value) => value;
+
 
 		public Action<ICellStyle> SetGlobalCellStyle = (style) => { };
 		public Action<ICellStyle> SetDefaultIntCellStyle = (value) => { };
@@ -101,18 +103,24 @@ namespace NPOIPlus
 			if (rownum < 1) rownum = 1;
 			IRow row = sheet.CreateRow(rownum - 1);
 			ICell cell = row.CreateCell((int)colnum);
-			SetCellStyle(cell, style);
+			SetCellStyle(cell, cellValue, style);
 			SetCellValueBasedOnType(cell, cellValue);
 		}
 
-		private void SetCellStyle(ICell cell, object cellValue, Action<ICellStyle> colStyle = null)
+		private void SetCellStyle(ICell cell, object cellValue, Action<ICellStyle> colStyle = null, Action<ICellStyle> rowStyle = null)
 		{
 			ICellStyle newCellStyle = Workbook.CreateCellStyle();
 			SetGlobalCellStyle(newCellStyle);
 			SetCellStyleBasedOnType(cellValue, newCellStyle);
+			rowStyle?.Invoke(newCellStyle);
 			colStyle?.Invoke(newCellStyle);
 			cell.CellStyle = newCellStyle;
 		}
+		public void SetExcelCell(ISheet sheet, DataTable dataTable, int tableIndex, string tableColName, ExcelColumns column, int rownum = 1, object cellValue = null, Action<ICellStyle> colStyle = null, bool? isFormula = null)
+		{
+			SetExcelCell(sheet, dataTable, tableIndex, tableColName, column, rownum, cellValue, colStyle, null, isFormula);
+		}
+
 
 		/// <summary>
 		/// For set single cell with datatable
@@ -125,40 +133,46 @@ namespace NPOIPlus
 		/// <param name="rownum"></param>
 		/// <param name="cellValue"></param>
 		/// <exception cref="Exception"></exception>
-		public void SetExcelCell(ISheet sheet, DataTable dataTable, int tableIndex, string tableColName, ExcelColumns colnum, int rownum = 1, object cellValue = null, Action<ICellStyle> style = null, bool isFormula = false)
+		private void SetExcelCell(ISheet sheet, DataTable dataTable, int tableIndex, string tableColName, ExcelColumns colnum, int rownum = 1, object cellValue = null, Action<ICellStyle> colStyle = null, Action<ICellStyle> rowStyle = null, bool? isFormula = false, FormulaCellValueType formulaCellValueType = null)
 		{
 			if (rownum < 1) rownum = 1;
-			IRow row = sheet.CreateRow(rownum - 1);
+			IRow row = sheet.GetRow(rownum - 1) ?? sheet.CreateRow(rownum - 1);
 			ICell cell = row.CreateCell((int)colnum);
-			var newValue = cellValue ?? dataTable.Rows[tableIndex][tableColName];
-			SetCellStyle(cell, cellValue, style);
-			if (isFormula)
+			var newValue = formulaCellValueType ?? cellValue ?? dataTable.Rows[tableIndex][tableColName];
+			SetCellStyle(cell, newValue, colStyle, rowStyle);
+			if (isFormula.HasValue)
 			{
-				cell.SetCellFormula(cellValue?.ToString());
-				return;
+				if (isFormula.Value)
+				{
+					var newCellValue = formulaCellValueType(rownum, colnum, cellValue);
+					cell.SetCellFormula(newCellValue?.ToString());
+					return;
+				}
 			}
+
 			SetCellValueBasedOnType(cell, newValue);
 		}
 
-		public void SetColExcelCells(ISheet sheet, DataTable dataTable, int tableIndex, List<ExcelCellParam> param, int rownum = 1, Action<ICellStyle> style = null, bool? isFormula = null)
+		public void SetColExcelCells(ISheet sheet, DataTable dataTable, int tableIndex, List<ExcelCellParam> param, ExcelColumns startColnum, int rownum = 1, Action<ICellStyle> rowStyle = null, bool? isFormula = null)
 		{
 			for (int colIndex = 0; colIndex < param.Count; colIndex++)
 			{
-				var col = param[colIndex].Copy();
-				if (isFormula != null) col.IsFormula = isFormula.Value;
-				var newStyle = col.CellStyle ?? style;
-				SetExcelCell(sheet, dataTable, tableIndex, col.ColumnName, (ExcelColumns)colIndex, rownum, col.CellValue, newStyle);
+				//var col = param[colIndex].Copy();
+				var colnum = colIndex + startColnum;
+				var col = param[colIndex];
+				var isFormulaValue = col.IsFormula.HasValue ? col.IsFormula : isFormula;
+				SetExcelCell(sheet, dataTable, tableIndex, col.ColumnName, colnum, rownum, col.CellValue, col.CellStyle, rowStyle, isFormulaValue, col.FormulaCellValue);
 			}
 		}
 
-		public void SetRowExcelCells(ISheet sheet, DataTable dataTable, List<ExcelCellParam> param, int startRownum = 1, Action<ICellStyle> style = null, bool? isFormula = null)
+		public void SetRowExcelCells(ISheet sheet, DataTable dataTable, List<ExcelCellParam> param, ExcelColumns startColnum, int startRownum = 1, Action<ICellStyle> rowStyle = null, bool? isFormula = null)
 		{
 			if (startRownum < 1) startRownum = 1;
 
 			for (int dtIndex = 0; dtIndex < dataTable.Rows.Count; dtIndex++)
 			{
 				var rownum = startRownum + dtIndex;
-				SetColExcelCells(sheet, dataTable, dtIndex, param, rownum, style, isFormula);
+				SetColExcelCells(sheet, dataTable, dtIndex, param, startColnum, rownum, rowStyle, isFormula);
 			}
 		}
 
