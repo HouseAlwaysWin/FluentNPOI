@@ -147,7 +147,8 @@ namespace NPOIPlus
 		public void SetExcelCell<T>(ISheet sheet, T cellValue, ExcelColumns colnum, int rownum, Action<ICellStyle> style = null)
 		{
 			if (rownum < 1) rownum = 1;
-			IRow row = sheet.CreateRow(rownum - 1);
+			int zeroBaseIndex = rownum - 1;
+			IRow row = sheet.GetRow(zeroBaseIndex) ?? sheet.CreateRow(zeroBaseIndex);
 			ICell cell = row.CreateCell((int)colnum);
 			SetCellStyle(cell, cellValue, style);
 			SetCellValueBasedOnType(cell, cellValue);

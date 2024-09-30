@@ -60,6 +60,8 @@ namespace NPOIPlusConsoleExample
 					}
 
 					workbook.SetExcelCell(sheet1, dataTable, 1, "ID", ExcelColumns.D, 12);
+					workbook.SetExcelCell(sheet1, "Test", ExcelColumns.H, 12);
+					workbook.SetExcelCell(sheet1, "Test2", ExcelColumns.G, 12);
 
 					workbook.SetColExcelCells(sheet1, dataTable, 1, new List<ExcelCellParam>
 					{
