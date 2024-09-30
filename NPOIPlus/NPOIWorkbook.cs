@@ -6,6 +6,7 @@ using NPOIPlus.Models;
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.IO;
 
 namespace NPOIPlus
 {
@@ -35,60 +36,73 @@ namespace NPOIPlus
 			Workbook = workbook;
 		}
 
-		private void SetCellStyleBasedOnType(object value, ICellStyle style)
+		private void SetCellStyleBasedOnType(object cellValue, ICellStyle style)
 		{
-			switch (value)
+			bool isInt = true;
+			bool isDouble = true;
+			bool isDateTime = true;
+			if (cellValue == DBNull.Value) return;
+
+			if (!int.TryParse(cellValue.ToString(), out int i)) isInt = false;
+
+			if (!double.TryParse(cellValue.ToString(), out double d)) isDouble = false;
+
+			if (!DateTime.TryParse(cellValue.ToString(), out DateTime dt)) isDateTime = false;
+
+			// 動態調整型別
+			if (isInt)
 			{
-				case int i:
-					SetDefaultIntCellStyle?.Invoke(style);
-					break;
-				case double d:
-					SetDefaultDoubleCellStyle?.Invoke(style);
-					break;
-				case bool b:
-					SetDefaultBoolCellStyle?.Invoke(style);
-					break;
-				case string s:
-					SetDefaultStringCellStyle?.Invoke(style);
-					break;
-				case DateTime dt:
-					SetDefaultDateTimeCellStyle?.Invoke(style);
-					break;
-				default:
-					SetDefaultStringCellStyle?.Invoke(style);
-					break;
+				SetDefaultIntCellStyle?.Invoke(style);
+			}
+			else if (isDouble)
+			{
+				SetDefaultDoubleCellStyle?.Invoke(style);
+			}
+			else if (isDateTime)
+			{
+				SetDefaultDateTimeCellStyle?.Invoke(style);
+			}
+			else
+			{
+				SetDefaultStringCellStyle?.Invoke(style);
 			}
 		}
 
 
-		private void SetCellValueBasedOnType(ICell cell, object value, CellValueActionType valueAction = null)
+		private void SetCellValueBasedOnType(ICell cell, object cellValue, CellValueActionType valueAction = null)
 		{
-			value = valueAction?.Invoke(cell, value) ?? value;
-			switch (value)
+			cellValue = valueAction?.Invoke(cell, cellValue) ?? cellValue;
+			bool isInt = true;
+			bool isDouble = true;
+			bool isDateTime = true;
+			if (cellValue == DBNull.Value) return;
+
+			if (!int.TryParse(cellValue.ToString(), out int i)) isInt = false;
+
+			if (!double.TryParse(cellValue.ToString(), out double d)) isDouble = false;
+
+			if (!DateTime.TryParse(cellValue.ToString(), out DateTime dt)) isDateTime = false;
+
+			// 動態調整型別
+			if (isInt)
 			{
-				case int i:
-					var intValue = SetDefaultIntCellValue(i);
-					cell.SetCellValue(intValue);
-					break;
-				case double d:
-					var doubleValue = SetDefaultDoubleCellValue(d);
-					cell.SetCellValue(doubleValue);
-					break;
-				case bool b:
-					var boolValue = SetDefaultBoolCellValue(b);
-					cell.SetCellValue(boolValue);
-					break;
-				case string s:
-					var stringValue = SetDefaultStringCellValue(s);
-					cell.SetCellValue(stringValue);
-					break;
-				case DateTime dt:
-					var dateValue = SetDefaultDateTimeCellValue(dt);
-					cell.SetCellValue(dateValue);
-					break;
-				default:
-					cell.SetCellValue(value?.ToString());
-					break;
+				var intValue = SetDefaultIntCellValue(i);
+				cell.SetCellValue(intValue);
+			}
+			else if (isDouble)
+			{
+				var doubleValue = SetDefaultDoubleCellValue(d);
+				cell.SetCellValue(doubleValue);
+			}
+			else if (isDateTime)
+			{
+				var dateValue = SetDefaultDateTimeCellValue(dt);
+				cell.SetCellValue(dateValue);
+			}
+			else
+			{
+				var stringValue = SetDefaultStringCellValue(cellValue?.ToString());
+				cell.SetCellValue(stringValue);
 			}
 		}
 
@@ -130,7 +144,7 @@ namespace NPOIPlus
 		/// <param name="rownum"></param>
 		/// <param name="param"></param>
 		/// <exception cref="Exception"></exception>
-		public void SetExcelCell(ISheet sheet, object cellValue, ExcelColumns colnum, int rownum, Action<ICellStyle> style = null)
+		public void SetExcelCell<T>(ISheet sheet, T cellValue, ExcelColumns colnum, int rownum, Action<ICellStyle> style = null)
 		{
 			if (rownum < 1) rownum = 1;
 			IRow row = sheet.CreateRow(rownum - 1);
@@ -141,12 +155,12 @@ namespace NPOIPlus
 
 		public void SetExcelCell(ISheet sheet, DataTable dataTable, int tableIndex, string tableColName, ExcelColumns column, int rownum = 1, object cellValue = null, Action<ICellStyle> colStyle = null, bool? isFormula = null)
 		{
-			SetExcelCell(sheet, dataTable, tableIndex, tableColName, column, rownum, cellValue, colStyle, null, null, isFormula, null);
+			SetExcelCell(sheet, dataTable, tableIndex, tableColName, column, rownum, cellValue, colStyle, null, null, isFormula);
 		}
 
-		public void SetExcelCell(ISheet sheet, DataTable dataTable, int tableIndex, string tableColName, ExcelColumns column, int rownum = 1, CellValueActionType cellValueAction = null, Action<ICellStyle> colStyle = null, bool? isFormula = null)
+		public void SetExcelCell(ISheet sheet, DataTable dataTable, int tableIndex, string tableColName, ExcelColumns column, CellValueActionType cellValueAction, int rownum = 1, Action<ICellStyle> colStyle = null, bool? isFormula = null)
 		{
-			SetExcelCell(sheet, dataTable, tableIndex, tableColName, column, rownum, null, colStyle, null, cellValueAction, isFormula, null);
+			SetExcelCell(sheet, dataTable, tableIndex, tableColName, column, rownum, null, colStyle, null, cellValueAction, isFormula);
 		}
 
 
@@ -161,20 +175,20 @@ namespace NPOIPlus
 		/// <param name="rownum"></param>
 		/// <param name="cellValue"></param>
 		/// <exception cref="Exception"></exception>
-		private void SetExcelCell(ISheet sheet, DataTable dataTable, int tableIndex, string tableColName, ExcelColumns colnum, int rownum = 1, object cellValue = null, Action<ICellStyle> colStyle = null, Action<ICellStyle> rowStyle = null, CellValueActionType cellValueAction = null, bool? isFormula = false, FormulaCellValueType formulaCellValueType = null)
+		private void SetExcelCell(ISheet sheet, DataTable dataTable, int tableIndex, string tableColName, ExcelColumns colnum, int rownum = 1, object cellValue = null, Action<ICellStyle> colStyle = null, Action<ICellStyle> rowStyle = null, CellValueActionType cellValueAction = null, bool? isFormula = false)
 		{
 			if (rownum < 1) rownum = 1;
 			int zeroBaseIndex = rownum - 1;
 			IRow row = sheet.GetRow(zeroBaseIndex) ?? sheet.CreateRow(zeroBaseIndex);
 			ICell cell = row.CreateCell((int)colnum);
-			var newValue = formulaCellValueType ?? cellValue ?? dataTable.Rows[tableIndex][tableColName];
+			var newValue = cellValueAction ?? cellValue ?? dataTable.Rows[tableIndex][tableColName];
 			SetCellStyle(cell, newValue, colStyle, rowStyle);
 			if (isFormula.HasValue)
 			{
 				if (isFormula.Value)
 				{
-					var newCellValue = formulaCellValueType(rownum, colnum, cellValue);
-					cell.SetCellFormula(newCellValue?.ToString());
+					string newCellValue = cellValueAction?.Invoke(cell, cellValue, rownum, colnum);
+					cell.SetCellFormula(newCellValue);
 					return;
 				}
 			}
@@ -189,7 +203,7 @@ namespace NPOIPlus
 				var colnum = colIndex + startColnum;
 				var col = param[colIndex];
 				var isFormulaValue = col.IsFormula.HasValue ? col.IsFormula : isFormula;
-				SetExcelCell(sheet, dataTable, tableIndex, col.ColumnName, colnum, rownum, col.CellValue, col.CellStyle, rowStyle, col.CellValueAction, isFormulaValue, col.FormulaCellValue);
+				SetExcelCell(sheet, dataTable, tableIndex, col.ColumnName, colnum, rownum, col.CellValue, col.CellStyle, rowStyle, col.CellValueAction, isFormulaValue);
 			}
 		}
 
@@ -205,5 +219,26 @@ namespace NPOIPlus
 		}
 
 
+	}
+
+	public class NpoiMemoryStream : MemoryStream
+	{
+		public NpoiMemoryStream()
+		{
+			// We always want to close streams by default to
+			// force the developer to make the conscious decision
+			// to disable it.  Then, they're more apt to remember
+			// to re-enable it.  The last thing you want is to
+			// enable memory leaks by default.  ;-)
+			AllowClose = true;
+		}
+
+		public bool AllowClose { get; set; }
+
+		public override void Close()
+		{
+			if (AllowClose)
+				base.Close();
+		}
 	}
 }

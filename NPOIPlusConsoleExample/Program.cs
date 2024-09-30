@@ -52,17 +52,14 @@ namespace NPOIPlusConsoleExample
 					dataTable.Rows.Add(3, "Charlie", new DateTime(2000, 10, 15));
 
 					// 4. 使用迴圈新增一百筆數據
-					for (int i = 4; i <= 10003; i++)
+					for (int i = 4; i <= 10; i++)
 					{
 						string name = "Name" + i;  // 根據ID生成名字
 						DateTime dateOfBirth = new DateTime(1990, 1, 1).AddDays(i * 10); // 根據ID生成不同的生日
 						dataTable.Rows.Add(i, name, dateOfBirth);
 					}
 
-					workbook.SetExcelCell(sheet1, dataTable, 1, "ID", ExcelColumns.D, 12, (cell, value) =>
-					{
-						return $"{value}st";
-					});
+					workbook.SetExcelCell(sheet1, dataTable, 1, "ID", ExcelColumns.D, 12);
 
 					workbook.SetColExcelCells(sheet1, dataTable, 1, new List<ExcelCellParam>
 					{
@@ -72,9 +69,9 @@ namespace NPOIPlusConsoleExample
 						}),
 						new("Name"),
 						new("DateOfBirth"),
-					}, ExcelColumns.A, 1, (style) =>
+					}, ExcelColumns.A, 2, (style) =>
 					{
-						style.Alignment = HorizontalAlignment.Center;
+						style.BorderTop = BorderStyle.Dashed;
 					});
 
 					workbook.SetRowExcelCells(sheet1, dataTable, new List<ExcelCellParam>
@@ -101,7 +98,7 @@ namespace NPOIPlusConsoleExample
 							style.Alignment = HorizontalAlignment.Right;
 						}
 						),
-						new((row, col, value) =>
+						new(null,"Test",(cell,value,row, col) =>
 						{
 							return $"{col-3}{row}:{col-3}{row+1}";
 						})
