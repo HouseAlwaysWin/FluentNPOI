@@ -113,6 +113,7 @@ namespace NPOIPlusConsoleExample
 					});
 
 					var test = workbook._cellStylesCached;
+					var test2 = workbook._globalCellStyleCached;
 
 
 
