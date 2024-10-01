@@ -144,8 +144,8 @@ namespace NPOIPlus
 		private void SetCellStyle(string cachedKey, ICell cell, object cellValue, Action<ICellStyle> colStyle = null, Action<ICellStyle> rowStyle = null, ExcelColumns colnum = 0, int rownum = 1)
 		{
 			// 根據列號和行號或全局樣式鍵生成樣式key
-			var styleGroup = _cellStylesCached.First(s => s.GroupName == cachedKey);
-			var style = styleGroup.CellStyles;
+			var styleGroup = _cellStylesCached.FirstOrDefault(s => s.GroupName == cachedKey);
+			var style = styleGroup?.CellStyles;
 
 			string key = SetGlobalStyleKeyBasedOnType(cellValue, "GlobalStyle");
 
@@ -194,13 +194,16 @@ namespace NPOIPlus
 			if (rownum < 1) rownum = 1;
 			var sheetName = sheet.SheetName;
 			var key = $"SetCell{sheetName}_{colnum}{rownum}";
-			if (_cellStylesCached.FirstOrDefault(s => s.GroupName == key) == null)
+			if (style != null)
 			{
-				_cellStylesCached.Add(new ExcelStyleCached
+				if (_cellStylesCached.FirstOrDefault(s => s.GroupName == key) == null)
 				{
-					GroupName = key,
-					CellStyles = new Dictionary<string, ICellStyle>()
-				});
+					_cellStylesCached.Add(new ExcelStyleCached
+					{
+						GroupName = key,
+						CellStyles = new Dictionary<string, ICellStyle>()
+					});
+				}
 			}
 			int zeroBaseIndex = rownum - 1;
 			IRow row = sheet.GetRow(zeroBaseIndex) ?? sheet.CreateRow(zeroBaseIndex);
@@ -223,13 +226,16 @@ namespace NPOIPlus
 		{
 			var sheetName = sheet.SheetName;
 			var key = $"SetCell{sheetName}_{colnum}{rownum}";
-			if (_cellStylesCached.FirstOrDefault(s => s.GroupName == key) == null)
+			if (colStyle != null || rowStyle != null)
 			{
-				_cellStylesCached.Add(new ExcelStyleCached
+				if (_cellStylesCached.FirstOrDefault(s => s.GroupName == key) == null)
 				{
-					GroupName = key,
-					CellStyles = new Dictionary<string, ICellStyle>()
-				});
+					_cellStylesCached.Add(new ExcelStyleCached
+					{
+						GroupName = key,
+						CellStyles = new Dictionary<string, ICellStyle>()
+					});
+				}
 			}
 			SetExcelCell(sheet, key, dataTable, tableIndex, tableColName, colnum, rownum, cellValue, colStyle, rowStyle, cellValueAction, isFormula);
 		}
@@ -287,13 +293,16 @@ namespace NPOIPlus
 			if (startRownum < 1) startRownum = 1;
 			var sheetName = sheet.SheetName;
 			var key = $"SetRow_{sheetName}_{startColnum}{startRownum}";
-			if (_cellStylesCached.FirstOrDefault(s => s.GroupName == key) == null)
+			if (rowStyle != null || param.Any(p => p.CellStyle != null))
 			{
-				_cellStylesCached.Add(new ExcelStyleCached
+				if (_cellStylesCached.FirstOrDefault(s => s.GroupName == key) == null)
 				{
-					GroupName = key,
-					CellStyles = new Dictionary<string, ICellStyle>()
-				});
+					_cellStylesCached.Add(new ExcelStyleCached
+					{
+						GroupName = key,
+						CellStyles = new Dictionary<string, ICellStyle>()
+					});
+				}
 			}
 
 			for (int dtIndex = 0; dtIndex < dataTable.Rows.Count; dtIndex++)

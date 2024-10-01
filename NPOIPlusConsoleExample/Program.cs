@@ -78,14 +78,14 @@ namespace NPOIPlusConsoleExample
 
 					workbook.SetRowExcelCells(sheet1, dataTable, new List<ExcelCellParam>
 					{
-						//new("ID" ,
-						//null,(style)=>{
-						//	style.Alignment = HorizontalAlignment.Center;
-						//	//style.BorderBottom = BorderStyle.Thick;
-						//	style.SetBorderStyle(bottom:BorderStyle.Thick);
-						//}
-						//),
-						new("ID"),
+						new("ID" ,
+						null,(style)=>{
+							style.Alignment = HorizontalAlignment.Center;
+							//style.BorderBottom = BorderStyle.Thick;
+							style.SetBorderStyle(bottom:BorderStyle.Thick);
+						}
+						),
+						//new("ID"),
 						new("Name",
 						null,(style)=>{
 							style.Alignment = HorizontalAlignment.Left;
@@ -111,6 +111,17 @@ namespace NPOIPlusConsoleExample
 						style.FillPattern = FillPattern.SolidForeground;
 						style.SetCellFillForegroundColor(IndexedColors.Aqua);
 					});
+
+					workbook.SetRowExcelCells(sheet1, dataTable, new List<ExcelCellParam>
+					{
+						new("ID"),
+						new("Name" ),
+						new("DateOfBirth"),
+						new(null,"Test",(cell,value,row, col) =>
+						{
+							return $"{col}{row}:{col}{row}";
+						})
+					}, ExcelColumns.L, 1);
 
 					var test = workbook._cellStylesCached;
 					var test2 = workbook._globalCellStyleCached;
