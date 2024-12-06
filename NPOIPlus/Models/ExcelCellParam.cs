@@ -12,17 +12,22 @@ namespace NPOIPlus.Models
 	{
 		public readonly object CellValue;
 		public readonly string ColumnName;
+		public string CellStyleKey { get; set; }
 		public readonly Action<ICellStyle> CellStyle;
 		public readonly CellValueActionType CellValueAction;
 		public readonly bool? IsFormula;
+		public readonly Type CellValueType;
 
-		public ExcelCellParam(object valueOrColName, CellValueActionType cellValueAction = null, Action<ICellStyle> style = null, bool? isFormula = false)
+		public ExcelCellParam(object valueOrColName, CellValueActionType cellValueAction = null,
+			Action<ICellStyle> colStyle = null, bool? isFormula = null, Type cellValueType = null, string cellStyleKey = null)
 		{
 			CellValueAction = cellValueAction;
 			ColumnName = valueOrColName.ToString();
 			CellValue = valueOrColName;
-			CellStyle = style;
+			CellStyle = colStyle;
 			IsFormula = isFormula;
+			CellValueType = cellValueType;
+			CellStyleKey = cellStyleKey;
 		}
 	}
 }

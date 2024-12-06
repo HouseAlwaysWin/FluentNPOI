@@ -28,45 +28,89 @@ namespace NPOIPlus
 		public Action<ICellStyle> SetGlobalCellStyle = (style) => { };
 		public Action<ICellStyle> SetDefaultIntCellStyle = (value) => { };
 		public Action<ICellStyle> SetDefaultDoubleCellStyle = (value) => { };
+		public Action<ICellStyle> SetDefaultNumberCellStyle = (value) => { };
 		public Action<ICellStyle> SetDefaultBoolCellStyle = (value) => { };
 		public Action<ICellStyle> SetDefaultStringCellStyle = (value) => { };
+
 		public Action<ICellStyle> SetDefaultDateTimeCellStyle = (value) => { };
 
-		public List<ExcelStyleCached> _cellStylesCached = new List<ExcelStyleCached>();
-		public Dictionary<string, ICellStyle> _globalCellStyleCached = new Dictionary<string, ICellStyle>();
+		/// <summary>
+		/// 廠區Excel通用格式
+		/// </summary>
+		public void SetDlpDefaultExcelStyle()
+		{
+			IWorkbook workbook = this.Workbook;
+			SetDefaultNumberCellStyle = (style) =>
+			{
+				style.SetDataFormat(workbook, "#,##0");
+				style.SetAligment(HorizontalAlignment.Right);
+			};
+			SetDefaultStringCellStyle = (style) =>
+			{
+				style.SetDataFormat(workbook, "#,##0");
+				style.SetAligment(HorizontalAlignment.Left);
 
+			};
+			SetDefaultDateTimeCellStyle = (style) =>
+			{
+				style.SetDataFormat(workbook, "yyyy/MM/DD");
+				style.SetAligment(HorizontalAlignment.Center);
+			};
+		}
+
+		// 樣式快取
+		private Dictionary<string, ICellStyle> _cellStylesCached = new();
+
+		public void AddCellStyles(string key, ICellStyle style)
+		{
+			_cellStylesCached.Add(key, style);
+		}
+
+		public List<string> GetCurrentCellStylesCached()
+		{
+			return _cellStylesCached.Keys.ToList();
+		}
 		public NPOIWorkbook(IWorkbook workbook)
 		{
 			Workbook = workbook;
 		}
 
-		#region CellStyle
-
-		private void SetCellStyleBasedOnType(object cellValue, ICellStyle style)
+		private void SetCellStyleBasedOnType(object cellValue, ICellStyle style, Type cellType = null)
 		{
-			bool isInt = true;
-			bool isDouble = true;
-			bool isDateTime = true;
+
 			if (cellValue == DBNull.Value) return;
 
-			if (!int.TryParse(cellValue.ToString(), out int i)) isInt = false;
+			bool isInt = int.TryParse(cellValue.ToString(), out int i);
+			bool isDouble = double.TryParse(cellValue.ToString(), out double d);
+			bool isDateTime = DateTime.TryParse(cellValue.ToString(), out DateTime dt);
+			bool isString = false;
 
-			if (!double.TryParse(cellValue.ToString(), out double d)) isDouble = false;
-
-			if (!DateTime.TryParse(cellValue.ToString(), out DateTime dt)) isDateTime = false;
+			if (cellType != null)
+			{
+				isInt = cellType == typeof(int);
+				isDouble = cellType == typeof(double) || cellType == typeof(float);
+				isDateTime = cellType == typeof(DateTime);
+				isString = cellType == typeof(string);
+			}
 
 			// 動態調整型別
 			if (isInt)
 			{
+				SetDefaultNumberCellStyle?.Invoke(style);
 				SetDefaultIntCellStyle?.Invoke(style);
 			}
 			else if (isDouble)
 			{
+				SetDefaultNumberCellStyle?.Invoke(style);
 				SetDefaultDoubleCellStyle?.Invoke(style);
 			}
 			else if (isDateTime)
 			{
 				SetDefaultDateTimeCellStyle?.Invoke(style);
+			}
+			else if (isString)
+			{
+				SetDefaultStringCellStyle?.Invoke(style);
 			}
 			else
 			{
@@ -74,93 +118,125 @@ namespace NPOIPlus
 			}
 		}
 
-		private string SetGlobalStyleKeyBasedOnType(object cellValue, string key)
+
+		/// <summary>
+		///  設定範圍樣式(後蓋前)
+		/// </summary>
+		/// <param name="sheet"></param>
+		/// <param name="col"></param>
+		/// <param name="row"></param>
+		/// <param name="style"></param>
+		/// <param name="overrideStyle">是否複寫原本的樣式</param>
+		public void SetRangeCellStyle(ISheet sheet, ExcelColumns col, int row, Action<ICellStyle> style, bool overrideStyle = false)
 		{
-			bool isInt = true;
-			bool isDouble = true;
-			bool isDateTime = true;
-
-			if (!int.TryParse(cellValue.ToString(), out int i)) isInt = false;
-
-			if (!double.TryParse(cellValue.ToString(), out double d)) isDouble = false;
-
-			if (!DateTime.TryParse(cellValue.ToString(), out DateTime dt)) isDateTime = false;
-
-			// 動態調整型別
-			if (isInt)
-			{
-				key = $"Int_{key}";
-			}
-			else if (isDouble)
-			{
-				key = $"double_{key}";
-			}
-			else if (isDateTime)
-			{
-				key = $"date_{key}";
-			}
-			else
-			{
-				key = $"str_{key}";
-			}
-			return key;
+			SetRangeCellStyle(sheet, col, col, row, row, style, overrideStyle);
 		}
 
-
-		private void SetCellStyle(string cachedKey, ICell cell, object cellValue, Action<ICellStyle> colStyle = null, Action<ICellStyle> rowStyle = null, ExcelColumns colnum = 0, int rownum = 1)
+		/// <summary>
+		///  設定範圍樣式(後蓋前)
+		/// </summary>
+		/// <param name="sheet"></param>
+		/// <param name="col"></param>
+		/// <param name="startRow"></param>
+		/// <param name="endRow"></param>
+		/// <param name="style"></param>
+		/// <param name="overrideStyle">是否複寫原本的樣式</param>
+		public void SetRangeCellStyle(ISheet sheet, ExcelColumns col, int startRow, int endRow, Action<ICellStyle> style, bool overrideStyle = false)
 		{
-			// 根據列號和行號或全局樣式鍵生成樣式key
-			var styleGroup = _cellStylesCached.FirstOrDefault(s => s.GroupName == cachedKey);
-			var style = styleGroup?.CellStyles;
+			SetRangeCellStyle(sheet, col, col, startRow, endRow, style, overrideStyle);
+		}
 
-			string key = SetGlobalStyleKeyBasedOnType(cellValue, "GlobalStyle");
+		/// <summary>
+		///  設定範圍樣式(後蓋前)
+		/// </summary>
+		/// <param name="sheet"></param>
+		/// <param name="startCol"></param>
+		/// <param name="endCol"></param>
+		/// <param name="row"></param>
+		/// <param name="style"></param>
+		/// <param name="overrideStyle">是否複寫原本的樣式</param>
+		public void SetRangeCellStyle(ISheet sheet, ExcelColumns startCol, ExcelColumns endCol, int row, Action<ICellStyle> style, bool overrideStyle = false)
+		{
+			SetRangeCellStyle(sheet, startCol, endCol, row, row, style, overrideStyle);
+		}
 
-			if (colStyle != null)
-			{
-				key = $"OnlyCellStyle_{colnum}";
-			}
-			else if (colStyle == null && rowStyle != null)
-			{
-				key = SetGlobalStyleKeyBasedOnType(cellValue, "GlobalRowStyle");
-			}
-			else
-			{
-				style = _globalCellStyleCached;
-			}
+		/// <summary>
+		///  設定範圍樣式(後蓋前)
+		/// </summary>
+		/// <param name="sheet"></param>
+		/// <param name="startCol"></param>
+		/// <param name="endCol"></param>
+		/// <param name="startRow"></param>
+		/// <param name="endRow"></param>
+		/// <param name="style"></param>
+		/// <param name="overrideStyle">是否複寫原本的樣式</param>
+		public void SetRangeCellStyle(ISheet sheet, ExcelColumns startCol, ExcelColumns endCol, int startRow, int endRow, Action<ICellStyle> style, bool overrideStyle = false)
+		{
+			int startColIndex = (int)startCol;
+			int endColIndex = (int)endCol;
+			startRow = startRow < 1 ? 1 : startRow;
+			endRow = endRow < 1 ? 1 : endRow;
+			string styleCachedKey = $"SetRangeCellStyle_{startCol}_{endCol}_{startRow}_{endRow}";
 
-			// 檢查是否已有樣式
-			if (style.ContainsKey(key))
+			for (int i = startRow; i <= endRow; i++)
 			{
-				cell.CellStyle = style[key];  // 直接使用已存在的樣式
-			}
-			else
-			{
-				ICellStyle newCellStyle = Workbook.CreateCellStyle(); ;
-				SetGlobalCellStyle(newCellStyle);
-				SetCellStyleBasedOnType(cellValue, newCellStyle);
-				rowStyle?.Invoke(newCellStyle);
-				colStyle?.Invoke(newCellStyle);
-				cell.CellStyle = newCellStyle;
+				int rowIndex = i - 1;
+				IRow row = sheet.GetRow(rowIndex) ?? sheet.CreateRow(rowIndex);
+				if (row != null)
+				{
+					for (int j = startColIndex; j <= endColIndex; j++)
+					{
+						ICell cell = row.GetCell(j);
 
-				style.Add(key, newCellStyle);
+						if (cell == null || overrideStyle)
+						{
+							cell = cell ?? row.CreateCell(j);
+							var styleCachedDict = _cellStylesCached;
+							if (styleCachedDict.ContainsKey(styleCachedKey))
+							{
+								cell.CellStyle = styleCachedDict[styleCachedKey]; // 直接使用已存在的樣式
+							}
+							else
+							{
+								ICellStyle newCellStyle = Workbook.CreateCellStyle();
+								style(newCellStyle);
+								cell.CellStyle = newCellStyle;
+								styleCachedDict.Add(styleCachedKey, newCellStyle);
+							}
+						}
+						else
+						{
+							ICellStyle newCellStyle = Workbook.CreateCellStyle();
+							// 複製原本欄位的style
+							newCellStyle.CloneStyleFrom(cell.CellStyle);
+							style(newCellStyle);
+							cell.CellStyle = newCellStyle;
+						}
+
+					}
+				}
 			}
 		}
 
-		#endregion
-
-		private void SetCellValueBasedOnType(ICell cell, object cellValue, CellValueActionType valueAction = null, ExcelColumns colnum = 0, int rownum = 1)
+		private void SetCellValueBasedOnType(ICell cell, object cellValue, CellValueActionType valueAction = null,
+			ExcelColumns colnum = 0, int rownum = 1, Type cellType = null)
 		{
-			cellValue = valueAction?.Invoke(cell, cellValue, colnum, rownum) ?? cellValue;
-			bool isInt = true;
-			bool isDouble = true;
-			bool isDateTime = true;
-			if (cellValue == DBNull.Value) return;
 
-			if (!int.TryParse(cellValue.ToString(), out int i)) isInt = false;
+			var newCellValue = valueAction?.Invoke(cell, cellValue, colnum, rownum) ?? cellValue;
+			if (newCellValue == DBNull.Value) return;
 
-			if (!double.TryParse(cellValue.ToString(), out double d)) isDouble = false;
+			bool isInt = int.TryParse(cellValue.ToString(), out int i);
+			bool isDouble = double.TryParse(cellValue.ToString(), out double d);
+			bool isDateTime = DateTime.TryParse(cellValue.ToString(), out DateTime dt);
+			bool isString = false;
 
-			if (!DateTime.TryParse(cellValue.ToString(), out DateTime dt)) isDateTime = false;
+			if (cellType != null)
+			{
+				isInt = cellType == typeof(int);
+				isDouble = cellType == typeof(double) || cellType == typeof(float);
+				isDateTime = cellType == typeof(DateTime);
+				isString = cellType == typeof(string);
+			}
 
 			// 動態調整型別
 			if (isInt)
@@ -178,267 +254,333 @@ namespace NPOIPlus
 				var dateValue = SetDefaultDateTimeCellValue(dt);
 				cell.SetCellValue(dateValue);
 			}
+			else if (isString)
+			{
+				var stringValue = SetDefaultStringCellValue(newCellValue?.ToString());
+				cell.SetCellValue(stringValue);
+
+			}
 			else
 			{
-				var stringValue = SetDefaultStringCellValue(cellValue?.ToString());
+				var stringValue = SetDefaultStringCellValue(newCellValue?.ToString());
 				cell.SetCellValue(stringValue);
 			}
 		}
 
-		private object GetPropertyValue<T>(T obj, string propertyName)
+		private string SetGlobalStyleKeyBasedOnType(object cellValue, string key, Type cellType)
 		{
-			if (obj != null && typeof(T).IsClass)
+
+
+			bool isInt = int.TryParse(cellValue.ToString(), out int i);
+			bool isDouble = double.TryParse(cellValue.ToString(), out double d);
+			bool isDateTime = DateTime.TryParse(cellValue.ToString(), out DateTime dt);
+			bool isString = false;
+
+			if (cellType != null)
 			{
-				var parameter = Expression.Parameter(typeof(T), "obj");
-
-				// 嘗試取得屬性
-				MemberInfo memberInfo = typeof(T).GetProperty(propertyName)
-										?? (MemberInfo)typeof(T).GetField(propertyName);
-
-				if (memberInfo == null)
-				{
-					return null;
-				}
-
-				// 根據是屬性還是字段來動態生成訪問的 Expression
-				Expression memberAccess;
-				if (memberInfo is PropertyInfo property)
-				{
-					memberAccess = Expression.Property(parameter, property);
-				}
-				else if (memberInfo is FieldInfo field)
-				{
-					memberAccess = Expression.Field(parameter, field);
-				}
-				else
-				{
-					return null;
-				}
-
-				// 將結果轉換為 object
-				var convert = Expression.Convert(memberAccess, typeof(object));
-
-				// 創建 Lambda 表達式：obj => (object)obj.Member
-				var lambda = Expression.Lambda<Func<T, object>>(convert, parameter);
-
-				// 編譯並返回委託，然後取得值
-				var compiledLambda = lambda.Compile();
-				return compiledLambda(obj);
+				isInt = cellType == typeof(int);
+				isDouble = cellType == typeof(double) || cellType == typeof(float);
+				isDateTime = cellType == typeof(DateTime);
+				isString = cellType == typeof(string);
 			}
-			return null;
+
+			// 動態調整型別
+			if (isInt)
+			{
+				key = $"Int_{key}";
+			}
+			else if (isDouble)
+			{
+				key = $"double_{key}";
+			}
+			else if (isDateTime)
+			{
+				key = $"date_{key}";
+			}
+			else if (isString)
+			{
+				key = $"str_{key}";
+			}
+			else
+			{
+				key = $"str_{key}";
+			}
+
+			return key;
 		}
 
-		public void SetExcelCell<T>(ISheet sheet, T cellValue, ExcelColumns colnum, int rownum, Action<ICellStyle> colStyle = null, Action<ICellStyle> rowStyle = null, CellValueActionType cellValueAction = null, bool? isFormula = null)
+		private void SetCellStyle(string cachedKey, ICell cell, object cellValue, Action<ICellStyle> colStyle = null,
+			Action<ICellStyle> rowStyle = null, ExcelColumns colnum = 0, int rownum = 1, Type cellType = null, string cellStyleKey = null)
+		{
+			string key = SetGlobalStyleKeyBasedOnType(cellValue, "GlobalStyle", cellType);
+
+			// 自定義的key值
+			if (!string.IsNullOrWhiteSpace(cellStyleKey))
+			{
+				key = SetGlobalStyleKeyBasedOnType(cellValue, $"{cachedKey}_{cellStyleKey}", cellType);
+			}
+			// 設定整行的欄位 例如 A行
+			else if (colStyle != null)
+			{
+				key = SetGlobalStyleKeyBasedOnType(cellValue, $"{cachedKey}_ColStyle_{colnum}", cellType);
+			}
+			// 設定整排的Style 例如 A到L欄位
+			else if (colStyle == null && rowStyle != null)
+			{
+				key = SetGlobalStyleKeyBasedOnType(cellValue, $"{cachedKey}_RowStyle_{rownum}", cellType);
+			}
+
+			// 檢查是否已有樣式
+			if (_cellStylesCached.ContainsKey(key))
+			{
+				cell.CellStyle = _cellStylesCached[key]; // 直接使用已存在的樣式
+			}
+			else
+			{
+				ICellStyle newCellStyle = Workbook.CreateCellStyle();
+				SetGlobalCellStyle(newCellStyle);
+				SetCellStyleBasedOnType(cellValue, newCellStyle, cellType);
+				rowStyle?.Invoke(newCellStyle);
+				colStyle?.Invoke(newCellStyle);
+
+				cell.CellStyle = newCellStyle;
+
+				_cellStylesCached.Add(key, newCellStyle);
+			}
+		}
+
+
+		/// <summary>
+		/// 設定單一個欄位
+		/// </summary>
+		/// <param name="sheet"></param>
+		/// <param name="cellValue"></param>
+		/// <param name="colnum"></param>
+		/// <param name="rownum"></param>
+		/// <param name="param"></param>
+		/// <exception cref="Exception"></exception>
+		public void SetExcelCell<T>(ISheet sheet, T cellValue, ExcelColumns colnum, int rownum,
+			Action<ICellStyle> style = null, bool? isFormula = null, Type cellType = null, string cellStyleKey = null)
 		{
 			if (rownum < 1) rownum = 1;
-			var sheetName = sheet.SheetName;
-			var key = $"SetCell{sheetName}_{colnum}{rownum}";
-			if (colStyle != null && rowStyle != null)
-			{
-				if (_cellStylesCached.FirstOrDefault(s => s.GroupName == key) == null)
-				{
-					_cellStylesCached.Add(new ExcelStyleCached
-					{
-						GroupName = key,
-						CellStyles = new Dictionary<string, ICellStyle>()
-					});
-				}
-			}
-			SetExcelCell(sheet, key, cellValue, colnum, rownum, colStyle, rowStyle, cellValueAction, isFormula);
+			var key = sheet.SheetName;
+
+			SetExcelCell(sheet, key, new DataTable(), 0, "", colnum, rownum, cellValue, style, null, null, isFormula, cellType, cellStyleKey);
 		}
 
-		private void SetExcelCell<T>(ISheet sheet, string groupKey, T cellValue, ExcelColumns colnum, int rownum, Action<ICellStyle> colStyle = null, Action<ICellStyle> rowStyle = null, CellValueActionType cellValueAction = null, bool? isFormula = null)
+		/// <summary>
+		/// 設定單一個欄位
+		/// </summary>
+		/// <param name="sheet"></param>
+		/// <param name="dataTable"></param>
+		/// <param name="tableIndex"></param>
+		/// <param name="tableColName"></param>
+		/// <param name="column"></param>
+		/// <param name="rownum"></param>
+		/// <param name="colStyle"></param>
+		/// <param name="isFormula"></param>
+		/// <param name="cellType"></param>
+		public void SetExcelCell(ISheet sheet, DataTable dataTable, int tableIndex, string tableColName,
+			ExcelColumns column, int rownum = 1, Action<ICellStyle> colStyle = null, bool? isFormula = null, Type cellType = null)
 		{
+			SetExcelCell(sheet, dataTable, tableIndex, tableColName, column, rownum, null, colStyle, null, null,
+				isFormula, cellType);
+		}
+
+		private void SetExcelCell(ISheet sheet, DataTable dataTable, int tableIndex, string tableColName,
+			ExcelColumns colnum, int rownum = 1, object cellValue = null, Action<ICellStyle> colStyle = null,
+			Action<ICellStyle> rowStyle = null, CellValueActionType cellValueAction = null, bool? isFormula = false, Type cellType = null)
+		{
+			var key = sheet.SheetName;
+
+			SetExcelCell(sheet, key, dataTable, tableIndex, tableColName, colnum, rownum, cellValue, colStyle, rowStyle,
+				cellValueAction, isFormula, cellType);
+		}
+
+		private void SetExcelCell(ISheet sheet, string groupKey, DataTable dataTable, int tableIndex,
+			string tableColName, ExcelColumns colnum, int rownum = 1, object cellValue = null,
+			Action<ICellStyle> colStyle = null, Action<ICellStyle> rowStyle = null,
+			CellValueActionType cellValueAction = null, bool? isFormula = false, Type cellType = null, string cellStyleKey = null)
+		{
+			if (rownum < 1) rownum = 1;
 			int zeroBaseIndex = rownum - 1;
 			IRow row = sheet.GetRow(zeroBaseIndex) ?? sheet.CreateRow(zeroBaseIndex);
 			ICell cell = row.CreateCell((int)colnum);
+			var newValue = dataTable.Columns.Contains(tableColName)
+				? dataTable.Rows?[tableIndex]?[tableColName]
+				: cellValue;
 
-			//var newValue = dataTable.Columns.Contains(tableColName) ? dataTable.Rows?[tableIndex]?[tableColName] : cellValue;
-			SetCellStyle(groupKey, cell, cellValue, colStyle, rowStyle, colnum, rownum);
+			SetCellStyle(groupKey, cell, newValue, colStyle, rowStyle, colnum, rownum, cellType, cellStyleKey);
+
+			// 設定CellValue
 			if (isFormula.HasValue)
 			{
 				if (isFormula.Value)
 				{
-					string newCellValue = cellValueAction?.Invoke(cell, cellValue, colnum, rownum);
-					cell.SetCellFormula(newCellValue);
+					object newCellValue = cellValueAction?.Invoke(cell, cellValue, colnum, rownum) ??
+										  cellValue?.ToString();
+					cell.SetCellFormula(newCellValue?.ToString());
 					return;
 				}
 			}
-			SetCellValueBasedOnType(cell, cellValue, cellValueAction, colnum, rownum);
+			SetCellValueBasedOnType(cell, newValue, cellValueAction, colnum, rownum, cellType);
 		}
 
-		private void SetExcelCell<T>(ISheet sheet, string groupKey, IEnumerable<T> dataTable, int tableIndex, string tableColName, ExcelColumns colnum, int rownum = 1, object cellValue = null, Action<ICellStyle> colStyle = null, Action<ICellStyle> rowStyle = null, CellValueActionType cellValueAction = null, bool? isFormula = false)
+		/// <summary>
+		/// 設定一行Row
+		/// </summary>
+		/// <param name="sheet"></param>
+		/// <param name="dataTable"></param>
+		/// <param name="tableIndex"></param>
+		/// <param name="param"></param>
+		/// <param name="startColnum"></param>
+		/// <param name="rownum"></param>
+		/// <param name="rowStyle"></param>
+		/// <param name="isFormula"></param>
+		public void SetOneRowExcelCells(ISheet sheet, DataTable dataTable, int tableIndex, List<ExcelCellParam> param,
+			ExcelColumns startColnum, int rownum = 1, Action<ICellStyle> rowStyle = null, bool? isFormula = null, Type cellType = null, string rowStyleKey = null)
 		{
-			if (rownum < 1) rownum = 1;
-			IRow row = sheet.GetExcelRowOrCreate(rownum);
-			ICell cell = row.CreateCell((int)colnum);
-			var newValue = GetPropertyValue(dataTable.ElementAt(tableIndex), tableColName) ?? cellValue;
-			SetCellStyle(groupKey, cell, newValue, colStyle, rowStyle, colnum, rownum);
-			if (isFormula.HasValue)
-			{
-				if (isFormula.Value)
-				{
-					string newCellValue = cellValueAction?.Invoke(cell, cellValue, colnum, rownum);
-					cell.SetCellFormula(newCellValue);
-					return;
-				}
-			}
+			var key = sheet.SheetName;
 
-			SetCellValueBasedOnType(cell, newValue, cellValueAction, colnum, rownum);
+			SetOneRowExcelCells(sheet, key, dataTable, tableIndex, param, startColnum, rownum, rowStyle, isFormula, cellType, rowStyleKey);
 		}
 
-
-		public void SetExcelCell(ISheet sheet, DataTable dataTable, int tableIndex, string tableColName, ExcelColumns column, int rownum = 1, Action<ICellStyle> colStyle = null, bool? isFormula = null)
+		/// <summary>
+		/// 設定單排Excel
+		/// </summary>
+		/// <param name="sheet"></param>
+		/// <param name="param"></param>
+		/// <param name="startColnum"></param>
+		/// <param name="rownum"></param>
+		/// <param name="rowStyle"></param>
+		/// <param name="isFormula"></param>
+		public void SetOneRowExcelCells(ISheet sheet, List<ExcelCellParam> param, ExcelColumns startColnum, int rownum = 1,
+			Action<ICellStyle> rowStyle = null, bool? isFormula = null, Type cellType = null, string rowStyleKey = null)
 		{
-			SetExcelCell(sheet, dataTable, tableIndex, tableColName, column, rownum, null, colStyle, null, null, isFormula);
-		}
+			var key = sheet.SheetName;
 
-		private void SetExcelCell(ISheet sheet, DataTable dataTable, int tableIndex, string tableColName, ExcelColumns colnum, int rownum = 1, object cellValue = null, Action<ICellStyle> colStyle = null, Action<ICellStyle> rowStyle = null, CellValueActionType cellValueAction = null, bool? isFormula = false)
-		{
-			var sheetName = sheet.SheetName;
-			var key = $"SetCell{sheetName}_{colnum}{rownum}";
-			if (colStyle != null || rowStyle != null)
-			{
-				if (_cellStylesCached.FirstOrDefault(s => s.GroupName == key) == null)
-				{
-					_cellStylesCached.Add(new ExcelStyleCached
-					{
-						GroupName = key,
-						CellStyles = new Dictionary<string, ICellStyle>()
-					});
-				}
-			}
-			SetExcelCell(sheet, key, dataTable, tableIndex, tableColName, cellValue, colnum, rownum, colStyle, rowStyle, cellValueAction, isFormula);
+			SetOneRowExcelCells(sheet, key, new DataTable(), 0, param, startColnum, rownum, rowStyle, isFormula, cellType, rowStyleKey);
 		}
 
 
-		private void SetExcelCell(ISheet sheet, string groupKey, DataTable dataTable, int tableIndex, string tableColName, object cellValue = null, ExcelColumns colnum = 0, int rownum = 1, Action<ICellStyle> colStyle = null, Action<ICellStyle> rowStyle = null, CellValueActionType cellValueAction = null, bool? isFormula = false)
-		{
-			if (rownum < 1) rownum = 1;
-			IRow row = sheet.GetExcelRowOrCreate(rownum);
-			ICell cell = row.CreateCell((int)colnum);
-			var newValue = dataTable.Columns.Contains(tableColName) ? dataTable.Rows?[tableIndex]?[tableColName] : cellValue;
-			SetCellStyle(groupKey, cell, newValue, colStyle, rowStyle, colnum, rownum);
-			if (isFormula.HasValue)
-			{
-				if (isFormula.Value)
-				{
-					string newCellValue = cellValueAction?.Invoke(cell, cellValue, colnum, rownum);
-					cell.SetCellFormula(newCellValue);
-					return;
-				}
-			}
-
-			SetCellValueBasedOnType(cell, newValue, cellValueAction, colnum, rownum);
-		}
-
-
-		public void SetColExcelCells(ISheet sheet, DataTable dataTable, int tableIndex, List<ExcelCellParam> param, ExcelColumns startColnum, int rownum = 1, Action<ICellStyle> rowStyle = null, bool? isFormula = null)
-		{
-			var sheetName = sheet.SheetName;
-			var key = $"SetCol{sheetName}_{startColnum}{rownum}";
-			if (_cellStylesCached.FirstOrDefault(s => s.GroupName == key) == null)
-			{
-				_cellStylesCached.Add(new ExcelStyleCached
-				{
-					GroupName = key,
-					CellStyles = new Dictionary<string, ICellStyle>()
-				});
-			}
-			SetColExcelCells(sheet, key, dataTable, tableIndex, param, startColnum, rownum, rowStyle, isFormula);
-		}
-
-		private void SetColExcelCells(ISheet sheet, string groupKey, DataTable dataTable, int tableIndex, List<ExcelCellParam> param, ExcelColumns startColnum, int rownum = 1, Action<ICellStyle> rowStyle = null, bool? isFormula = null)
+		private void SetOneRowExcelCells(ISheet sheet, string groupKey, DataTable dataTable, int tableIndex,
+			List<ExcelCellParam> param, ExcelColumns startColnum, int rownum = 1, Action<ICellStyle> rowStyle = null,
+			bool? isFormula = null, Type rowCellType = null, string rowStyleKey = null)
 		{
 			for (int colIndex = 0; colIndex < param.Count; colIndex++)
 			{
 				var colnum = colIndex + startColnum;
 				var col = param[colIndex];
 				var isFormulaValue = col.IsFormula.HasValue ? col.IsFormula : isFormula;
-				SetExcelCell(sheet, groupKey, dataTable, tableIndex, col.ColumnName, col.CellValue, colnum, rownum, col.CellStyle, rowStyle, col.CellValueAction, isFormulaValue);
-			}
-		}
-		public void SetColExcelCells<T>(ISheet sheet, List<T> table, int tableIndex, List<ExcelCellParam> param, ExcelColumns startColnum, int rownum = 1, Action<ICellStyle> rowStyle = null, bool? isFormula = null)
-		{
-			var sheetName = sheet.SheetName;
-			var key = $"SetCol{sheetName}_{startColnum}{rownum}";
-			if (_cellStylesCached.FirstOrDefault(s => s.GroupName == key) == null)
-			{
-				_cellStylesCached.Add(new ExcelStyleCached
-				{
-					GroupName = key,
-					CellStyles = new Dictionary<string, ICellStyle>()
-				});
-			}
-			for (int colIndex = 0; colIndex < param.Count; colIndex++)
-			{
-				var colnum = colIndex + startColnum;
-				var col = param[colIndex];
-				var isFormulaValue = col.IsFormula.HasValue ? col.IsFormula : isFormula;
-				SetExcelCell(sheet, key, table, tableIndex, col.ColumnName, colnum, rownum, col.CellValue, col.CellStyle, rowStyle, col.CellValueAction, isFormulaValue);
+				var styleKey = string.IsNullOrWhiteSpace(col.CellStyleKey) ? rowStyleKey : col.CellStyleKey;
+				var cellType = col.CellValueType ?? rowCellType;
+				SetExcelCell(sheet, groupKey, dataTable, tableIndex, col.ColumnName, colnum, rownum, col.CellValue,
+					col.CellStyle, rowStyle, col.CellValueAction, isFormulaValue, cellType, styleKey);
 			}
 		}
 
-		private void SetColExcelCells<T>(ISheet sheet, string groupKey, IEnumerable<T> table, int tableIndex, List<ExcelCellParam> param, ExcelColumns startColnum, int rownum = 1, Action<ICellStyle> rowStyle = null, bool? isFormula = null)
-		{
-			for (int colIndex = 0; colIndex < param.Count; colIndex++)
-			{
-				var colnum = colIndex + startColnum;
-				var col = param[colIndex];
-				var isFormulaValue = col.IsFormula.HasValue ? col.IsFormula : isFormula;
-				SetExcelCell(sheet, groupKey, table, tableIndex, col.ColumnName, colnum, rownum, col.CellValue, col.CellStyle, rowStyle, col.CellValueAction, isFormulaValue);
-			}
-		}
-
-
-		public void SetRowExcelCells(ISheet sheet, DataTable dataTable, List<ExcelCellParam> param, ExcelColumns startColnum, int startRownum = 1, Action<ICellStyle> rowStyle = null, bool? isFormula = null)
+		/// <summary>
+		/// 設定多行Row
+		/// </summary>
+		/// <param name="sheet"></param>
+		/// <param name="dataTable"></param>
+		/// <param name="param"></param>
+		/// <param name="startColnum"></param>
+		/// <param name="startRownum"></param>
+		/// <param name="rowStyle"></param>
+		/// <param name="isFormula"></param>
+		public void SetMultiRowsExcelCells(ISheet sheet, DataTable dataTable, List<ExcelCellParam> param,
+			ExcelColumns startColnum, int startRownum = 1, Action<ICellStyle> rowStyle = null, bool? isFormula = null, string rowStyleKey = null)
 		{
 			if (startRownum < 1) startRownum = 1;
-			var sheetName = sheet.SheetName;
-			var key = $"SetRow_{sheetName}_{startColnum}{startRownum}";
-			if (rowStyle != null || param.Any(p => p.CellStyle != null))
-			{
-				if (_cellStylesCached.FirstOrDefault(s => s.GroupName == key) == null)
-				{
-					_cellStylesCached.Add(new ExcelStyleCached
-					{
-						GroupName = key,
-						CellStyles = new Dictionary<string, ICellStyle>()
-					});
-				}
-			}
+			var key = sheet.SheetName;
 
 			for (int dtIndex = 0; dtIndex < dataTable.Rows.Count; dtIndex++)
 			{
 				var rownum = startRownum + dtIndex;
-				SetColExcelCells(sheet, key, dataTable, dtIndex, param, startColnum, rownum, rowStyle, isFormula);
+				SetOneRowExcelCells(sheet, key, dataTable, dtIndex, param, startColnum, rownum, rowStyle, isFormula, null, rowStyleKey);
 			}
 		}
 
-		public void SetRowExcelCells<T>(ISheet sheet, IEnumerable<T> table, List<ExcelCellParam> param, ExcelColumns startColnum, int startRownum = 1, Action<ICellStyle> rowStyle = null, bool? isFormula = null)
+
+		/// <summary>
+		/// 設定表
+		/// </summary>
+		/// <param name="sheet"></param>
+		/// <param name="dataTable"></param>
+		/// <param name="tableCellParams"></param>
+		/// <param name="startColnum"></param>
+		/// <param name="rowNum"></param>
+		/// <param name="headerStyle"></param>
+		public void SetTableExcelCells(ISheet sheet, DataTable dataTable, List<TableCellParam> tableCellParams, ExcelColumns startColnum, int rowNum = 1, Action<ICellStyle> headerStyle = null)
 		{
-			if (startRownum < 1) startRownum = 1;
-			var sheetName = sheet.SheetName;
-			var key = $"SetRow_{sheetName}_{startColnum}{startRownum}";
-			if (rowStyle != null || param.Any(p => p.CellStyle != null))
+			var headerParam = new List<ExcelCellParam>();
+			var bodyParam = new List<ExcelCellParam>();
+
+			foreach (var p in tableCellParams)
 			{
-				if (_cellStylesCached.FirstOrDefault(s => s.GroupName == key) == null)
+				headerParam.Add(new ExcelCellParam(p.HeaderName, colStyle: p.HeaderStyle, cellValueType: p.HeaderCellValueType));
+				bodyParam.Add(new ExcelCellParam(p.CellValue, p.CellValueAction, p.CellStyle, p.IsFormula, p.CellValueType));
+			}
+			SetOneRowExcelCells(sheet, headerParam, startColnum, rowNum, headerStyle);
+			SetMultiRowsExcelCells(sheet, dataTable, bodyParam, startColnum, rowNum + 1);
+		}
+
+
+		/// <summary>
+		/// GetFormulaCellValue
+		/// </summary>
+		/// <param name="sheet"></param>
+		/// <param name="colNum"></param>
+		/// <param name="rowNum"></param>
+		/// <returns></returns>
+		public string GetFormulaCellValue(ISheet sheet, ExcelColumns colNum, int rowNum = 1)
+		{
+			if (rowNum < 1) rowNum = 1;
+			rowNum = rowNum - 1;
+
+			// 逐行讀取資料
+			for (int rowIndex = 0; rowIndex <= sheet.LastRowNum; rowIndex++)
+			{
+				IRow row = sheet.GetRow(rowIndex);
+				if (row == null) continue;
+
+				for (int colIndex = 0; colIndex < row.LastCellNum; colIndex++)
 				{
-					_cellStylesCached.Add(new ExcelStyleCached
+					ICell cell = row.GetCell(colIndex);
+					if (rowIndex == rowNum && (int)colNum == colIndex)
 					{
-						GroupName = key,
-						CellStyles = new Dictionary<string, ICellStyle>()
-					});
+						IFormulaEvaluator
+							evaluator = this.Workbook.GetCreationHelper().CreateFormulaEvaluator(); // 創建公式計算器
+																									// 使用 DataFormatter 來格式化結果並保留數字格式
+						DataFormatter formatter = new DataFormatter();
+						var cellValue = formatter.FormatCellValue(cell, evaluator);
+						return cellValue;
+					}
 				}
 			}
 
-			for (int tIndex = 0; tIndex < table.Count(); tIndex++)
-			{
-				var rownum = startRownum + tIndex;
-				SetColExcelCells(sheet, key, table, tIndex, param, startColnum, rownum, rowStyle, isFormula);
-			}
+			return null;
 		}
 
+		public NpoiMemoryStream OutputExcelStream()
+		{
+			var ms = new NpoiMemoryStream();
+			ms.AllowClose = false;
+			Workbook.Write(ms);
+			ms.Flush();
+			ms.Seek(0, SeekOrigin.Begin);
+			ms.AllowClose = true;
+			return ms;
+		}
+
+		public void SetColumnWidth(ISheet sheet, ExcelColumns startCol, ExcelColumns endCol, double width)
+		{
+			for (int i = (int)startCol; i < (int)endCol; i++)
+			{
+				sheet.SetColumnWidth(i, width * 256);
+			}
+		}
 
 
 		public void RemovwRowRange(ISheet sheet, int startRow = 1, int endRow = 2)
@@ -457,7 +599,20 @@ namespace NPOIPlus
 			}
 		}
 
+		public void InsertPicture(ISheet sheet, byte[] bytes, ExcelColumns startCol, ExcelColumns endCol, int startRow, int endRow, PictureType pictureType = PictureType.PNG)
+		{
+			int pictureIdx = Workbook.AddPicture(bytes, pictureType);  // 可以根據圖片類型更改
 
+			// 建立繪圖patriarch
+			IDrawing drawing = sheet.CreateDrawingPatriarch();
+
+			// 設定圖片位置和大小 (起始行, 起始列, 結束行, 結束列)
+			IClientAnchor anchor = drawing.CreateAnchor(0, 0, 0, 0, (int)startCol, startRow, (int)endCol, endRow);
+
+			// 插入圖片
+			IPicture picture = drawing.CreatePicture(anchor, pictureIdx);
+
+		}
 	}
 
 	public class NpoiMemoryStream : MemoryStream

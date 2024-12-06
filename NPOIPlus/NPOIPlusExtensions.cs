@@ -1,5 +1,6 @@
 ﻿using NPOI.SS.Formula.Functions;
 using NPOI.SS.UserModel;
+using NPOI.SS.Util;
 using NPOI.XSSF.UserModel;
 using NPOIPlus.Models;
 using System;
@@ -12,14 +13,6 @@ namespace NPOIPlus
 {
 	public static class NPOIPlusExtensions
 	{
-
-		public static IRow GetExcelRowOrCreate(this ISheet sheet, int row = 1)
-		{
-			if (row < 1) row = 1;
-			IRow newRow = sheet.GetRow(row - 1) ?? sheet.CreateRow(row - 1);
-			return newRow;
-		}
-
 		/// <summary>
 		/// Use rgb to set foreground color
 		/// </summary>
@@ -41,7 +34,7 @@ namespace NPOIPlus
 		/// <param name="hexColor"></param>
 		public static void SetCellFillForegroundColor(this ICellStyle style, string hexColor)
 		{
-			byte[] rgbColor = HexToRgb(hexColor);  // 轉換為 RGB 數組
+			byte[] rgbColor = HexToRgb(hexColor); // 轉換為 RGB 數組
 			XSSFColor xssfColor = new XSSFColor(rgbColor);
 
 			// 設定背景色
@@ -73,19 +66,25 @@ namespace NPOIPlus
 			return new byte[] { r, g, b };
 		}
 
-		public static void SetDateFormat(this ICellStyle style, IWorkbook workbook, string format)
+		public static void SetDataFormat(this ICellStyle style, IWorkbook workbook, string format)
 		{
 			IDataFormat dataFormat = workbook.CreateDataFormat();
 			style.DataFormat = dataFormat.GetFormat(format);
 		}
 
-		public static void SetFontInfo(this ICellStyle style, IWorkbook workbook, string fontFamily, double fontHeight)
+		public static void SetFontInfo(this ICellStyle style, IWorkbook workbook, string fontFamily = null, double? fontHeight = null, bool isBold = false, bool isItalic = false, bool isStrikeout = false, IndexedColors color = null)
 		{
 			IFont font = workbook.CreateFont();
-			font.FontName = fontFamily;
-			font.FontHeightInPoints = fontHeight;
+			if (fontFamily != null) font.FontName = fontFamily;
+			if (fontHeight != null) font.FontHeightInPoints = fontHeight.Value;
+			if (color != null) font.Color = color.Index;
+			font.IsBold = isBold;
+			font.IsItalic = isItalic;
+			font.IsStrikeout = isStrikeout;
 			style.SetFont(font);
 		}
+
+
 
 		public static void SetBorderAllStyle(this ICellStyle style, BorderStyle all = BorderStyle.None)
 		{
@@ -105,36 +104,81 @@ namespace NPOIPlus
 			style.BorderTop = top;
 		}
 
-		public static void SetAligment(this ICellStyle style, HorizontalAlignment horizontal = HorizontalAlignment.General)
-		{
-			style.Alignment = horizontal;
-		}
-		public static void SetAligment(this ICellStyle style, VerticalAlignment vertical = VerticalAlignment.None)
-		{
-			style.VerticalAlignment = vertical;
-		}
-		public static void SetAligment(this ICellStyle style, VerticalAlignment vertical = VerticalAlignment.None, HorizontalAlignment horizontal = HorizontalAlignment.General)
+		public static void SetAligment(this ICellStyle style,
+			HorizontalAlignment horizontal = HorizontalAlignment.General,
+			VerticalAlignment vertical = VerticalAlignment.Center)
 		{
 			style.Alignment = horizontal;
 			style.VerticalAlignment = vertical;
 		}
 
-		public static void SetColumnWidthRange(this ISheet sheet, ExcelColumns start, ExcelColumns end, int size)
+		public static void SetAligment(this ICellStyle style, VerticalAlignment vertical = VerticalAlignment.Center,
+			HorizontalAlignment horizontal = HorizontalAlignment.General)
 		{
-			for (int i = (int)start; i <= (int)end; i++)
+			style.Alignment = horizontal;
+			style.VerticalAlignment = vertical;
+		}
+
+		public static void SetExcelCellMerge(this ISheet sheet, ExcelColumns firstCol, ExcelColumns lastCol,
+			int firstRow = 1, int lastRow = 1)
+		{
+			if (firstRow < 1) firstRow = 1;
+			if (lastRow < 1) lastRow = 1;
+
+			CellRangeAddress region = new CellRangeAddress(firstRow - 1, lastRow - 1, (int)firstCol, (int)lastCol);
+			sheet.AddMergedRegion(region);
+		}
+
+		public static void SetExcelCellMerge(this ISheet sheet, ExcelColumns firstCol, ExcelColumns lastCol, int row)
+		{
+			if (row < 1) row = 1;
+
+			CellRangeAddress region = new CellRangeAddress(row - 1, row - 1, (int)firstCol, (int)lastCol);
+			sheet.AddMergedRegion(region);
+		}
+
+		public static void SetColumnWidth(this ISheet sheet, ExcelColumns startCol, ExcelColumns endCol, double width)
+		{
+			for (int i = (int)startCol; i <= (int)endCol; i++)
 			{
-				sheet.SetColumnWidth(i, size * 256);
+				sheet.SetColumnWidth(i, width * 256);
 			}
 		}
 
-		public static void SetColumnWidth(this ISheet sheet, ExcelColumns col, int size)
+		public static void SetColumnWidth(this ISheet sheet, ExcelColumns col, double width)
 		{
-			sheet.SetColumnWidth((int)col, size * 256);
+			sheet.SetColumnWidth((int)col, width * 256);
 		}
 
-		public static void CreateFreezePane(this ISheet sheet, ExcelColumns col, int row)
+		/// <summary>
+		/// 取得特定欄位的值
+		/// </summary>
+		/// <param name="sheet"></param>
+		/// <param name="colNum"></param>
+		/// <param name="rowNum"></param>
+		/// <returns></returns>
+		public static ICell GetCellValue(this ISheet sheet, ExcelColumns colNum, int rowNum = 1)
 		{
-			sheet.CreateFreezePane((int)col + 1, row);
+			if (rowNum < 1) rowNum = 1;
+			rowNum = rowNum - 1;
+
+			// 逐行讀取資料
+			for (int rowIndex = 0; rowIndex <= sheet.LastRowNum; rowIndex++)
+			{
+				IRow row = sheet.GetRow(rowIndex);
+				if (row == null) continue;
+
+				for (int colIndex = 0; colIndex < row.LastCellNum; colIndex++)
+				{
+					ICell cell = row.GetCell(colIndex);
+					if (rowIndex == rowNum && (int)colNum == colIndex)
+					{
+						return cell;
+					}
+				}
+			}
+
+			return null;
 		}
 	}
 }
