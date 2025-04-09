@@ -30,10 +30,10 @@ namespace NPOIPlusConsoleExample
 						style.SetFontInfo(workbook.Workbook, "Calibri", 10);
 					};
 
-					workbook.SetDefaultDateTimeCellStyle = (style) =>
-					{
-						style.SetDateFormat(workbook.Workbook, "yyyy-MM-dd");
-					};
+					//workbook.SetDefaultDateTimeCellStyle = (style) =>
+					//{
+					//	style.SetDateFormat(workbook.Workbook, "yyyy-MM-dd");
+					//};
 
 					ISheet sheet1 = workbook.Workbook.GetSheet("Sheet1");
 
@@ -63,90 +63,90 @@ namespace NPOIPlusConsoleExample
 					workbook.SetExcelCell(sheet1, "Test", ExcelColumns.H, 12);
 					workbook.SetExcelCell(sheet1, "Test2", ExcelColumns.G, 12);
 
-					workbook.SetColExcelCells(sheet1, dataTable, 1, new List<ExcelCellParam>
-					{
-						new("ID",null,(style)=>{
-							//style.Alignment = HorizontalAlignment.Left;
-							style.SetAligment(HorizontalAlignment.Left);
-						}),
-						new("Name"),
-						new("DateOfBirth"),
-					}, ExcelColumns.A, 2, (style) =>
-					{
-						style.BorderTop = BorderStyle.Dashed;
-					});
+					//workbook.SetColExcelCells(sheet1, dataTable, 1, new List<ExcelCellParam>
+					//{
+					//	new("ID",null,(style)=>{
+					//		//style.Alignment = HorizontalAlignment.Left;
+					//		style.SetAligment(HorizontalAlignment.Left);
+					//	}),
+					//	new("Name"),
+					//	new("DateOfBirth"),
+					//}, ExcelColumns.A, 2, (style) =>
+					//{
+					//	style.BorderTop = BorderStyle.Dashed;
+					//});
 
-					List<ExampleData> exampleData = new List<ExampleData>()
-					{
-						new(1, "Alice", new DateTime(1990, 1, 1)),
-						new(2, "Bob", new DateTime(1985, 5, 23)),
-						new(3, "Charlie", new DateTime(2000, 10, 15)),
-					};
+					//List<ExampleData> exampleData = new List<ExampleData>()
+					//{
+					//	new(1, "Alice", new DateTime(1990, 1, 1)),
+					//	new(2, "Bob", new DateTime(1985, 5, 23)),
+					//	new(3, "Charlie", new DateTime(2000, 10, 15)),
+					//};
 
-					workbook.SetRowExcelCells(sheet1, exampleData, new List<ExcelCellParam>
-					{
-						new("ID" ,
-						null,(style)=>{
-							style.SetAligment(HorizontalAlignment.Center);
-							//style.BorderBottom = BorderStyle.Thick;
-							style.SetBorderStyle(bottom:BorderStyle.Thick);
-						}
-						),
-						//new("ID"),
-						new("Name",
-						null,(style)=>{
-							style.Alignment = HorizontalAlignment.Left;
-							// 設定單元格背景色（RGB 顏色）
-							style.FillPattern = FillPattern.SolidForeground;
-							style.SetCellFillForegroundColor(IndexedColors.Grey25Percent);
-							//style.SetCellFillForegroundColor("#FF5733");
-						}
-						),
-						new("DateOfBirth",
-						null,(style)=>{
-							style.Alignment = HorizontalAlignment.Right;
-						}
-						),
-						new("Test",(cell,value,row, col) =>
-						{
-							return $"{col}{row}:{col}{row}";
-						})
-					}, ExcelColumns.E, 1, (style) =>
-					{
-						style.BorderBottom = BorderStyle.Double;
-						style.FillPattern = FillPattern.SolidForeground;
-						style.SetCellFillForegroundColor(IndexedColors.Aqua);
-					});
+					//workbook.SetRowExcelCells(sheet1, exampleData, new List<ExcelCellParam>
+					//{
+					//	new("ID" ,
+					//	null,(style)=>{
+					//		style.SetAligment(HorizontalAlignment.Center);
+					//		//style.BorderBottom = BorderStyle.Thick;
+					//		style.SetBorderStyle(bottom:BorderStyle.Thick);
+					//	}
+					//	),
+					//	//new("ID"),
+					//	new("Name",
+					//	null,(style)=>{
+					//		style.Alignment = HorizontalAlignment.Left;
+					//		// 設定單元格背景色（RGB 顏色）
+					//		style.FillPattern = FillPattern.SolidForeground;
+					//		style.SetCellFillForegroundColor(IndexedColors.Grey25Percent);
+					//		//style.SetCellFillForegroundColor("#FF5733");
+					//	}
+					//	),
+					//	new("DateOfBirth",
+					//	null,(style)=>{
+					//		style.Alignment = HorizontalAlignment.Right;
+					//	}
+					//	),
+					//	new("Test",(cell,value,row, col) =>
+					//	{
+					//		return $"{col}{row}:{col}{row}";
+					//	})
+					//}, ExcelColumns.E, 1, (style) =>
+					//{
+					//	style.BorderBottom = BorderStyle.Double;
+					//	style.FillPattern = FillPattern.SolidForeground;
+					//	style.SetCellFillForegroundColor(IndexedColors.Aqua);
+					//});
 
-					workbook.SetRowExcelCells(sheet1, dataTable, new List<ExcelCellParam>
-					{
-						new("ID"),
-						new("Name" ),
-						new("DateOfBirth"),
-						new("Test")
-					}, ExcelColumns.L, 1, (style) =>
-					{
-						style.BorderBottom = BorderStyle.Double;
-						style.FillPattern = FillPattern.SolidForeground;
-						style.SetCellFillForegroundColor(IndexedColors.Grey25Percent);
-					});
+					//workbook.SetRowExcelCells(sheet1, dataTable, new List<ExcelCellParam>
+					//{
+					//	new("ID"),
+					//	new("Name" ),
+					//	new("DateOfBirth"),
+					//	new("Test")
+					//}, ExcelColumns.L, 1, (style) =>
+					//{
+					//	style.BorderBottom = BorderStyle.Double;
+					//	style.FillPattern = FillPattern.SolidForeground;
+					//	style.SetCellFillForegroundColor(IndexedColors.Grey25Percent);
+					//});
 
-					sheet1.SetColumnWidthRange(ExcelColumns.A, ExcelColumns.H, 20);
-					sheet1.SetColumnWidth(ExcelColumns.A, 10);
+					//sheet1.SetColumnWidthRange(ExcelColumns.A, ExcelColumns.H, 20);
+					//sheet1.SetColumnWidth(ExcelColumns.A, 10);
 
-					sheet1.CreateFreezePane(ExcelColumns.A, 0);
+					//sheet1.CreateFreezePane(ExcelColumns.A, 0);
 
-					workbook.SetExcelCell(sheet1, "test", ExcelColumns.F, 10);
-
-
-					var test = workbook._cellStylesCached;
-					var test2 = workbook._globalCellStyleCached;
+					//workbook.SetExcelCell(sheet1, "test", ExcelColumns.F, 10);
 
 
-					using (FileStream outFile = new FileStream(filePath, FileMode.Create, FileAccess.Write))
-					{
-						workbook.Workbook.Write(outFile);
-					}
+					//var test = workbook._cellStylesCached;
+					//var test2 = workbook._globalCellStyleCached;
+
+
+					//using (FileStream outFile = new FileStream(filePath, FileMode.Create, FileAccess.Write))
+					//{
+					//	workbook.Workbook.Write(outFile);
+					//}
 
 				}
 			}

@@ -6,6 +6,8 @@ using NPOIPlus.Models;
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Drawing;
+using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
@@ -40,6 +42,37 @@ namespace NPOIPlus
 		public void SetDlpDefaultExcelStyle()
 		{
 			IWorkbook workbook = this.Workbook;
+
+			SetGlobalCellStyle = (style) =>
+			{
+				style.SetBorderAllStyle(BorderStyle.Thin);
+			};
+
+			SetDefaultNumberCellStyle = (style) =>
+			{
+				style.SetDataFormat(workbook, "#,##0");
+				style.SetAligment(HorizontalAlignment.Right);
+			};
+			SetDefaultStringCellStyle = (style) =>
+			{
+				style.SetDataFormat(workbook, "#,##0");
+				style.SetAligment(HorizontalAlignment.Left);
+
+			};
+			SetDefaultDateTimeCellStyle = (style) =>
+			{
+				style.SetDataFormat(workbook, "yyyy/MM/DD");
+				style.SetAligment(HorizontalAlignment.Center);
+			};
+		}
+
+		/// <summary>
+		/// 廠區Excel通用格式
+		/// </summary>
+		public void SetDlpDefaultExcelStyleNoBorder()
+		{
+			IWorkbook workbook = this.Workbook;
+
 			SetDefaultNumberCellStyle = (style) =>
 			{
 				style.SetDataFormat(workbook, "#,##0");
@@ -59,11 +92,46 @@ namespace NPOIPlus
 		}
 
 		// 樣式快取
-		private Dictionary<string, ICellStyle> _cellStylesCached = new();
+		private Dictionary<string, ICellStyle> _cellStylesCached = new Dictionary<string, ICellStyle>();
 
-		public void AddCellStyles(string key, ICellStyle style)
+		public void SetupGlobalCachedCellStyles(ISheet sheet, List<StyleCachedParam> styles)
 		{
-			_cellStylesCached.Add(key, style);
+			foreach (var item in styles)
+			{
+				AddCellStyles(sheet, item.Key, item.StyleAction);
+			}
+		}
+
+		public string AddCellStyles(ISheet sheet, string key, Action<ICellStyle> style)
+		{
+			// string cachedKey = SetGlobalStyleKeyBasedOnType("", $"{sheet.SheetName}_{key}", cellType);
+			string cachedKey = $"{sheet.SheetName}_{key}";
+			if (!_cellStylesCached.ContainsKey(cachedKey))
+			{
+				ICellStyle newCellStyle = Workbook.CreateCellStyle();
+				style(newCellStyle);
+				_cellStylesCached.Add(cachedKey, newCellStyle);
+			}
+			return key;
+		}
+
+		/// <summary>
+		/// 複製特定欄位的Style
+		/// </summary>
+		/// <param name="sheet"></param>
+		/// <param name="col"></param>
+		/// <param name="rowIndex"></param>
+		/// <param name="key"></param>
+		/// <param name="cellType"></param>
+		public string CopyStyleFromCell(ISheet sheet, ExcelColumns col, int rowIndex)
+		{
+			string key = $"{col}{rowIndex}";
+			ICell cell = sheet.GetExcelCell(col, rowIndex);
+			AddCellStyles(sheet, key, (style) =>
+			{
+				style.CloneStyleFrom(cell.CellStyle);
+			});
+			return key;
 		}
 
 		public List<string> GetCurrentCellStylesCached()
@@ -118,6 +186,22 @@ namespace NPOIPlus
 			}
 		}
 
+		/// <summary>
+		/// 設定欄位A~N自動寬度
+		/// </summary>
+		/// <param name="sheet"></param>
+		/// <param name="startCol"></param>
+		/// <param name="endCol"></param>
+		public void SetRangeAutoSizeColumns(ISheet sheet, ExcelColumns startCol, ExcelColumns endCol)
+		{
+			int startColIndex = (int)startCol;
+			int endColIndex = (int)endCol;
+			for (int j = startColIndex; j <= endColIndex; j++)
+			{
+				sheet.AutoSizeColumn(j);
+			}
+		}
+
 
 		/// <summary>
 		///  設定範圍樣式(後蓋前)
@@ -160,6 +244,35 @@ namespace NPOIPlus
 			SetRangeCellStyle(sheet, startCol, endCol, row, row, style, overrideStyle);
 		}
 
+
+		/// <summary>
+		/// 
+		/// </summary>
+		/// <param name="sheet"></param>
+		/// <param name="startCol"></param>
+		/// <param name="endCol"></param>
+		/// <param name="startRow"></param>
+		/// <param name="endRow"></param>
+		/// <param name="cellType"></param>
+		/// <param name="cellStyleKey"></param>
+		public void SetRangeCellStyle(ISheet sheet, ExcelColumns startCol, ExcelColumns endCol, int startRow, int endRow, string cellStyleKey, bool mergeCell = false, bool overrideStyle = false)
+		{
+			if (mergeCell)
+			{
+				sheet.SetExcelCellMerge(startCol, endCol, startRow, endRow);
+			}
+			// string cachedKey = SetGlobalStyleKeyBasedOnType("", $"{sheet.SheetName}_{cellStyleKey}", cellType);
+			string cachedKey = $"{sheet.SheetName}_{cellStyleKey}";
+			if (!_cellStylesCached.ContainsKey(cachedKey)) throw new Exception($"{cachedKey}樣式不存在");
+			SetRangeCellStyle(sheet, startCol, endCol, startRow, endRow, null, overrideStyle, cachedKey);
+		}
+
+		public void SetRangeCellStyle(ISheet sheet, ExcelColumns startCol, ExcelColumns endCol, int row, string cellStyleKey, bool mergeCell = false, bool overrideStyle = false)
+		{
+			// SetRangeCellStyle(sheet, startCol, endCol, row, row, cellType, cellStyleKey, mergeCell);
+			SetRangeCellStyle(sheet, startCol, endCol, row, row, cellStyleKey, mergeCell, overrideStyle);
+		}
+
 		/// <summary>
 		///  設定範圍樣式(後蓋前)
 		/// </summary>
@@ -170,13 +283,17 @@ namespace NPOIPlus
 		/// <param name="endRow"></param>
 		/// <param name="style"></param>
 		/// <param name="overrideStyle">是否複寫原本的樣式</param>
-		public void SetRangeCellStyle(ISheet sheet, ExcelColumns startCol, ExcelColumns endCol, int startRow, int endRow, Action<ICellStyle> style, bool overrideStyle = false)
+		public void SetRangeCellStyle(ISheet sheet, ExcelColumns startCol, ExcelColumns endCol, int startRow, int endRow, Action<ICellStyle> style, bool overrideStyle = false, string cellStyleKey = "")
 		{
 			int startColIndex = (int)startCol;
 			int endColIndex = (int)endCol;
 			startRow = startRow < 1 ? 1 : startRow;
 			endRow = endRow < 1 ? 1 : endRow;
 			string styleCachedKey = $"SetRangeCellStyle_{startCol}_{endCol}_{startRow}_{endRow}";
+			if (!string.IsNullOrWhiteSpace(cellStyleKey))
+			{
+				styleCachedKey = cellStyleKey;
+			}
 
 			for (int i = startRow; i <= endRow; i++)
 			{
@@ -188,7 +305,7 @@ namespace NPOIPlus
 					{
 						ICell cell = row.GetCell(j);
 
-						if (cell == null || overrideStyle)
+						if (cell == null || overrideStyle || cell?.CellType == CellType.Blank)
 						{
 							cell = cell ?? row.CreateCell(j);
 							var styleCachedDict = _cellStylesCached;
@@ -203,14 +320,6 @@ namespace NPOIPlus
 								cell.CellStyle = newCellStyle;
 								styleCachedDict.Add(styleCachedKey, newCellStyle);
 							}
-						}
-						else
-						{
-							ICellStyle newCellStyle = Workbook.CreateCellStyle();
-							// 複製原本欄位的style
-							newCellStyle.CloneStyleFrom(cell.CellStyle);
-							style(newCellStyle);
-							cell.CellStyle = newCellStyle;
 						}
 
 					}
@@ -317,7 +426,8 @@ namespace NPOIPlus
 			// 自定義的key值
 			if (!string.IsNullOrWhiteSpace(cellStyleKey))
 			{
-				key = SetGlobalStyleKeyBasedOnType(cellValue, $"{cachedKey}_{cellStyleKey}", cellType);
+				// key = SetGlobalStyleKeyBasedOnType(cellValue, $"{cachedKey}_{cellStyleKey}", cellType);
+				key = $"{cachedKey}_{cellStyleKey}";
 			}
 			// 設定整行的欄位 例如 A行
 			else if (colStyle != null)
@@ -437,6 +547,8 @@ namespace NPOIPlus
 		/// <param name="rownum"></param>
 		/// <param name="rowStyle"></param>
 		/// <param name="isFormula"></param>
+		/// <param name="cellType"></param>
+		/// <param name="rowStyleKey"></param>
 		public void SetOneRowExcelCells(ISheet sheet, DataTable dataTable, int tableIndex, List<ExcelCellParam> param,
 			ExcelColumns startColnum, int rownum = 1, Action<ICellStyle> rowStyle = null, bool? isFormula = null, Type cellType = null, string rowStyleKey = null)
 		{
@@ -490,7 +602,7 @@ namespace NPOIPlus
 		/// <param name="rowStyle"></param>
 		/// <param name="isFormula"></param>
 		public void SetMultiRowsExcelCells(ISheet sheet, DataTable dataTable, List<ExcelCellParam> param,
-			ExcelColumns startColnum, int startRownum = 1, Action<ICellStyle> rowStyle = null, bool? isFormula = null, string rowStyleKey = null)
+			ExcelColumns startColnum, int startRownum = 1, Action<ICellStyle> rowStyle = null, bool? isFormula = null, Type rowCellType = null, string rowStyleKey = null)
 		{
 			if (startRownum < 1) startRownum = 1;
 			var key = sheet.SheetName;
@@ -498,7 +610,7 @@ namespace NPOIPlus
 			for (int dtIndex = 0; dtIndex < dataTable.Rows.Count; dtIndex++)
 			{
 				var rownum = startRownum + dtIndex;
-				SetOneRowExcelCells(sheet, key, dataTable, dtIndex, param, startColnum, rownum, rowStyle, isFormula, null, rowStyleKey);
+				SetOneRowExcelCells(sheet, key, dataTable, dtIndex, param, startColnum, rownum, rowStyle, isFormula, rowCellType, rowStyleKey);
 			}
 		}
 
@@ -512,18 +624,18 @@ namespace NPOIPlus
 		/// <param name="startColnum"></param>
 		/// <param name="rowNum"></param>
 		/// <param name="headerStyle"></param>
-		public void SetTableExcelCells(ISheet sheet, DataTable dataTable, List<TableCellParam> tableCellParams, ExcelColumns startColnum, int rowNum = 1, Action<ICellStyle> headerStyle = null)
+		public void SetTableExcelCells(ISheet sheet, DataTable dataTable, List<TableCellParam> tableCellParams, ExcelColumns startColnum, int rowNum = 1, Action<ICellStyle> headerStyle = null, string headerRowStyleKey = null, Action<ICellStyle> bodyRowStyle = null, string bodyRowStyleKey = null)
 		{
 			var headerParam = new List<ExcelCellParam>();
 			var bodyParam = new List<ExcelCellParam>();
-
+			sheet.CreateFreezePane((int)startColnum, rowNum);
 			foreach (var p in tableCellParams)
 			{
 				headerParam.Add(new ExcelCellParam(p.HeaderName, colStyle: p.HeaderStyle, cellValueType: p.HeaderCellValueType));
 				bodyParam.Add(new ExcelCellParam(p.CellValue, p.CellValueAction, p.CellStyle, p.IsFormula, p.CellValueType));
 			}
-			SetOneRowExcelCells(sheet, headerParam, startColnum, rowNum, headerStyle);
-			SetMultiRowsExcelCells(sheet, dataTable, bodyParam, startColnum, rowNum + 1);
+			SetOneRowExcelCells(sheet, headerParam, startColnum, rowNum, headerStyle, rowStyleKey: headerRowStyleKey);
+			SetMultiRowsExcelCells(sheet, dataTable, bodyParam, startColnum, rowNum + 1, bodyRowStyle, null, null, bodyRowStyleKey);
 		}
 
 
@@ -576,7 +688,7 @@ namespace NPOIPlus
 
 		public void SetColumnWidth(ISheet sheet, ExcelColumns startCol, ExcelColumns endCol, double width)
 		{
-			for (int i = (int)startCol; i < (int)endCol; i++)
+			for (int i = (int)startCol; i <= (int)endCol; i++)
 			{
 				sheet.SetColumnWidth(i, width * 256);
 			}
@@ -599,9 +711,24 @@ namespace NPOIPlus
 			}
 		}
 
-		public void InsertPicture(ISheet sheet, byte[] bytes, ExcelColumns startCol, ExcelColumns endCol, int startRow, int endRow, PictureType pictureType = PictureType.PNG)
+		/// <summary>
+		/// 插入圖片到指定位置
+		/// </summary>
+		/// <param name="sheet"></param>
+		/// <param name="bytes"></param>
+		/// <param name="startCol"></param>
+		/// <param name="endCol"></param>
+		/// <param name="startRow"></param>
+		/// <param name="endRow"></param>
+		public void InsertPicture(ISheet sheet, byte[] bytes, ExcelColumns startCol, ExcelColumns endCol, int startRow, int endRow)
 		{
-			int pictureIdx = Workbook.AddPicture(bytes, pictureType);  // 可以根據圖片類型更改
+			if (startRow < 1) startRow = 1;
+			if (endRow < 2) endRow = 2;
+			startRow = startRow - 1;
+			endRow = endRow - 1;
+			var picType = GetPictureType(bytes);
+
+			int pictureIdx = Workbook.AddPicture(bytes, picType);  // 可以根據圖片類型更改
 
 			// 建立繪圖patriarch
 			IDrawing drawing = sheet.CreateDrawingPatriarch();
@@ -612,6 +739,55 @@ namespace NPOIPlus
 			// 插入圖片
 			IPicture picture = drawing.CreatePicture(anchor, pictureIdx);
 
+		}
+
+		/// <summary>
+		/// 根據圖片內容判斷格式
+		/// </summary>
+		private PictureType GetPictureType(byte[] imageData)
+		{
+			using (MemoryStream ms = new MemoryStream(imageData))
+			using (Image image = System.Drawing.Image.FromStream(ms))
+			{
+				if (image.RawFormat.Equals(ImageFormat.Jpeg))
+					return PictureType.JPEG;
+				else if (image.RawFormat.Equals(ImageFormat.Png))
+					return PictureType.PNG;
+				else if (image.RawFormat.Equals(ImageFormat.Gif))
+					return PictureType.GIF;
+				else if (image.RawFormat.Equals(ImageFormat.Bmp))
+					return PictureType.BMP;
+				else
+					return PictureType.Unknown;
+			}
+		}
+
+		/// <summary>
+		/// Excel插入圖片到特定一格欄位
+		/// </summary>
+		/// <param name="wb">workbook</param>
+		/// <param name="sheet">sheet</param>
+		/// <param name="img">圖片</param>
+		/// <param name="imgWidth">根據圖片調整的欄位寬度</param>
+		/// <param name="col">插入行</param>
+		/// <param name="row">插入列</param>
+		/// <returns></returns>
+		public IPicture SetPictureToExcellCell(ISheet sheet, byte[] img, int imgWidth, ExcelColumns col, int row = 1, AnchorType anchorType = AnchorType.DontMoveAndResize)
+		{
+			if (row <= 0) row = 1;
+			// **設定單元格大小**
+			sheet.SetColumnWidth(col, imgWidth / 7); // 欄寬
+			var picType = GetPictureType(img);
+			// 插入圖片
+			int pictureIdx = Workbook.AddPicture(img, picType);
+			IDrawing drawing = sheet.CreateDrawingPatriarch();
+			ICreationHelper helper = Workbook.GetCreationHelper();
+			IClientAnchor anchor = helper.CreateClientAnchor();
+			anchor.Col1 = (int)col; // 開始的欄
+			anchor.Row1 = row - 1; // 開始的列
+			anchor.AnchorType = anchorType;
+			IPicture picture = drawing.CreatePicture(anchor, pictureIdx);
+			return picture;
 		}
 	}
 

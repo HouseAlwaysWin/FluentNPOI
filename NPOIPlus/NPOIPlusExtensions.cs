@@ -13,6 +13,13 @@ namespace NPOIPlus
 {
 	public static class NPOIPlusExtensions
 	{
+		public static ICell GetExcelCell(this ISheet sheet, ExcelColumns colIndex, int rowIndex)
+		{
+			IRow row = sheet.GetExcellRow(rowIndex);
+			ICell cell = row.GetCell((int)colIndex);
+			return cell;
+		}
+
 		/// <summary>
 		/// Use rgb to set foreground color
 		/// </summary>
@@ -137,6 +144,15 @@ namespace NPOIPlus
 			sheet.AddMergedRegion(region);
 		}
 
+		public static void SetExcelCellMerge(this ISheet sheet, ExcelColumns col, int startRow, int endRow)
+		{
+			if (startRow < 1) startRow = 1;
+			if (endRow < 1) endRow = 1;
+
+			CellRangeAddress region = new CellRangeAddress(startRow - 1, endRow - 1, (int)col, (int)col);
+			sheet.AddMergedRegion(region);
+		}
+
 		public static void SetColumnWidth(this ISheet sheet, ExcelColumns startCol, ExcelColumns endCol, double width)
 		{
 			for (int i = (int)startCol; i <= (int)endCol; i++)
@@ -179,6 +195,14 @@ namespace NPOIPlus
 			}
 
 			return null;
+		}
+
+		public static IRow GetExcellRow(this ISheet sheet, int rowNum = 1)
+		{
+			if (rowNum < 1) rowNum = 1;
+			rowNum = rowNum - 1;
+			IRow row = sheet.GetRow(rowNum) ?? sheet.CreateRow(rowNum);
+			return row;
 		}
 	}
 }
