@@ -211,9 +211,9 @@ namespace NPOIPlus
 		/// <param name="row"></param>
 		/// <param name="style"></param>
 		/// <param name="overrideStyle">是否複寫原本的樣式</param>
-		public void SetRangeCellStyle(ISheet sheet, ExcelColumns col, int row, Action<ICellStyle> style, bool overrideStyle = false)
+		public void SetRangeCellStyle(ISheet sheet, ExcelColumns col, int row, Action<ICellStyle> style, bool overrideStyle = false, object defaultValue = null)
 		{
-			SetRangeCellStyle(sheet, col, col, row, row, style, overrideStyle);
+			SetRangeCellStyle(sheet, col, col, row, row, style, overrideStyle, defaultValue: defaultValue);
 		}
 
 		/// <summary>
@@ -225,9 +225,9 @@ namespace NPOIPlus
 		/// <param name="endRow"></param>
 		/// <param name="style"></param>
 		/// <param name="overrideStyle">是否複寫原本的樣式</param>
-		public void SetRangeCellStyle(ISheet sheet, ExcelColumns col, int startRow, int endRow, Action<ICellStyle> style, bool overrideStyle = false)
+		public void SetRangeCellStyle(ISheet sheet, ExcelColumns col, int startRow, int endRow, Action<ICellStyle> style, bool overrideStyle = false, object defaultValue = null)
 		{
-			SetRangeCellStyle(sheet, col, col, startRow, endRow, style, overrideStyle);
+			SetRangeCellStyle(sheet, col, col, startRow, endRow, style, overrideStyle, defaultValue: defaultValue);
 		}
 
 		/// <summary>
@@ -239,9 +239,9 @@ namespace NPOIPlus
 		/// <param name="row"></param>
 		/// <param name="style"></param>
 		/// <param name="overrideStyle">是否複寫原本的樣式</param>
-		public void SetRangeCellStyle(ISheet sheet, ExcelColumns startCol, ExcelColumns endCol, int row, Action<ICellStyle> style, bool overrideStyle = false)
+		public void SetRangeCellStyle(ISheet sheet, ExcelColumns startCol, ExcelColumns endCol, int row, Action<ICellStyle> style, bool overrideStyle = false, object defaultValue = null)
 		{
-			SetRangeCellStyle(sheet, startCol, endCol, row, row, style, overrideStyle);
+			SetRangeCellStyle(sheet, startCol, endCol, row, row, style, overrideStyle, defaultValue: defaultValue);
 		}
 
 
@@ -255,7 +255,7 @@ namespace NPOIPlus
 		/// <param name="endRow"></param>
 		/// <param name="cellType"></param>
 		/// <param name="cellStyleKey"></param>
-		public void SetRangeCellStyle(ISheet sheet, ExcelColumns startCol, ExcelColumns endCol, int startRow, int endRow, string cellStyleKey, bool mergeCell = false, bool overrideStyle = false)
+		public void SetRangeCellStyle(ISheet sheet, ExcelColumns startCol, ExcelColumns endCol, int startRow, int endRow, string cellStyleKey, bool mergeCell = false, bool overrideStyle = false, object defaultValue = null)
 		{
 			if (mergeCell)
 			{
@@ -264,13 +264,13 @@ namespace NPOIPlus
 			// string cachedKey = SetGlobalStyleKeyBasedOnType("", $"{sheet.SheetName}_{cellStyleKey}", cellType);
 			string cachedKey = $"{sheet.SheetName}_{cellStyleKey}";
 			if (!_cellStylesCached.ContainsKey(cachedKey)) throw new Exception($"{cachedKey}樣式不存在");
-			SetRangeCellStyle(sheet, startCol, endCol, startRow, endRow, null, overrideStyle, cachedKey);
+			SetRangeCellStyle(sheet, startCol, endCol, startRow, endRow, null, overrideStyle, cachedKey, defaultValue: defaultValue);
 		}
 
-		public void SetRangeCellStyle(ISheet sheet, ExcelColumns startCol, ExcelColumns endCol, int row, string cellStyleKey, bool mergeCell = false, bool overrideStyle = false)
+		public void SetRangeCellStyle(ISheet sheet, ExcelColumns startCol, ExcelColumns endCol, int row, string cellStyleKey, bool mergeCell = false, bool overrideStyle = false, object defaultValue = null)
 		{
 			// SetRangeCellStyle(sheet, startCol, endCol, row, row, cellType, cellStyleKey, mergeCell);
-			SetRangeCellStyle(sheet, startCol, endCol, row, row, cellStyleKey, mergeCell, overrideStyle);
+			SetRangeCellStyle(sheet, startCol, endCol, row, row, cellStyleKey, mergeCell, overrideStyle, defaultValue: defaultValue);
 		}
 
 		/// <summary>
@@ -283,7 +283,7 @@ namespace NPOIPlus
 		/// <param name="endRow"></param>
 		/// <param name="style"></param>
 		/// <param name="overrideStyle">是否複寫原本的樣式</param>
-		public void SetRangeCellStyle(ISheet sheet, ExcelColumns startCol, ExcelColumns endCol, int startRow, int endRow, Action<ICellStyle> style, bool overrideStyle = false, string cellStyleKey = "")
+		public void SetRangeCellStyle(ISheet sheet, ExcelColumns startCol, ExcelColumns endCol, int startRow, int endRow, Action<ICellStyle> style, bool overrideStyle = false, string cellStyleKey = "", object defaultValue = null)
 		{
 			int startColIndex = (int)startCol;
 			int endColIndex = (int)endCol;
@@ -307,7 +307,12 @@ namespace NPOIPlus
 
 						if (cell == null || overrideStyle || cell?.CellType == CellType.Blank)
 						{
+
 							cell = cell ?? row.CreateCell(j);
+							if (defaultValue != null)
+							{
+								SetCellValueBasedOnType(cell, defaultValue);
+							}
 							var styleCachedDict = _cellStylesCached;
 							if (styleCachedDict.ContainsKey(styleCachedKey))
 							{
@@ -624,7 +629,7 @@ namespace NPOIPlus
 		/// <param name="startColnum"></param>
 		/// <param name="rowNum"></param>
 		/// <param name="headerStyle"></param>
-		public void SetTableExcelCells(ISheet sheet, DataTable dataTable, List<TableCellParam> tableCellParams, ExcelColumns startColnum, int rowNum = 1, Action<ICellStyle> headerStyle = null, string headerRowStyleKey = null, Action<ICellStyle> bodyRowStyle = null, string bodyRowStyleKey = null)
+		public void SetTableExcelCells(ISheet sheet, DataTable dataTable, List<TableCellParam> tableCellParams, ExcelColumns startColnum, int rowNum = 1, Action<ICellStyle> headerStyle = null, string headerRowStyleKey = null)
 		{
 			var headerParam = new List<ExcelCellParam>();
 			var bodyParam = new List<ExcelCellParam>();
@@ -635,7 +640,7 @@ namespace NPOIPlus
 				bodyParam.Add(new ExcelCellParam(p.CellValue, p.CellValueAction, p.CellStyle, p.IsFormula, p.CellValueType));
 			}
 			SetOneRowExcelCells(sheet, headerParam, startColnum, rowNum, headerStyle, rowStyleKey: headerRowStyleKey);
-			SetMultiRowsExcelCells(sheet, dataTable, bodyParam, startColnum, rowNum + 1, bodyRowStyle, null, null, bodyRowStyleKey);
+			SetMultiRowsExcelCells(sheet, dataTable, bodyParam, startColnum, rowNum + 1);
 		}
 
 
@@ -680,6 +685,18 @@ namespace NPOIPlus
 			var ms = new NpoiMemoryStream();
 			ms.AllowClose = false;
 			Workbook.Write(ms);
+			ms.Flush();
+			ms.Seek(0, SeekOrigin.Begin);
+			ms.AllowClose = true;
+			return ms;
+		}
+
+		public NpoiMemoryStream OutputExcelStream(Action<NpoiMemoryStream> modifyStream)
+		{
+			var ms = new NpoiMemoryStream();
+			ms.AllowClose = false;
+			Workbook.Write(ms);
+			modifyStream(ms);
 			ms.Flush();
 			ms.Seek(0, SeekOrigin.Begin);
 			ms.AllowClose = true;
@@ -747,7 +764,7 @@ namespace NPOIPlus
 		private PictureType GetPictureType(byte[] imageData)
 		{
 			using (MemoryStream ms = new MemoryStream(imageData))
-			using (Image image = System.Drawing.Image.FromStream(ms))
+			using (System.Drawing.Image image = System.Drawing.Image.FromStream(ms))
 			{
 				if (image.RawFormat.Equals(ImageFormat.Jpeg))
 					return PictureType.JPEG;
