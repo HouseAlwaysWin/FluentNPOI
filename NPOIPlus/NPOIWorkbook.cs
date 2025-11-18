@@ -18,6 +18,17 @@ namespace NPOIPlus
 
 	public class NPOIWorkbook
 	{
+		/// <summary>
+		/// 儲存格類型列舉
+		/// </summary>
+		private enum CellTypeEnum
+		{
+			Int,
+			Double,
+			DateTime,
+			String
+		}
+
 		public IWorkbook Workbook { get; set; }
 
 		public DefaultType<int> SetDefaultIntCellValue = (value) => value;
@@ -143,46 +154,75 @@ namespace NPOIPlus
 			Workbook = workbook;
 		}
 
-		private void SetCellStyleBasedOnType(object cellValue, ICellStyle style, Type cellType = null)
+		/// <summary>
+		/// 判斷儲存格值的實際類型
+		/// </summary>
+		/// <param name="cellValue">儲存格值</param>
+		/// <param name="cellType">明確指定的類型</param>
+		/// <returns>CellTypeEnum 列舉值</returns>
+		private CellTypeEnum DetermineCellType(object cellValue, Type cellType = null)
 		{
-
-			if (cellValue == DBNull.Value) return;
-
-			bool isInt = int.TryParse(cellValue.ToString(), out int i);
-			bool isDouble = double.TryParse(cellValue.ToString(), out double d);
-			bool isDateTime = DateTime.TryParse(cellValue.ToString(), out DateTime dt);
-			bool isString = false;
-
+			// 明確的類型參數優先級最高
 			if (cellType != null)
 			{
-				isInt = cellType == typeof(int);
-				isDouble = cellType == typeof(double) || cellType == typeof(float);
-				isDateTime = cellType == typeof(DateTime);
-				isString = cellType == typeof(string);
+				if (cellType == typeof(int)) return CellTypeEnum.Int;
+				if (cellType == typeof(double) || cellType == typeof(float)) return CellTypeEnum.Double;
+				if (cellType == typeof(DateTime)) return CellTypeEnum.DateTime;
+				if (cellType == typeof(string)) return CellTypeEnum.String;
 			}
 
-			// 動態調整型別
-			if (isInt)
+			// 如果無值，回傳字串型別
+			if (cellValue == null || cellValue == DBNull.Value) return CellTypeEnum.String;
+
+			var stringValue = cellValue.ToString();
+
+			// 嘗試按優先級判斷型別
+			if (int.TryParse(stringValue, out _)) return CellTypeEnum.Int;
+			if (double.TryParse(stringValue, out _)) return CellTypeEnum.Double;
+			if (DateTime.TryParse(stringValue, out _)) return CellTypeEnum.DateTime;
+
+			return CellTypeEnum.String;
+		}
+
+		/// <summary>
+		/// 安全地轉換值為字串
+		/// </summary>
+		private string SafeToString(object obj)
+		{
+			return obj?.ToString() ?? string.Empty;
+		}
+
+		/// <summary>
+		/// 驗證與標準化列號
+		/// </summary>
+		private int NormalizeRow(int row)
+		{
+			return row < 1 ? 1 : row;
+		}
+
+		private void SetCellStyleBasedOnType(object cellValue, ICellStyle style, Type cellType = null)
+		{
+			if (cellValue == null || cellValue == DBNull.Value) return;
+
+			var typeEnum = DetermineCellType(cellValue, cellType);
+			
+			switch (typeEnum)
 			{
-				SetDefaultNumberCellStyle?.Invoke(style);
-				SetDefaultIntCellStyle?.Invoke(style);
-			}
-			else if (isDouble)
-			{
-				SetDefaultNumberCellStyle?.Invoke(style);
-				SetDefaultDoubleCellStyle?.Invoke(style);
-			}
-			else if (isDateTime)
-			{
-				SetDefaultDateTimeCellStyle?.Invoke(style);
-			}
-			else if (isString)
-			{
-				SetDefaultStringCellStyle?.Invoke(style);
-			}
-			else
-			{
-				SetDefaultStringCellStyle?.Invoke(style);
+				case CellTypeEnum.Int:
+					SetDefaultNumberCellStyle?.Invoke(style);
+					SetDefaultIntCellStyle?.Invoke(style);
+					break;
+				case CellTypeEnum.Double:
+					SetDefaultNumberCellStyle?.Invoke(style);
+					SetDefaultDoubleCellStyle?.Invoke(style);
+					break;
+				case CellTypeEnum.DateTime:
+					SetDefaultDateTimeCellStyle?.Invoke(style);
+					break;
+				case CellTypeEnum.String:
+				default:
+					SetDefaultStringCellStyle?.Invoke(style);
+					break;
 			}
 		}
 
@@ -287,8 +327,8 @@ namespace NPOIPlus
 		{
 			int startColIndex = (int)startCol;
 			int endColIndex = (int)endCol;
-			startRow = startRow < 1 ? 1 : startRow;
-			endRow = endRow < 1 ? 1 : endRow;
+			startRow = NormalizeRow(startRow);
+			endRow = NormalizeRow(endRow);
 			string styleCachedKey = $"SetRangeCellStyle_{startCol}_{endCol}_{startRow}_{endRow}";
 			if (!string.IsNullOrWhiteSpace(cellStyleKey))
 			{
@@ -335,92 +375,64 @@ namespace NPOIPlus
 		private void SetCellValueBasedOnType(ICell cell, object cellValue, CellValueActionType valueAction = null,
 			ExcelColumns colnum = 0, int rownum = 1, Type cellType = null)
 		{
+			if (cell == null || cellValue == null || cellValue == DBNull.Value)
+				return;
 
 			var newCellValue = valueAction?.Invoke(cell, cellValue, colnum, rownum) ?? cellValue;
-			if (newCellValue == DBNull.Value) return;
+			if (newCellValue == null || newCellValue == DBNull.Value)
+				return;
 
-			bool isInt = int.TryParse(cellValue.ToString(), out int i);
-			bool isDouble = double.TryParse(cellValue.ToString(), out double d);
-			bool isDateTime = DateTime.TryParse(cellValue.ToString(), out DateTime dt);
-			bool isString = false;
+			var typeEnum = DetermineCellType(cellValue, cellType);
+			var stringValue = SafeToString(newCellValue);
 
-			if (cellType != null)
+			switch (typeEnum)
 			{
-				isInt = cellType == typeof(int);
-				isDouble = cellType == typeof(double) || cellType == typeof(float);
-				isDateTime = cellType == typeof(DateTime);
-				isString = cellType == typeof(string);
-			}
-
-			// 動態調整型別
-			if (isInt)
-			{
-				var intValue = SetDefaultIntCellValue(i);
-				cell.SetCellValue(intValue);
-			}
-			else if (isDouble)
-			{
-				var doubleValue = SetDefaultDoubleCellValue(d);
-				cell.SetCellValue(doubleValue);
-			}
-			else if (isDateTime)
-			{
-				var dateValue = SetDefaultDateTimeCellValue(dt);
-				cell.SetCellValue(dateValue);
-			}
-			else if (isString)
-			{
-				var stringValue = SetDefaultStringCellValue(newCellValue?.ToString());
-				cell.SetCellValue(stringValue);
-
-			}
-			else
-			{
-				var stringValue = SetDefaultStringCellValue(newCellValue?.ToString());
-				cell.SetCellValue(stringValue);
+				case CellTypeEnum.Int:
+					if (int.TryParse(stringValue, out var intVal))
+					{
+						var processedValue = SetDefaultIntCellValue(intVal);
+						cell.SetCellValue(processedValue);
+					}
+					break;
+				case CellTypeEnum.Double:
+					if (double.TryParse(stringValue, out var doubleVal))
+					{
+						var processedValue = SetDefaultDoubleCellValue(doubleVal);
+						cell.SetCellValue(processedValue);
+					}
+					break;
+				case CellTypeEnum.DateTime:
+					if (DateTime.TryParse(stringValue, out var dateVal))
+					{
+						var processedValue = SetDefaultDateTimeCellValue(dateVal);
+						cell.SetCellValue(processedValue);
+					}
+					break;
+				case CellTypeEnum.String:
+				default:
+					var processedString = SetDefaultStringCellValue(stringValue);
+					cell.SetCellValue(processedString);
+					break;
 			}
 		}
 
 		private string SetGlobalStyleKeyBasedOnType(object cellValue, string key, Type cellType)
 		{
-
-
-			bool isInt = int.TryParse(cellValue.ToString(), out int i);
-			bool isDouble = double.TryParse(cellValue.ToString(), out double d);
-			bool isDateTime = DateTime.TryParse(cellValue.ToString(), out DateTime dt);
-			bool isString = false;
-
-			if (cellType != null)
+			var typeEnum = DetermineCellType(cellValue, cellType);
+			
+			switch (typeEnum)
 			{
-				isInt = cellType == typeof(int);
-				isDouble = cellType == typeof(double) || cellType == typeof(float);
-				isDateTime = cellType == typeof(DateTime);
-				isString = cellType == typeof(string);
+				case CellTypeEnum.Int:
+					return $"Int_{key}";
+				case CellTypeEnum.Double:
+                    return $"Double_{key}";
+				case CellTypeEnum.DateTime:
+                    return $"DateTime_{key}";
+				case CellTypeEnum.String:
+                    return $"String_{key}";
+				default:
+                    return $"String_{key}";
 			}
-
-			// 動態調整型別
-			if (isInt)
-			{
-				key = $"Int_{key}";
-			}
-			else if (isDouble)
-			{
-				key = $"double_{key}";
-			}
-			else if (isDateTime)
-			{
-				key = $"date_{key}";
-			}
-			else if (isString)
-			{
-				key = $"str_{key}";
-			}
-			else
-			{
-				key = $"str_{key}";
-			}
-
-			return key;
 		}
 
 		private void SetCellStyle(string cachedKey, ICell cell, object cellValue, Action<ICellStyle> colStyle = null,
@@ -477,7 +489,7 @@ namespace NPOIPlus
 		public void SetExcelCell<T>(ISheet sheet, T cellValue, ExcelColumns colnum, int rownum,
 			Action<ICellStyle> style = null, bool? isFormula = null, Type cellType = null, string cellStyleKey = null)
 		{
-			if (rownum < 1) rownum = 1;
+			rownum = NormalizeRow(rownum);
 			var key = sheet.SheetName;
 
 			SetExcelCell(sheet, key, new DataTable(), 0, "", colnum, rownum, cellValue, style, null, null, isFormula, cellType, cellStyleKey);
@@ -517,7 +529,7 @@ namespace NPOIPlus
 			Action<ICellStyle> colStyle = null, Action<ICellStyle> rowStyle = null,
 			CellValueActionType cellValueAction = null, bool? isFormula = false, Type cellType = null, string cellStyleKey = null)
 		{
-			if (rownum < 1) rownum = 1;
+			rownum = NormalizeRow(rownum);
 			int zeroBaseIndex = rownum - 1;
 			IRow row = sheet.GetRow(zeroBaseIndex) ?? sheet.CreateRow(zeroBaseIndex);
 			ICell cell = row.CreateCell((int)colnum);
@@ -534,7 +546,7 @@ namespace NPOIPlus
 				{
 					object newCellValue = cellValueAction?.Invoke(cell, cellValue, colnum, rownum) ??
 										  cellValue?.ToString();
-					cell.SetCellFormula(newCellValue?.ToString());
+					cell.SetCellFormula(SafeToString(newCellValue));
 					return;
 				}
 			}
@@ -609,7 +621,7 @@ namespace NPOIPlus
 		public void SetMultiRowsExcelCells(ISheet sheet, DataTable dataTable, List<ExcelCellParam> param,
 			ExcelColumns startColnum, int startRownum = 1, Action<ICellStyle> rowStyle = null, bool? isFormula = null, Type rowCellType = null, string rowStyleKey = null)
 		{
-			if (startRownum < 1) startRownum = 1;
+			startRownum = NormalizeRow(startRownum);
 			var key = sheet.SheetName;
 
 			for (int dtIndex = 0; dtIndex < dataTable.Rows.Count; dtIndex++)
@@ -653,34 +665,40 @@ namespace NPOIPlus
 		/// <returns></returns>
 		public string GetFormulaCellValue(ISheet sheet, ExcelColumns colNum, int rowNum = 1)
 		{
-			if (rowNum < 1) rowNum = 1;
+			if (sheet == null) throw new ArgumentNullException(nameof(sheet));
+			
+			rowNum = NormalizeRow(rowNum);
 			rowNum = rowNum - 1;
 
-			// 逐行讀取資料
-			for (int rowIndex = 0; rowIndex <= sheet.LastRowNum; rowIndex++)
+			try
 			{
-				IRow row = sheet.GetRow(rowIndex);
-				if (row == null) continue;
-
-				for (int colIndex = 0; colIndex < row.LastCellNum; colIndex++)
+				// 逐行讀取資料
+				for (int rowIndex = 0; rowIndex <= sheet.LastRowNum; rowIndex++)
 				{
-					ICell cell = row.GetCell(colIndex);
-					if (rowIndex == rowNum && (int)colNum == colIndex)
+					IRow row = sheet.GetRow(rowIndex);
+					if (row == null) continue;
+
+					for (int colIndex = 0; colIndex < row.LastCellNum; colIndex++)
 					{
-						IFormulaEvaluator
-							evaluator = this.Workbook.GetCreationHelper().CreateFormulaEvaluator(); // 創建公式計算器
-																									// 使用 DataFormatter 來格式化結果並保留數字格式
-						DataFormatter formatter = new DataFormatter();
-						var cellValue = formatter.FormatCellValue(cell, evaluator);
-						return cellValue;
+						ICell cell = row.GetCell(colIndex);
+						if (rowIndex == rowNum && (int)colNum == colIndex)
+						{
+							IFormulaEvaluator evaluator = this.Workbook.GetCreationHelper().CreateFormulaEvaluator();
+							DataFormatter formatter = new DataFormatter();
+							var cellValue = formatter.FormatCellValue(cell, evaluator);
+							return cellValue;
+						}
 					}
 				}
 			}
+			catch (Exception ex)
+			{
+				System.Diagnostics.Debug.WriteLine($"Error getting formula value: {ex.Message}");
+				return null;
+			}
 
 			return null;
-		}
-
-		public NpoiMemoryStream OutputExcelStream()
+		}		public NpoiMemoryStream OutputExcelStream()
 		{
 			var ms = new NpoiMemoryStream();
 			ms.AllowClose = false;
@@ -714,10 +732,15 @@ namespace NPOIPlus
 
 		public void RemovwRowRange(ISheet sheet, int startRow = 1, int endRow = 2)
 		{
-			if (startRow < 1) startRow = 1;
-			if (endRow < 2) endRow = 2;
+			startRow = NormalizeRow(startRow);
+			endRow = NormalizeRow(endRow);
+			
+			if (endRow < startRow)
+				endRow = startRow;
+				
 			startRow = startRow - 1;
 			endRow = endRow - 1;
+			
 			for (int i = endRow; i >= startRow; i--)
 			{
 				IRow row = sheet.GetRow(i);
@@ -739,13 +762,17 @@ namespace NPOIPlus
 		/// <param name="endRow"></param>
 		public void InsertPicture(ISheet sheet, byte[] bytes, ExcelColumns startCol, ExcelColumns endCol, int startRow, int endRow)
 		{
-			if (startRow < 1) startRow = 1;
-			if (endRow < 2) endRow = 2;
+			startRow = NormalizeRow(startRow);
+			endRow = NormalizeRow(endRow);
+			
+			if (endRow < startRow)
+				endRow = startRow;
+				
 			startRow = startRow - 1;
 			endRow = endRow - 1;
 			var picType = GetPictureType(bytes);
 
-			int pictureIdx = Workbook.AddPicture(bytes, picType);  // 可以根據圖片類型更改
+			int pictureIdx = Workbook.AddPicture(bytes, picType);
 
 			// 建立繪圖patriarch
 			IDrawing drawing = sheet.CreateDrawingPatriarch();
@@ -791,10 +818,12 @@ namespace NPOIPlus
 		/// <returns></returns>
 		public IPicture SetPictureToExcellCell(ISheet sheet, byte[] img, int imgWidth, ExcelColumns col, int row = 1, AnchorType anchorType = AnchorType.DontMoveAndResize)
 		{
-			if (row <= 0) row = 1;
+			row = NormalizeRow(row);
+			
 			// **設定單元格大小**
 			sheet.SetColumnWidth(col, imgWidth / 7); // 欄寬
 			var picType = GetPictureType(img);
+			
 			// 插入圖片
 			int pictureIdx = Workbook.AddPicture(img, picType);
 			IDrawing drawing = sheet.CreateDrawingPatriarch();
