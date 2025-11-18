@@ -1,0 +1,418 @@
+﻿using NPOI.SS.Formula.Functions;
+using NPOI.SS.UserModel;
+using NPOI.Util;
+using NPOI.XSSF.Streaming.Values;
+using NPOIPlus.Models;
+using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Drawing;
+using System.Drawing.Imaging;
+using System.IO;
+using System.Linq;
+using System.Linq.Expressions;
+using System.Reflection;
+
+namespace NPOIPlus
+{
+	public interface IWorkbookStage
+	{
+		ISheetStage UseSheet(string sheetName, bool createIfMissing = true);
+		ISheetStage UseSheet(ISheet sheet);
+		ISheetStage UseSheetAt(int index, bool createIfMissing = false);
+	}
+
+	public interface ISheetStage
+	{
+		ITableStage SetTable<T>(IEnumerable<T> table, ExcelColumns startCol, int startRow);
+		ICellStage SetCell(ExcelColumns startCol, int startRow);
+	}
+
+
+	public interface ITableStage
+	{
+		ITableStage SetCell(string cellName, object value);
+	}
+
+	public interface ITableCellStage<T>
+	{
+		ITableCellStage<T> SetValue(T value);
+	}
+
+	public interface ICellStage
+	{
+		ICellStage SetValue<T>(T value);
+		IWorkbookStage Save();
+	}
+
+	public class FluentWorkbook : IWorkbookStage
+	{
+		private IWorkbook _workbook;
+		private ISheet _currentSheet;
+		public ISheetStage UseSheet(string sheetName, bool createIfMissing = true)
+		{
+			_currentSheet = _workbook.GetSheet(sheetName);
+			if (_currentSheet == null && createIfMissing)
+			{
+				_currentSheet = _workbook.CreateSheet(sheetName);
+			}
+			return new FluentSheet(_workbook, _currentSheet);
+		}
+
+		public ISheetStage UseSheet(ISheet sheet)
+		{
+			_currentSheet = sheet;
+			return new FluentSheet(_workbook, _currentSheet);
+		}
+
+		public ISheetStage UseSheetAt(int index, bool createIfMissing = false)
+		{
+			_currentSheet = _workbook.GetSheetAt(index);
+			if (_currentSheet == null && createIfMissing)
+			{
+				_currentSheet = _workbook.CreateSheet();
+			}
+			return new FluentSheet(_workbook, _currentSheet);
+		}
+	}
+
+	public class FluentSheet : ISheetStage
+	{
+		private ISheet _sheet;
+		private IWorkbook _workbook;
+		public FluentSheet(IWorkbook workbook, ISheet sheet)
+		{
+			_workbook = workbook;
+			_sheet = sheet;
+		}
+
+		public ICellStage SetCell(ExcelColumns col, int row)
+		{
+			if (_sheet == null) throw new InvalidOperationException("No active sheet. Call UseSheet(...) first.");
+
+			var rowObj = _sheet.GetRow(row) ?? _sheet.CreateRow(row);
+			var cell = rowObj.GetCell((int)col) ?? rowObj.CreateCell((int)col);
+			return new FluentCell(_workbook, _sheet, cell);
+		}
+
+		public ITableStage SetTable<T>(IEnumerable<T> table, ExcelColumns startCol, int startRow)
+		{
+			return new FluentTable<T>(_workbook, _sheet, table, startCol, startRow);
+		}
+	}
+
+
+	public class FluentTable<T> : ITableStage
+	{
+		private ISheet _sheet;
+		private IWorkbook _workbook;
+		private IEnumerable<T> _table;
+		private IList<T> _itemsCache;
+		private ExcelColumns _startCol;
+		private int _startRow;
+		private List<TableCellNameMap> _cellNameMaps = new List<TableCellNameMap>();
+		public FluentTable(IWorkbook workbook, ISheet sheet, IEnumerable<T> table, ExcelColumns startCol, int startRow)
+		{
+			_workbook = workbook;
+			_sheet = sheet;
+			_table = table;
+			_startCol = startCol;
+			_startRow = startRow;
+		}
+
+		private IList<T> GetItems()
+		{
+			if (_itemsCache != null) return _itemsCache;
+			_itemsCache = _table as IList<T> ?? _table?.ToList() ?? new List<T>();
+			return _itemsCache;
+		}
+
+		private T GetItemAt(int index)
+		{
+			var items = GetItems();
+			if (index < 0 || index >= items.Count) return default;
+			return items[index];
+		}
+
+
+		private T GetTableCellValue(string cellName, T item)
+		{
+			if (string.IsNullOrWhiteSpace(cellName) || item == null) return default;
+
+			object value = null;
+
+			if (item is DataRow dr)
+			{
+				if (dr.Table != null && dr.Table.Columns.Contains(cellName))
+					value = dr[cellName];
+			}
+			else if (item is IDictionary<string, object> dictObj)
+			{
+				dictObj.TryGetValue(cellName, out value);
+			}
+			else if (item is IDictionary<string, string> dictStr)
+			{
+				if (dictStr.TryGetValue(cellName, out var s))
+					value = s;
+			}
+			else
+			{
+				var type = item.GetType();
+				var prop = type.GetProperty(cellName, BindingFlags.Public | BindingFlags.Instance | BindingFlags.IgnoreCase);
+				if (prop != null)
+				{
+					value = prop.GetValue(item);
+				}
+				else
+				{
+					var field = type.GetField(cellName, BindingFlags.Public | BindingFlags.Instance | BindingFlags.IgnoreCase);
+					if (field != null)
+						value = field.GetValue(item);
+				}
+			}
+
+			if (value == null || value == DBNull.Value) return default;
+
+			try
+			{
+				if (value is T tVal) return tVal;
+				var targetType = Nullable.GetUnderlyingType(typeof(T)) ?? typeof(T);
+				return (T)Convert.ChangeType(value, targetType);
+			}
+			catch
+			{
+				try
+				{
+					var targetType = Nullable.GetUnderlyingType(typeof(T)) ?? typeof(T);
+					return (T)Convert.ChangeType(value.ToString(), targetType);
+				}
+				catch
+				{
+					return default;
+				}
+			}
+		}
+
+		private void SetCellValue(ICell cell, object value)
+		{
+			if (value is bool b)
+			{
+				cell.SetCellValue(b);
+				return;
+			}
+			if (value is DateTime dt)
+			{
+				cell.SetCellValue(dt);
+				return;
+			}
+			if (value is int i)
+			{
+				cell.SetCellValue((double)i);
+				return;
+			}
+			if (value is long l)
+			{
+				cell.SetCellValue((double)l);
+				return;
+			}
+			if (value is float f)
+			{
+				cell.SetCellValue((double)f);
+				return;
+			}
+			if (value is double d)
+			{
+				cell.SetCellValue(d);
+				return;
+			}
+			if (value is decimal m)
+			{
+				cell.SetCellValue((double)m);
+				return;
+			}
+
+			cell.SetCellValue(value.ToString());
+		}
+
+		private ITableStage SetRow(IEnumerable<string> cellNames, int rowOffset = 0)
+		{
+			if (cellNames == null) return this;
+
+			var targetRowIndex = _startRow + rowOffset;
+			var rowObj = _sheet.GetRow(targetRowIndex) ?? _sheet.CreateRow(targetRowIndex);
+
+			var item = GetItemAt(rowOffset);
+
+			int colIndex = (int)_startCol;
+			foreach (var name in cellNames)
+			{
+				var cell = rowObj.GetCell(colIndex) ?? rowObj.CreateCell(colIndex);
+				var value = GetTableCellValue(name, item);
+				var obj = (object)value;
+				if (obj == null || obj is DBNull)
+				{
+					colIndex++;
+					continue;
+				}
+
+				// write value
+				{
+					SetCellValue(cell, obj);
+				}
+				colIndex++;
+			}
+
+			return this;
+		}
+
+		private ITableStage SetColumn(IEnumerable<string> cellNames, int colOffset = 0)
+		{
+			if (cellNames == null) return this;
+
+			int rowIndex = _startRow;
+			int targetColIndex = (int)_startCol + colOffset;
+
+			int itemIndex = 0;
+			foreach (var name in cellNames)
+			{
+				var rowObj = _sheet.GetRow(rowIndex) ?? _sheet.CreateRow(rowIndex);
+				var cell = rowObj.GetCell(targetColIndex) ?? rowObj.CreateCell(targetColIndex);
+
+				var item = GetItemAt(itemIndex);
+				var value = GetTableCellValue(name, item);
+				var obj = (object)value;
+				if (obj != null && !(obj is DBNull))
+				{
+					SetCellValue(cell, obj);
+				}
+
+				rowIndex++;
+				itemIndex++;
+			}
+
+			return this;
+		}
+
+		public ITableStage AddCellByName(string cellName, object value)
+		{
+			_cellNameMaps.Add(new TableCellNameMap { CellName = cellName, Value = value });
+			return this;
+		}
+
+		public ITableStage SetRow()
+		{
+			foreach (var data in _table)
+			{
+				// SetRow(data.Select(x => x.CellName));
+			}
+			return this;
+		}
+
+	}
+
+	public class TableCellNameMap
+	{
+		public string CellName { get; set; }
+		public int RowOffset { get; set; }
+		public int ColOffset { get; set; }
+		public object Value { get; set; }
+	}
+
+
+	public class FluentCell : ICellStage
+	{
+		private ISheet _sheet;
+		private IWorkbook _workbook;
+		private ICell _cell;
+		public FluentCell(IWorkbook workbook, ISheet sheet, ICell cell)
+		{
+			_workbook = workbook;
+			_sheet = sheet;
+			_cell = cell;
+		}
+
+		public IWorkbookStage Save()
+		{
+			throw new NotImplementedException();
+		}
+
+		public ICellStage SetValue<T>(T value)
+		{
+			var typeEnum = DetermineCellType(value, typeof(T));
+			if (_cell == null) return this;
+
+			var stringValue = value?.ToString() ?? string.Empty;
+
+			switch (typeEnum)
+			{
+				case CellTypeEnum.Int:
+					if (int.TryParse(stringValue, out var intVal))
+					{
+						_cell.SetCellValue(intVal);
+					}
+					else
+					{
+						_cell.SetCellValue(stringValue);
+					}
+					break;
+				case CellTypeEnum.Double:
+					if (double.TryParse(stringValue, out var doubleVal))
+					{
+						_cell.SetCellValue(doubleVal);
+					}
+					else
+					{
+						_cell.SetCellValue(stringValue);
+					}
+					break;
+				case CellTypeEnum.DateTime:
+					if (DateTime.TryParse(stringValue, out var dateVal))
+					{
+						_cell.SetCellValue(dateVal);
+					}
+					else
+					{
+						_cell.SetCellValue(stringValue);
+					}
+					break;
+				case CellTypeEnum.String:
+				default:
+					_cell.SetCellValue(stringValue);
+					break;
+			}
+			return this;
+		}
+
+		private enum CellTypeEnum
+		{
+			Int,
+			Double,
+			DateTime,
+			String
+		}
+
+		private CellTypeEnum DetermineCellType(object cellValue, Type cellType = null)
+		{
+			// 明確的類型參數優先級最高
+			if (cellType != null)
+			{
+				if (cellType == typeof(int)) return CellTypeEnum.Int;
+				if (cellType == typeof(double) || cellType == typeof(float)) return CellTypeEnum.Double;
+				if (cellType == typeof(DateTime)) return CellTypeEnum.DateTime;
+				if (cellType == typeof(string)) return CellTypeEnum.String;
+			}
+
+			// 如果無值，回傳字串型別
+			if (cellValue == null || cellValue == DBNull.Value) return CellTypeEnum.String;
+
+			var stringValue = cellValue.ToString();
+
+			// 嘗試按優先級判斷型別
+			if (int.TryParse(stringValue, out _)) return CellTypeEnum.Int;
+			if (double.TryParse(stringValue, out _)) return CellTypeEnum.Double;
+			if (DateTime.TryParse(stringValue, out _)) return CellTypeEnum.DateTime;
+
+			return CellTypeEnum.String;
+		}
+	}
+}
