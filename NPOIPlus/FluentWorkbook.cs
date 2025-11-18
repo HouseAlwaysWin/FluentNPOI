@@ -31,7 +31,7 @@ namespace NPOIPlus
 
 	public interface ITableStage
 	{
-		ITableStage SetCell(string cellName, object value);
+		// ITableStage SetCell(string cellName, object value);
 	}
 
 	public interface ITableCellStage<T>
@@ -234,9 +234,9 @@ namespace NPOIPlus
 			cell.SetCellValue(value.ToString());
 		}
 
-		private ITableStage SetRow(IEnumerable<string> cellNames, int rowOffset = 0)
+		private ITableStage SetRow(int rowOffset = 0)
 		{
-			if (cellNames == null) return this;
+			if (_cellNameMaps == null || _cellNameMaps.Count == 0) return this;
 
 			var targetRowIndex = _startRow + rowOffset;
 			var rowObj = _sheet.GetRow(targetRowIndex) ?? _sheet.CreateRow(targetRowIndex);
@@ -244,11 +244,18 @@ namespace NPOIPlus
 			var item = GetItemAt(rowOffset);
 
 			int colIndex = (int)_startCol;
-			foreach (var name in cellNames)
+			foreach (var cellNameMap in _cellNameMaps)
 			{
 				var cell = rowObj.GetCell(colIndex) ?? rowObj.CreateCell(colIndex);
-				var value = GetTableCellValue(name, item);
-				var obj = (object)value;
+
+				// 優先使用 TableCellNameMap 中的 Value，如果沒有則從 item 中獲取
+				object obj = cellNameMap.Value;
+				if (obj == null)
+				{
+					var value = GetTableCellValue(cellNameMap.CellName, item);
+					obj = value;
+				}
+
 				if (obj == null || obj is DBNull)
 				{
 					colIndex++;
@@ -256,9 +263,7 @@ namespace NPOIPlus
 				}
 
 				// write value
-				{
-					SetCellValue(cell, obj);
-				}
+				SetCellValue(cell, obj);
 				colIndex++;
 			}
 
@@ -301,9 +306,9 @@ namespace NPOIPlus
 
 		public ITableStage SetRow()
 		{
-			foreach (var data in _table)
+			for (int i = 0; i < _table.Count(); i++)
 			{
-				// SetRow(data.Select(x => x.CellName));
+				SetRow(i);
 			}
 			return this;
 		}
