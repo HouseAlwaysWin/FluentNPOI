@@ -18,7 +18,6 @@ using System.Reflection;
 namespace NPOIPlus
 {
 
-
 	public interface IWorkbookStage
 	{
 		IWorkbookStage ReadExcelFile(string filePath);
@@ -29,6 +28,7 @@ namespace NPOIPlus
 
 	public interface ISheetStage
 	{
+		ISheetStage SetupGlobalCachedCellStyles(string key, Action<ICellStyle> styles);
 		ITableStage SetTable<T>(IEnumerable<T> table, ExcelColumns startCol, int startRow);
 		ICellStage SetCell(ExcelColumns startCol, int startRow);
 	}
@@ -61,6 +61,7 @@ namespace NPOIPlus
 		private IWorkbook _workbook;
 		private ISheet _currentSheet;
 		private FileStream _fileStream;
+		private Dictionary<string, ICellStyle> _cellStylesCached = new Dictionary<string, ICellStyle>();
 		public FluentWorkbook(IWorkbook workbook)
 		{
 			_workbook = workbook;
@@ -98,7 +99,8 @@ namespace NPOIPlus
 			return this;
 		}
 
-		public ISheetStage UseSheet(string sheetName, bool createIfMissing = true)
+
+        public ISheetStage UseSheet(string sheetName, bool createIfMissing = true)
 		{
 			_currentSheet = _workbook.GetSheet(sheetName);
 			if (_currentSheet == null && createIfMissing)
@@ -129,6 +131,7 @@ namespace NPOIPlus
 	{
 		private ISheet _sheet;
 		private IWorkbook _workbook;
+		private Dictionary<string, ICellStyle> _cellStylesCached = new Dictionary<string, ICellStyle>();
 		public FluentSheet(IWorkbook workbook, ISheet sheet)
 		{
 			_workbook = workbook;
@@ -148,7 +151,15 @@ namespace NPOIPlus
 		{
 			return new FluentTable<T>(_workbook, _sheet, table, startCol, startRow);
 		}
-	}
+
+        public ISheetStage SetupGlobalCachedCellStyles(string key, Action<ICellStyle> styles)
+        {
+			ICellStyle newCellStyle = _workbook.CreateCellStyle();
+			styles(newCellStyle);
+			_cellStylesCached.Add(key, newCellStyle);
+			return this;
+        }
+    }
 
 
 	public class FluentTable<T> : ITableStage
