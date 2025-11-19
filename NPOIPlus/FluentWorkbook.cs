@@ -37,7 +37,7 @@ namespace NPOIPlus
 	public interface ITableStage
 	{
 		// ITableStage SetCell(string cellName, object value);
-		ITableStage AddCellByName(string cellName, object value = null);
+		ITableStage AddCellByName(string cellName, Func<object, object> value = null);
 		ITableStage SetRow();
 		FluentMemoryStream Save();
 		IWorkbook Save(string filePath);
@@ -280,11 +280,11 @@ namespace NPOIPlus
 				var cell = rowObj.GetCell(colIndex) ?? rowObj.CreateCell(colIndex);
 
 				// 優先使用 TableCellNameMap 中的 Value，如果沒有則從 item 中獲取
-				Action<ICell, object> setValueAction = cellNameMap.SetValueAction;
-				object value = null;
-				if (setValueAction == null)
+				Func<object, object> setValueAction = cellNameMap.SetValueAction;
+				object value = GetTableCellValue(cellNameMap.CellName, item);
+				if (setValueAction != null)
 				{
-					value = GetTableCellValue(cellNameMap.CellName, item);
+					value = setValueAction(value);
 				}
 
 				// write value
@@ -295,37 +295,9 @@ namespace NPOIPlus
 			return this;
 		}
 
-		private ITableStage SetColumn(IEnumerable<string> cellNames, int colOffset = 0)
+		public ITableStage AddCellByName(string cellName, Func<object, object> value = null)
 		{
-			if (cellNames == null) return this;
-
-			int rowIndex = _startRow;
-			int targetColIndex = (int)_startCol + colOffset;
-
-			int itemIndex = 0;
-			foreach (var name in cellNames)
-			{
-				var rowObj = _sheet.GetRow(rowIndex) ?? _sheet.CreateRow(rowIndex);
-				var cell = rowObj.GetCell(targetColIndex) ?? rowObj.CreateCell(targetColIndex);
-
-				var item = GetItemAt(itemIndex);
-				var value = GetTableCellValue(name, item);
-				var obj = (object)value;
-				if (obj != null && !(obj is DBNull))
-				{
-					SetCellValue(cell, obj);
-				}
-
-				rowIndex++;
-				itemIndex++;
-			}
-
-			return this;
-		}
-
-		public ITableStage AddCellByName(string cellName, object value = null)
-		{
-			_cellNameMaps.Add(new TableCellNameMap { CellName = cellName });
+			_cellNameMaps.Add(new TableCellNameMap { CellName = cellName, SetValueAction = value });
 			return this;
 		}
 
@@ -351,15 +323,15 @@ namespace NPOIPlus
 			return ms;
 		}
 
-        public IWorkbook Save(string filePath)
-        {
+		public IWorkbook Save(string filePath)
+		{
 			using (FileStream outFile = new FileStream(filePath, FileMode.Create, FileAccess.Write))
 			{
 				_workbook.Write(outFile);
 			}
 			return _workbook;
-        }
-    }
+		}
+	}
 
 	public class FluentMemoryStream : MemoryStream
 	{
@@ -387,7 +359,7 @@ namespace NPOIPlus
 		public string CellName { get; set; }
 		public int RowOffset { get; set; }
 		public int ColOffset { get; set; }
-		public Action<ICell, object> SetValueAction { get; set; }
+		public Func<object, object> SetValueAction { get; set; }
 	}
 
 
