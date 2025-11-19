@@ -698,7 +698,9 @@ namespace NPOIPlus
 			}
 
 			return null;
-		}		public NpoiMemoryStream OutputExcelStream()
+		}		
+
+		public NpoiMemoryStream OutputExcelStream()
 		{
 			var ms = new NpoiMemoryStream();
 			ms.AllowClose = false;

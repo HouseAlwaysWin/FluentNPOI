@@ -165,8 +165,22 @@ namespace NPOIPlus
 			_workbook = workbook;
 			_sheet = sheet;
 			_table = table;
-			_startCol = startCol;
-			_startRow = startRow;
+			_startCol = NormalizeStartCol(startCol);
+			_startRow = NormalizeStartRow(startRow);
+		}
+
+		private ExcelColumns NormalizeStartCol(ExcelColumns col)
+		{
+			int idx = (int)col;
+			if (idx < 0) idx = 0;
+			return (ExcelColumns)idx;
+		}
+
+		private int NormalizeStartRow(int row)
+		{
+			// 將使用者常見的 1-based 列號轉為 0-based，並確保不為負數
+			if (row < 1) return 0;
+			return row - 1;
 		}
 
 		private IList<T> GetItems()
@@ -310,8 +324,6 @@ namespace NPOIPlus
 			return this;
 		}
 
-
-
 		public FluentMemoryStream Save()
 		{
 			var ms = new FluentMemoryStream();
@@ -357,8 +369,6 @@ namespace NPOIPlus
 	public class TableCellNameMap
 	{
 		public string CellName { get; set; }
-		public int RowOffset { get; set; }
-		public int ColOffset { get; set; }
 		public Func<object, object> SetValueAction { get; set; }
 	}
 

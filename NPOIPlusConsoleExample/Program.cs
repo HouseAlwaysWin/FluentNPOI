@@ -17,16 +17,18 @@ namespace NPOIPlusConsoleExample
 		{
 			try
 			{
-				var filePath = @$"{AppDomain.CurrentDomain.BaseDirectory}\Resources\Test.xlsx";
-				var outputPath = @$"{AppDomain.CurrentDomain.BaseDirectory}\Resources\Test2.xlsx";
-				var workbook = new FluentWorkbook(new XSSFWorkbook(filePath))
-				.ReadExcelFile(filePath)
-				.UseSheet("Sheet1")
-				.SetTable<ExampleData>(new List<ExampleData>(){
+				var testData = new List<ExampleData>(){
 					new ExampleData(1, "John", new DateTime(1990, 1, 1)),
 					new ExampleData(2, "Jane", new DateTime(1990, 1, 1)),
 					new ExampleData(3, "Jim", new DateTime(1990, 1, 1)),
-				}, ExcelColumns.A, 1)
+				};
+				var filePath = @$"{AppDomain.CurrentDomain.BaseDirectory}\Resources\Test.xlsx";
+				var outputPath = @$"{AppDomain.CurrentDomain.BaseDirectory}\Resources\Test2.xlsx";
+
+				var workbook = new FluentWorkbook(new XSSFWorkbook(filePath))
+				.ReadExcelFile(filePath)
+				.UseSheet("Sheet1")
+				.SetTable<ExampleData>(testData, ExcelColumns.A, 1)
 				.AddCellByName("ID")
 				.AddCellByName("Name")
 				.AddCellByName("DateOfBirth")
