@@ -100,7 +100,7 @@ namespace NPOIPlus
 		}
 
 
-        public ISheetStage UseSheet(string sheetName, bool createIfMissing = true)
+		public ISheetStage UseSheet(string sheetName, bool createIfMissing = true)
 		{
 			_currentSheet = _workbook.GetSheet(sheetName);
 			if (_currentSheet == null && createIfMissing)
@@ -149,17 +149,17 @@ namespace NPOIPlus
 
 		public ITableStage SetTable<T>(IEnumerable<T> table, ExcelColumns startCol, int startRow)
 		{
-			return new FluentTable<T>(_workbook, _sheet, table, startCol, startRow);
+			return new FluentTable<T>(_workbook, _sheet, table, startCol, startRow, _cellStylesCached);
 		}
 
-        public ISheetStage SetupGlobalCachedCellStyles(string key, Action<ICellStyle> styles)
-        {
+		public ISheetStage SetupGlobalCachedCellStyles(string key, Action<ICellStyle> styles)
+		{
 			ICellStyle newCellStyle = _workbook.CreateCellStyle();
 			styles(newCellStyle);
 			_cellStylesCached.Add(key, newCellStyle);
 			return this;
-        }
-    }
+		}
+	}
 
 
 	public class FluentTable<T> : ITableStage
@@ -171,13 +171,16 @@ namespace NPOIPlus
 		private ExcelColumns _startCol;
 		private int _startRow;
 		private List<TableCellNameMap> _cellNameMaps = new List<TableCellNameMap>();
-		public FluentTable(IWorkbook workbook, ISheet sheet, IEnumerable<T> table, ExcelColumns startCol, int startRow)
+		private Dictionary<string, ICellStyle> _cellStylesCached; 
+		public FluentTable(IWorkbook workbook, ISheet sheet, IEnumerable<T> table, 
+		ExcelColumns startCol, int startRow, Dictionary<string, ICellStyle> cellStylesCached)
 		{
 			_workbook = workbook;
 			_sheet = sheet;
 			_table = table;
 			_startCol = NormalizeStartCol(startCol);
 			_startRow = NormalizeStartRow(startRow);
+			_cellStylesCached = new Dictionary<string, ICellStyle>();
 		}
 
 		private ExcelColumns NormalizeStartCol(ExcelColumns col)
@@ -290,6 +293,23 @@ namespace NPOIPlus
 			cell.SetCellValue(value.ToString());
 		}
 
+		private void SetCellStyle(ICell cell, TableCellNameMap cellNameMap)
+		{
+			if (string.IsNullOrWhiteSpace(cellNameMap.CellStyleKey)) return;
+
+			if (_cellStylesCached.ContainsKey(cellNameMap.CellStyleKey))
+			{
+				cell.CellStyle = _cellStylesCached[cellNameMap.CellStyleKey];
+			}
+			else
+			{
+				ICellStyle newCellStyle = _workbook.CreateCellStyle();
+				cellNameMap.SetCellStyleAction(newCellStyle);
+				_cellStylesCached.Add(cellNameMap.CellStyleKey, newCellStyle);
+				cell.CellStyle = newCellStyle;
+			}
+		}
+
 		private ITableStage SetRow(int rowOffset = 0)
 		{
 			if (_cellNameMaps == null || _cellNameMaps.Count == 0) return this;
@@ -312,6 +332,7 @@ namespace NPOIPlus
 					value = setValueAction(value);
 				}
 
+				SetCellStyle(cell, cellNameMap);
 				// write value
 				SetCellValue(cell, value);
 				colIndex++;
@@ -381,6 +402,8 @@ namespace NPOIPlus
 	{
 		public string CellName { get; set; }
 		public Func<object, object> SetValueAction { get; set; }
+		public string CellStyleKey { get; set; }
+		public Action<ICellStyle> SetCellStyleAction { get; set; }
 	}
 
 
