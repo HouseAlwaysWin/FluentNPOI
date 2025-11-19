@@ -18,9 +18,24 @@ namespace NPOIPlusConsoleExample
 			try
 			{
 				var filePath = @$"{AppDomain.CurrentDomain.BaseDirectory}\Resources\Test.xlsx";
+				Stream stream = new FluentWorkbook(new XSSFWorkbook(filePath))
+				.ReadExcelFile(filePath)
+				.UseSheet("Sheet1")
+				.SetTable<ExampleData>(new List<ExampleData>(){
+					new ExampleData(1, "John", new DateTime(1990, 1, 1)),
+					new ExampleData(2, "Jane", new DateTime(1990, 1, 1)),
+					new ExampleData(3, "Jim", new DateTime(1990, 1, 1)),
+				}, ExcelColumns.A, 1)
+				.AddCellByName("ID")
+				.AddCellByName("Name")
+				.AddCellByName("DateOfBirth")
+				.SetRow()
+				.Save();
+				
+
 				// 打開 Excel 文件
-				using (FileStream file = new FileStream(filePath, FileMode.Open, FileAccess.Read))
-				{
+				// using (FileStream file = new FileStream(filePath, FileMode.Open, FileAccess.Read))
+				// {
 		
 					// NPOIWorkbook workbook = new NPOIWorkbook(new XSSFWorkbook(file));
 
@@ -149,7 +164,7 @@ namespace NPOIPlusConsoleExample
 					//	workbook.Workbook.Write(outFile);
 					//}
 
-				}
+				// }
 			}
 			catch (Exception ex)
 			{

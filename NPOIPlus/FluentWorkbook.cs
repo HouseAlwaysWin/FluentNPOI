@@ -2,6 +2,8 @@
 using NPOI.SS.UserModel;
 using NPOI.Util;
 using NPOI.XSSF.Streaming.Values;
+using NPOI.HSSF.UserModel;
+using NPOI.XSSF.UserModel;
 using NPOIPlus.Models;
 using System;
 using System.Collections.Generic;
@@ -15,8 +17,11 @@ using System.Reflection;
 
 namespace NPOIPlus
 {
+
+
 	public interface IWorkbookStage
 	{
+		IWorkbookStage ReadExcelFile(string filePath);
 		ISheetStage UseSheet(string sheetName, bool createIfMissing = true);
 		ISheetStage UseSheet(ISheet sheet);
 		ISheetStage UseSheetAt(int index, bool createIfMissing = false);
@@ -32,6 +37,9 @@ namespace NPOIPlus
 	public interface ITableStage
 	{
 		// ITableStage SetCell(string cellName, object value);
+		ITableStage AddCellByName(string cellName, object value = null);
+		ITableStage SetRow();
+		FluentMemoryStream Save();
 	}
 
 	public interface ITableCellStage<T>
@@ -42,13 +50,53 @@ namespace NPOIPlus
 	public interface ICellStage
 	{
 		ICellStage SetValue<T>(T value);
-		IWorkbookStage Save();
+		FluentMemoryStream Save();
 	}
+
+
 
 	public class FluentWorkbook : IWorkbookStage
 	{
 		private IWorkbook _workbook;
 		private ISheet _currentSheet;
+		private FileStream _fileStream;
+		public FluentWorkbook(IWorkbook workbook)
+		{
+			_workbook = workbook;
+		}
+
+		public IWorkbookStage ReadExcelFile(string filePath)
+		{
+			if (string.IsNullOrWhiteSpace(filePath)) throw new ArgumentNullException(nameof(filePath));
+			if (!File.Exists(filePath)) throw new FileNotFoundException("Excel file not found.", filePath);
+
+			_currentSheet = null;
+
+			string ext = Path.GetExtension(filePath)?.ToLowerInvariant();
+
+			// 以讀取模式開啟並立即讀入記憶體，讀完即釋放檔案鎖
+			using (var fs = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+			{
+				if (ext == ".xls")
+				{
+					_workbook = new HSSFWorkbook(fs);
+				}
+				else
+				{
+					// 預設使用 XSSF，支援 .xlsx/.xlsm
+					_workbook = new XSSFWorkbook(fs);
+				}
+			}
+
+			// 預設選取第一個工作表
+			if (_workbook.NumberOfSheets > 0)
+			{
+				_currentSheet = _workbook.GetSheetAt(0);
+			}
+
+			return this;
+		}
+
 		public ISheetStage UseSheet(string sheetName, bool createIfMissing = true)
 		{
 			_currentSheet = _workbook.GetSheet(sheetName);
@@ -135,7 +183,7 @@ namespace NPOIPlus
 		}
 
 
-		private T GetTableCellValue(string cellName, T item)
+		private object GetTableCellValue(string cellName, object item)
 		{
 			if (string.IsNullOrWhiteSpace(cellName) || item == null) return default;
 
@@ -172,25 +220,7 @@ namespace NPOIPlus
 			}
 
 			if (value == null || value == DBNull.Value) return default;
-
-			try
-			{
-				if (value is T tVal) return tVal;
-				var targetType = Nullable.GetUnderlyingType(typeof(T)) ?? typeof(T);
-				return (T)Convert.ChangeType(value, targetType);
-			}
-			catch
-			{
-				try
-				{
-					var targetType = Nullable.GetUnderlyingType(typeof(T)) ?? typeof(T);
-					return (T)Convert.ChangeType(value.ToString(), targetType);
-				}
-				catch
-				{
-					return default;
-				}
-			}
+			return value;
 		}
 
 		private void SetCellValue(ICell cell, object value)
@@ -249,21 +279,15 @@ namespace NPOIPlus
 				var cell = rowObj.GetCell(colIndex) ?? rowObj.CreateCell(colIndex);
 
 				// 優先使用 TableCellNameMap 中的 Value，如果沒有則從 item 中獲取
-				object obj = cellNameMap.Value;
-				if (obj == null)
+				Action<ICell, object> setValueAction = cellNameMap.SetValueAction;
+				object value = null;
+				if (setValueAction == null)
 				{
-					var value = GetTableCellValue(cellNameMap.CellName, item);
-					obj = value;
-				}
-
-				if (obj == null || obj is DBNull)
-				{
-					colIndex++;
-					continue;
+					value = GetTableCellValue(cellNameMap.CellName, item);
 				}
 
 				// write value
-				SetCellValue(cell, obj);
+				SetCellValue(cell, value);
 				colIndex++;
 			}
 
@@ -298,9 +322,9 @@ namespace NPOIPlus
 			return this;
 		}
 
-		public ITableStage AddCellByName(string cellName, object value)
+		public ITableStage AddCellByName(string cellName, object value = null)
 		{
-			_cellNameMaps.Add(new TableCellNameMap { CellName = cellName, Value = value });
+			_cellNameMaps.Add(new TableCellNameMap { CellName = cellName });
 			return this;
 		}
 
@@ -313,6 +337,40 @@ namespace NPOIPlus
 			return this;
 		}
 
+
+
+		public FluentMemoryStream Save()
+		{
+			var ms = new FluentMemoryStream();
+			ms.AllowClose = false;
+			_workbook.Write(ms);
+			ms.Flush();
+			ms.Seek(0, SeekOrigin.Begin);
+			ms.AllowClose = true;
+			return ms;
+		}
+
+	}
+
+	public class FluentMemoryStream : MemoryStream
+	{
+		public FluentMemoryStream()
+		{
+			// We always want to close streams by default to
+			// force the developer to make the conscious decision
+			// to disable it.  Then, they're more apt to remember
+			// to re-enable it.  The last thing you want is to
+			// enable memory leaks by default.  ;-)
+			AllowClose = true;
+		}
+
+		public bool AllowClose { get; set; }
+
+		public override void Close()
+		{
+			if (AllowClose)
+				base.Close();
+		}
 	}
 
 	public class TableCellNameMap
@@ -320,7 +378,7 @@ namespace NPOIPlus
 		public string CellName { get; set; }
 		public int RowOffset { get; set; }
 		public int ColOffset { get; set; }
-		public object Value { get; set; }
+		public Action<ICell, object> SetValueAction { get; set; }
 	}
 
 
@@ -336,9 +394,15 @@ namespace NPOIPlus
 			_cell = cell;
 		}
 
-		public IWorkbookStage Save()
+		public FluentMemoryStream Save()
 		{
-			throw new NotImplementedException();
+			var ms = new FluentMemoryStream();
+			ms.AllowClose = false;
+			_workbook.Write(ms);
+			ms.Flush();
+			ms.Seek(0, SeekOrigin.Begin);
+			ms.AllowClose = true;
+			return ms;
 		}
 
 		public ICellStage SetValue<T>(T value)
