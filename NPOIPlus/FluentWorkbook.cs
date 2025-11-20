@@ -45,9 +45,9 @@ namespace NPOIPlus
 
 	public interface ITableCellStage
 	{
-		ITableCellStage SetValue(object valueAction);
-		ITableCellStage SetValue(Func<object, object> valueAction);
-		ITableCellStage SetFormulaValue(Func<object, object> valueAction);
+		ITableCellStage SetValue(object value);
+		ITableCellStage SetValue(Func<TableCellParams, object> valueAction);
+		ITableCellStage SetFormulaValue(Func<TableCellParams, object> valueAction);
 		ITableCellStage SetCellStyle(string cellStyleKey, Action<IWorkbook, ICellStyle> cellStyleAction);
 		ITableStage End();
 	}
@@ -349,18 +349,20 @@ namespace NPOIPlus
 				var cell = rowObj.GetCell(colIndex) ?? rowObj.CreateCell(colIndex);
 
 				// 優先使用 TableCellNameMap 中的 Value，如果沒有則從 item 中獲取
-				Func<object, object> setValueAction = cellNameMap.SetValueAction;
-				Func<object, object> setFormulaValueAction = cellNameMap.SetFormulaValueAction;
+				Func<TableCellParams, object> setValueAction = cellNameMap.SetValueAction;
+				Func<TableCellParams, object> setFormulaValueAction = cellNameMap.SetFormulaValueAction;
+
+				TableCellParams cellParams = new TableCellParams { ColNum = (ExcelColumns)colIndex, RowNum = targetRowIndex };
 				object value = cellNameMap.CellValue ?? GetTableCellValue(cellNameMap.CellName, item);
+				cellParams.CellValue = value;
 
 				SetCellStyle(cell, cellNameMap);
-
 
 				if (cellNameMap.IsFormulaValue)
 				{
 					if (setFormulaValueAction != null)
 					{
-						value = setFormulaValueAction(value);
+						value = setFormulaValueAction(cellParams);
 					}
 					SetFormulaValue(cell, value);
 				}
@@ -368,7 +370,7 @@ namespace NPOIPlus
 				{
 					if (setValueAction != null)
 					{
-						value = setValueAction(value);
+						value = setValueAction(cellParams);
 					}
 					SetCellValue(cell, value);
 				}
@@ -446,7 +448,7 @@ namespace NPOIPlus
 			return this;
 		}
 
-		public ITableCellStage SetValue(Func<object, object> valueAction)
+		public ITableCellStage SetValue(Func<TableCellParams, object> valueAction)
 		{
 			_cellNameMap.SetValueAction = valueAction;
 			_cellNameMap.IsFormulaValue = false;
@@ -462,7 +464,7 @@ namespace NPOIPlus
 		}
 
 
-		public ITableCellStage SetFormulaValue(Func<object, object> valueAction)
+		public ITableCellStage SetFormulaValue(Func<TableCellParams, object> valueAction)
 		{
 			_cellNameMap.SetFormulaValueAction = valueAction;
 			_cellNameMap.IsFormulaValue = true;
@@ -483,7 +485,6 @@ namespace NPOIPlus
 
 
 	}
-
 
 	public class FluentMemoryStream : MemoryStream
 	{
@@ -511,10 +512,17 @@ namespace NPOIPlus
 		public string CellName { get; set; }
 		public object CellValue { get; set; }
 		public bool IsFormulaValue { get; set; }
-		public Func<object, object> SetValueAction { get; set; }
-		public Func<object, object> SetFormulaValueAction { get; set; }
+		public Func<TableCellParams, object> SetValueAction { get; set; }
+		public Func<TableCellParams, object> SetFormulaValueAction { get; set; }
 		public string CellStyleKey { get; set; }
 		public Action<IWorkbook, ICellStyle> SetCellStyleAction { get; set; }
+	}
+
+	public class TableCellParams
+	{
+		public object CellValue { get; set; }
+		public ExcelColumns ColNum { get; set; }
+		public int RowNum { get; set; }
 	}
 
 

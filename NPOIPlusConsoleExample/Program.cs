@@ -18,9 +18,9 @@ namespace NPOIPlusConsoleExample
 			try
 			{
 				var testData = new List<ExampleData>(){
-					new ExampleData(1, "John", new DateTime(1990, 1, 1)),
-					new ExampleData(2, "Jane", new DateTime(1990, 1, 1)),
-					new ExampleData(3, "Jim", new DateTime(1990, 1, 1)),
+					new ExampleData(1, "John", new DateTime(1994, 1, 1)),
+					new ExampleData(2, "Jane", new DateTime(1993, 1, 1)),
+					new ExampleData(3, "Jim", new DateTime(1992, 1, 1)),
 				};
 				var filePath = @$"{AppDomain.CurrentDomain.BaseDirectory}\Resources\Test.xlsx";
 				var outputPath = @$"{AppDomain.CurrentDomain.BaseDirectory}\Resources\Test2.xlsx";
@@ -35,7 +35,7 @@ namespace NPOIPlusConsoleExample
 					style.SetFontInfo(workbook, "Calibri", 10);
 				})
 				.SetTable(testData, ExcelColumns.A, 1)
-				.BeginMapCell("ID").SetValue((value) => $"ID: {value}").End()
+				.BeginMapCell("ID").SetValue((value) => $"ID: {value.CellValue}").End()
 				.BeginMapCell("Name").End()
 				.BeginMapCell("DateOfBirth").SetCellStyle("DateOfBirth",
 				(workbook, style) => { style.SetDataFormat(workbook, "yyyy-MM-dd"); }
