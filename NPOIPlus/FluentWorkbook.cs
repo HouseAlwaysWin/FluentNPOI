@@ -29,6 +29,7 @@ namespace NPOIPlus
 	public interface ISheetStage
 	{
 		ISheetStage SetupGlobalCachedCellStyles(Action<IWorkbook, ICellStyle> styles);
+		ISheetStage SetupCellStyle(string cellStyleKey, Action<IWorkbook, ICellStyle> styles);
 		ITableStage SetTable<T>(IEnumerable<T> table, ExcelColumns startCol, int startRow);
 		ICellStage SetCell(ExcelColumns startCol, int startRow);
 	}
@@ -48,7 +49,8 @@ namespace NPOIPlus
 		ITableCellStage SetValue(object value);
 		ITableCellStage SetValue(Func<TableCellParams, object> valueAction);
 		ITableCellStage SetFormulaValue(Func<TableCellParams, object> valueAction);
-		ITableCellStage SetCellStyle(string cellStyleKey, Action<IWorkbook, ICellStyle> cellStyleAction);
+		ITableCellStage SetCellStyle(string cellStyleKey, Action<TableCellStyleParams, ICellStyle> cellStyleAction);
+		ITableCellStage SetCellStyle(string cellStyleKey);
 		ITableStage End();
 	}
 
@@ -162,6 +164,14 @@ namespace NPOIPlus
 			ICellStyle newCellStyle = _workbook.CreateCellStyle();
 			styles(_workbook, newCellStyle);
 			_cellStylesCached.Add("global", newCellStyle);
+			return this;
+		}
+
+		public ISheetStage SetupCellStyle(string cellStyleKey, Action<IWorkbook, ICellStyle> styles)
+		{
+			ICellStyle newCellStyle = _workbook.CreateCellStyle();
+			styles(_workbook, newCellStyle);
+			_cellStylesCached.Add(cellStyleKey, newCellStyle);
 			return this;
 		}
 	}
@@ -312,7 +322,7 @@ namespace NPOIPlus
 			cell.SetCellFormula(formula);
 		}
 
-		private void SetCellStyle(ICell cell, TableCellNameMap cellNameMap)
+		private void SetCellStyle(ICell cell, TableCellNameMap cellNameMap, TableCellStyleParams cellStyleParams)
 		{
 			if (!string.IsNullOrWhiteSpace(cellNameMap.CellStyleKey) && _cellStylesCached.ContainsKey(cellNameMap.CellStyleKey))
 			{
@@ -327,7 +337,7 @@ namespace NPOIPlus
 			else if (!string.IsNullOrWhiteSpace(cellNameMap.CellStyleKey) && cellNameMap.SetCellStyleAction != null)
 			{
 				ICellStyle newCellStyle = _workbook.CreateCellStyle();
-				cellNameMap.SetCellStyleAction(_workbook, newCellStyle);
+				cellNameMap.SetCellStyleAction(cellStyleParams, newCellStyle);
 				cellNameMap.CellStyleKey = cellNameMap.CellStyleKey;
 				_cellStylesCached.Add(cellNameMap.CellStyleKey, newCellStyle);
 				cell.CellStyle = newCellStyle;
@@ -356,7 +366,14 @@ namespace NPOIPlus
 				object value = cellNameMap.CellValue ?? GetTableCellValue(cellNameMap.CellName, item);
 				cellParams.CellValue = value;
 
-				SetCellStyle(cell, cellNameMap);
+				TableCellStyleParams cellStyleParams =
+				new TableCellStyleParams
+				{
+					Workbook = _workbook,
+					ColNum = (ExcelColumns)colIndex,
+					RowNum = targetRowIndex
+				};
+				SetCellStyle(cell, cellNameMap, cellStyleParams);
 
 				if (cellNameMap.IsFormulaValue)
 				{
@@ -471,7 +488,13 @@ namespace NPOIPlus
 			return this;
 		}
 
-		public ITableCellStage SetCellStyle(string cellStyleKey, Action<IWorkbook, ICellStyle> cellStyleAction)
+		public ITableCellStage SetCellStyle(string cellStyleKey)
+		{
+			_cellNameMap.CellStyleKey = cellStyleKey;
+			return this;
+		}
+
+		public ITableCellStage SetCellStyle(string cellStyleKey, Action<TableCellStyleParams, ICellStyle> cellStyleAction)
 		{
 			_cellNameMap.CellStyleKey = cellStyleKey;
 			_cellNameMap.SetCellStyleAction = cellStyleAction;
@@ -515,7 +538,14 @@ namespace NPOIPlus
 		public Func<TableCellParams, object> SetValueAction { get; set; }
 		public Func<TableCellParams, object> SetFormulaValueAction { get; set; }
 		public string CellStyleKey { get; set; }
-		public Action<IWorkbook, ICellStyle> SetCellStyleAction { get; set; }
+		public Action<TableCellStyleParams, ICellStyle> SetCellStyleAction { get; set; }
+	}
+
+	public class TableCellStyleParams
+	{
+		public IWorkbook Workbook { get; set; }
+		public ExcelColumns ColNum { get; set; }
+		public int RowNum { get; set; }
 	}
 
 	public class TableCellParams

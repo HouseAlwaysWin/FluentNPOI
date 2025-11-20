@@ -26,7 +26,7 @@ namespace NPOIPlusConsoleExample
 				var outputPath = @$"{AppDomain.CurrentDomain.BaseDirectory}\Resources\Test2.xlsx";
 
 				var workbook = new FluentWorkbook(new XSSFWorkbook(filePath))
-				.ReadExcelFile(filePath)
+				// .ReadExcelFile(filePath)
 				.UseSheet("Sheet1")
 				.SetupGlobalCachedCellStyles((workbook, style) =>
 				{
@@ -34,12 +34,11 @@ namespace NPOIPlusConsoleExample
 					style.SetBorderAllStyle(BorderStyle.None);
 					style.SetFontInfo(workbook, "Calibri", 10);
 				})
+				.SetupCellStyle("DateOfBirth", (workbook, style) => { style.SetDataFormat(workbook, "yyyy-MM-dd"); })
 				.SetTable(testData, ExcelColumns.A, 1)
-				.BeginMapCell("ID").SetValue((value) => $"ID: {value.CellValue}").End()
+				.BeginMapCell("ID").SetValue((value) => $"ID: {value.CellValue}, Col: {value.ColNum}, Row: {value.RowNum}").End()
 				.BeginMapCell("Name").End()
-				.BeginMapCell("DateOfBirth").SetCellStyle("DateOfBirth",
-				(workbook, style) => { style.SetDataFormat(workbook, "yyyy-MM-dd"); }
-					).End()
+				.BeginMapCell("DateOfBirth").SetCellStyle("DateOfBirth").End()
 				.SetRow()
 				.Save(outputPath);
 
