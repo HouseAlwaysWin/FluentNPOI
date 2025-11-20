@@ -37,15 +37,19 @@ namespace NPOIPlus
 	public interface ITableStage
 	{
 		// ITableStage SetCell(string cellName, object value);
-		ITableStage MapCellByName(string cellName, Func<object, object> value = null);
+		ITableCellStage BeginMapCell(string cellName);
 		ITableStage SetRow();
 		FluentMemoryStream Save();
 		IWorkbook Save(string filePath);
 	}
 
-	public interface ITableCellStage<T>
+	public interface ITableCellStage
 	{
-		ITableCellStage<T> SetValue(T value);
+		ITableCellStage SetValue(object valueAction);
+		ITableCellStage SetValue(Func<object, object> valueAction);
+		ITableCellStage SetFormulaValue(Func<object, object> valueAction);
+		ITableCellStage SetCellStyle(string cellStyleKey, Action<IWorkbook, ICellStyle> cellStyleAction);
+		ITableStage End();
 	}
 
 	public interface ICellStage
@@ -150,7 +154,7 @@ namespace NPOIPlus
 
 		public ITableStage SetTable<T>(IEnumerable<T> table, ExcelColumns startCol, int startRow)
 		{
-			return new FluentTable<T>(_workbook, _sheet, table, startCol, startRow, _cellStylesCached);
+			return new FluentTable<T>(_workbook, _sheet, table, startCol, startRow, _cellStylesCached, new List<TableCellNameMap>());
 		}
 
 		public ISheetStage SetupGlobalCachedCellStyles(Action<IWorkbook, ICellStyle> styles)
@@ -171,10 +175,10 @@ namespace NPOIPlus
 		private IList<T> _itemsCache;
 		private ExcelColumns _startCol;
 		private int _startRow;
-		private List<TableCellNameMap> _cellNameMaps = new List<TableCellNameMap>();
+		private List<TableCellNameMap> _cellNameMaps;
 		private Dictionary<string, ICellStyle> _cellStylesCached;
 		public FluentTable(IWorkbook workbook, ISheet sheet, IEnumerable<T> table,
-		ExcelColumns startCol, int startRow, Dictionary<string, ICellStyle> cellStylesCached)
+		ExcelColumns startCol, int startRow, Dictionary<string, ICellStyle> cellStylesCached, List<TableCellNameMap> cellNameMaps)
 		{
 			_workbook = workbook;
 			_sheet = sheet;
@@ -182,6 +186,7 @@ namespace NPOIPlus
 			_startCol = NormalizeStartCol(startCol);
 			_startRow = NormalizeStartRow(startRow);
 			_cellStylesCached = cellStylesCached;
+			_cellNameMaps = cellNameMaps;
 		}
 
 		private ExcelColumns NormalizeStartCol(ExcelColumns col)
@@ -211,7 +216,6 @@ namespace NPOIPlus
 			if (index < 0 || index >= items.Count) return default;
 			return items[index];
 		}
-
 
 		private object GetTableCellValue(string cellName, object item)
 		{
@@ -294,6 +298,20 @@ namespace NPOIPlus
 			cell.SetCellValue(value.ToString());
 		}
 
+		private void SetFormulaValue(ICell cell, object value)
+		{
+			if (cell == null) return;
+			if (value == null || value == DBNull.Value) return;
+
+			var formula = value.ToString();
+			if (string.IsNullOrWhiteSpace(formula)) return;
+
+			// NPOI SetCellFormula 需要純公式字串（不含 '='）
+			if (formula.StartsWith("=")) formula = formula.Substring(1);
+
+			cell.SetCellFormula(formula);
+		}
+
 		private void SetCellStyle(ICell cell, TableCellNameMap cellNameMap)
 		{
 			if (!string.IsNullOrWhiteSpace(cellNameMap.CellStyleKey) && _cellStylesCached.ContainsKey(cellNameMap.CellStyleKey))
@@ -309,7 +327,7 @@ namespace NPOIPlus
 			else if (!string.IsNullOrWhiteSpace(cellNameMap.CellStyleKey) && cellNameMap.SetCellStyleAction != null)
 			{
 				ICellStyle newCellStyle = _workbook.CreateCellStyle();
-				cellNameMap.SetCellStyleAction(newCellStyle);
+				cellNameMap.SetCellStyleAction(_workbook, newCellStyle);
 				cellNameMap.CellStyleKey = cellNameMap.CellStyleKey;
 				_cellStylesCached.Add(cellNameMap.CellStyleKey, newCellStyle);
 				cell.CellStyle = newCellStyle;
@@ -332,25 +350,40 @@ namespace NPOIPlus
 
 				// 優先使用 TableCellNameMap 中的 Value，如果沒有則從 item 中獲取
 				Func<object, object> setValueAction = cellNameMap.SetValueAction;
-				object value = GetTableCellValue(cellNameMap.CellName, item);
-				if (setValueAction != null)
-				{
-					value = setValueAction(value);
-				}
+				Func<object, object> setFormulaValueAction = cellNameMap.SetFormulaValueAction;
+				object value = cellNameMap.CellValue ?? GetTableCellValue(cellNameMap.CellName, item);
 
 				SetCellStyle(cell, cellNameMap);
-				// write value
-				SetCellValue(cell, value);
+
+
+				if (cellNameMap.IsFormulaValue)
+				{
+					if (setFormulaValueAction != null)
+					{
+						value = setFormulaValueAction(value);
+					}
+					SetFormulaValue(cell, value);
+				}
+				else
+				{
+					if (setValueAction != null)
+					{
+						value = setValueAction(value);
+					}
+					SetCellValue(cell, value);
+				}
+
+
 				colIndex++;
 			}
 
 			return this;
 		}
 
-		public ITableStage MapCellByName(string cellName, Func<object, object> value = null)
+		public ITableCellStage BeginMapCell(string cellName)
 		{
-			_cellNameMaps.Add(new TableCellNameMap { CellName = cellName, SetValueAction = value });
-			return this;
+			_cellNameMaps.Add(new TableCellNameMap { CellName = cellName });
+			return new FluentTableCellStage<T>(_workbook, _sheet, _table, _startCol, _startRow, _cellStylesCached, cellName, _cellNameMaps);
 		}
 
 		public ITableStage SetRow()
@@ -383,6 +416,75 @@ namespace NPOIPlus
 		}
 	}
 
+	public class FluentTableCellStage<T> : ITableCellStage
+	{
+		private List<TableCellNameMap> _cellNameMaps;
+		private TableCellNameMap _cellNameMap;
+		private IWorkbook _workbook;
+		private ISheet _sheet;
+		private IEnumerable<T> _table;
+		private ExcelColumns _startCol;
+		private int _startRow;
+		private Dictionary<string, ICellStyle> _cellStylesCached;
+
+		public FluentTableCellStage(IWorkbook workbook, ISheet sheet, IEnumerable<T> table, ExcelColumns startCol, int startRow, Dictionary<string, ICellStyle> cellStylesCached, string cellName, List<TableCellNameMap> cellNameMaps)
+		{
+			_workbook = workbook;
+			_sheet = sheet;
+			_table = table;
+			_startCol = startCol;
+			_startRow = startRow;
+			_cellStylesCached = cellStylesCached;
+			_cellNameMaps = cellNameMaps;
+			_cellNameMap = cellNameMaps.First(c => c.CellName == cellName);
+		}
+
+		public ITableCellStage SetValue(object value)
+		{
+			_cellNameMap.CellValue = value;
+			_cellNameMap.IsFormulaValue = false;
+			return this;
+		}
+
+		public ITableCellStage SetValue(Func<object, object> valueAction)
+		{
+			_cellNameMap.SetValueAction = valueAction;
+			_cellNameMap.IsFormulaValue = false;
+			return this;
+		}
+
+
+		public ITableCellStage SetFormulaValue(object value)
+		{
+			_cellNameMap.CellValue = value;
+			_cellNameMap.IsFormulaValue = true;
+			return this;
+		}
+
+
+		public ITableCellStage SetFormulaValue(Func<object, object> valueAction)
+		{
+			_cellNameMap.SetFormulaValueAction = valueAction;
+			_cellNameMap.IsFormulaValue = true;
+			return this;
+		}
+
+		public ITableCellStage SetCellStyle(string cellStyleKey, Action<IWorkbook, ICellStyle> cellStyleAction)
+		{
+			_cellNameMap.CellStyleKey = cellStyleKey;
+			_cellNameMap.SetCellStyleAction = cellStyleAction;
+			return this;
+		}
+
+		public ITableStage End()
+		{
+			return new FluentTable<T>(_workbook, _sheet, _table, _startCol, _startRow, _cellStylesCached, _cellNameMaps);
+		}
+
+
+	}
+
+
 	public class FluentMemoryStream : MemoryStream
 	{
 		public FluentMemoryStream()
@@ -407,9 +509,12 @@ namespace NPOIPlus
 	public class TableCellNameMap
 	{
 		public string CellName { get; set; }
+		public object CellValue { get; set; }
+		public bool IsFormulaValue { get; set; }
 		public Func<object, object> SetValueAction { get; set; }
+		public Func<object, object> SetFormulaValueAction { get; set; }
 		public string CellStyleKey { get; set; }
-		public Action<ICellStyle> SetCellStyleAction { get; set; }
+		public Action<IWorkbook, ICellStyle> SetCellStyleAction { get; set; }
 	}
 
 
