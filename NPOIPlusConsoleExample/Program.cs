@@ -38,7 +38,8 @@ namespace NPOIPlusConsoleExample
 				.SetTable(testData, ExcelColumns.A, 1)
 				.BeginMapCell("ID").SetValue((value) => $"ID: {value.CellValue}, Col: {value.ColNum}, Row: {value.RowNum}").End()
 				.BeginMapCell("Name").End()
-				.BeginMapCell("DateOfBirth").SetCellStyle("DateOfBirth").End()
+				.BeginMapCell("DateOfBirth").End()
+				.BeginMapCell("Test").SetValue("C1:C3").SetCellType(CellType.Formula).End()
 				.SetRow()
 				.Save(outputPath);
 

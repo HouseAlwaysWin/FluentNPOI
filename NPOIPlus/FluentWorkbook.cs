@@ -309,6 +309,66 @@ namespace NPOIPlus
 			cell.SetCellValue(value.ToString());
 		}
 
+		private void SetCellValue(ICell cell, object value, CellType cellType)
+		{
+			if (cell == null)
+				return;
+
+			if (value == null || value == DBNull.Value)
+			{
+				cell.SetCellValue(string.Empty);
+				return;
+			}
+
+			// 1) 先依據 value 的實際型別寫入
+			SetCellValue(cell, value);
+
+			// 2) 若指定了 CellType（且非 Unknown），以 CellType 覆寫
+			if (cellType == CellType.Unknown) return;
+			if (cellType == CellType.Formula)
+			{
+				SetFormulaValue(cell, value);
+				return;
+			}
+
+			var text = value.ToString();
+			switch (cellType)
+			{
+				case CellType.Boolean:
+					{
+						if (bool.TryParse(text, out var bv)) { cell.SetCellValue(bv); return; }
+						if (int.TryParse(text, out var iv)) { cell.SetCellValue(iv != 0); return; }
+						cell.SetCellValue(!string.IsNullOrEmpty(text));
+						return;
+					}
+				case CellType.Numeric:
+					{
+						if (double.TryParse(text, out var dv)) { cell.SetCellValue(dv); return; }
+						if (DateTime.TryParse(text, out var dtv)) { cell.SetCellValue(dtv); return; }
+						// 若無法轉換為數值/日期則保留前一步的寫入結果
+						return;
+					}
+				case CellType.String:
+					{
+						cell.SetCellValue(text);
+						return;
+					}
+				case CellType.Blank:
+					{
+						cell.SetCellValue(string.Empty);
+						return;
+					}
+				case CellType.Error:
+					{
+						// NPOI 錯誤型別無從 object 直接設定，退為字串呈現
+						cell.SetCellValue(text);
+						return;
+					}
+				default:
+					return;
+			}
+		}
+
 		private void SetFormulaValue(ICell cell, object value)
 		{
 			if (cell == null) return;
@@ -376,7 +436,7 @@ namespace NPOIPlus
 				};
 				SetCellStyle(cell, cellNameMap, cellStyleParams);
 
-				if (cellNameMap.IsFormulaValue)
+				if (cellNameMap.CellType == CellType.Formula)
 				{
 					if (setFormulaValueAction != null)
 					{
@@ -390,7 +450,7 @@ namespace NPOIPlus
 					{
 						value = setValueAction(cellParams);
 					}
-					SetCellValue(cell, value);
+					SetCellValue(cell, value, cellNameMap.CellType);
 				}
 
 
@@ -462,14 +522,12 @@ namespace NPOIPlus
 		public ITableCellStage SetValue(object value)
 		{
 			_cellNameMap.CellValue = value;
-			_cellNameMap.IsFormulaValue = false;
 			return this;
 		}
 
 		public ITableCellStage SetValue(Func<TableCellParams, object> valueAction)
 		{
 			_cellNameMap.SetValueAction = valueAction;
-			_cellNameMap.IsFormulaValue = false;
 			return this;
 		}
 
@@ -477,7 +535,7 @@ namespace NPOIPlus
 		public ITableCellStage SetFormulaValue(object value)
 		{
 			_cellNameMap.CellValue = value;
-			_cellNameMap.IsFormulaValue = true;
+			_cellNameMap.CellType = CellType.Formula;
 			return this;
 		}
 
@@ -485,7 +543,7 @@ namespace NPOIPlus
 		public ITableCellStage SetFormulaValue(Func<TableCellParams, object> valueAction)
 		{
 			_cellNameMap.SetFormulaValueAction = valueAction;
-			_cellNameMap.IsFormulaValue = true;
+			_cellNameMap.CellType = CellType.Formula;
 			return this;
 		}
 
@@ -540,7 +598,6 @@ namespace NPOIPlus
 	{
 		public string CellName { get; set; }
 		public object CellValue { get; set; }
-		public bool IsFormulaValue { get; set; }
 		public Func<TableCellParams, object> SetValueAction { get; set; }
 		public Func<TableCellParams, object> SetFormulaValueAction { get; set; }
 		public string CellStyleKey { get; set; }
