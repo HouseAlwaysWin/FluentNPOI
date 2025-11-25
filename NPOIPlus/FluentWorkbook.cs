@@ -24,7 +24,6 @@ namespace NPOIPlus
 		ISheetStage UseSheet(string sheetName, bool createIfMissing = true);
 		ISheetStage UseSheet(ISheet sheet);
 		ISheetStage UseSheetAt(int index, bool createIfMissing = false);
-		IWorkbook GetWorkbook();
 	}
 
 	public interface ISheetStage
@@ -33,6 +32,7 @@ namespace NPOIPlus
 		ISheetStage SetupCellStyle(string cellStyleKey, Action<IWorkbook, ICellStyle> styles);
 		ITableStage SetTable<T>(IEnumerable<T> table, ExcelColumns startCol, int startRow);
 		ICellStage SetCell(ExcelColumns startCol, int startRow);
+		ISheetStage SetColumnWidth(ExcelColumns col, int width);
 	}
 
 
@@ -134,10 +134,8 @@ namespace NPOIPlus
 			return new FluentSheet(_workbook, _currentSheet);
 		}
 
-		public IWorkbook GetWorkbook()
-		{
-			return _workbook;
-		}
+
+
 	}
 
 	public class FluentSheet : ISheetStage
@@ -151,6 +149,13 @@ namespace NPOIPlus
 			_workbook = workbook;
 			_sheet = sheet;
 		}
+
+		public ISheetStage SetColumnWidth(ExcelColumns col, int width)
+		{
+			_sheet.SetColumnWidth((int)col, width * 256);
+			return new FluentSheet(_workbook, _sheet);
+		}
+
 
 		public ICellStage SetCell(ExcelColumns col, int row)
 		{

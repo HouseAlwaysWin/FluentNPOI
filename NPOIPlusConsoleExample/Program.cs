@@ -64,6 +64,7 @@ namespace NPOIPlusConsoleExample
 
 				var sheet = fluent
 				.UseSheet("Sheet1")
+				.SetColumnWidth(ExcelColumns.C, 20)
 				.SetupGlobalCachedCellStyles((workbook, style) =>
 				{
 					style.SetAligment(HorizontalAlignment.Center);
@@ -99,7 +100,6 @@ namespace NPOIPlusConsoleExample
 				.BeginMapCell("ID").SetValue((value) => $"ID: {value.CellValue}, Col: {value.ColNum}, Row: {value.RowNum}").SetCellStyle("HeaderBlue").End()
 				.BeginMapCell("Name").SetCellStyle("HeaderBlue").End()
 				.BeginMapCell("DateOfBirth").SetCellStyle("DateOfBirth").End()
-				.BeginMapCell("Test").SetValue("C1:C3").SetCellType(CellType.Formula).End()
 				.SetRow();
 
 				// 在 F 欄開始放入混合型別資料，測試更多型別與公式
@@ -161,6 +161,55 @@ namespace NPOIPlusConsoleExample
 					s.FillPattern = FillPattern.SolidForeground;
 					s.SetCellFillForegroundColor(IndexedColors.LightOrange);
 				}).End()
+				.SetRow();
+
+				// 第二個分頁（Summary）：不同資料與樣式示範
+				var sheet2Data = new List<Dictionary<string, object>>
+				{
+					new Dictionary<string, object> {
+						{ "Title", "Total Users" }, { "Value", testData.Count }, { "AsOfDate", DateTime.Today }, { "IsOk", true }, { "FormulaVal", "SUM(B2:B4)" }
+					},
+					new Dictionary<string, object> {
+						{ "Title", "Active Rate" }, { "Value", 0.8765 }, { "AsOfDate", DateTime.Today.AddDays(-1) }, { "IsOk", true }, { "FormulaVal", "B3*100" }
+					},
+					new Dictionary<string, object> {
+						{ "Title", "Remarks" }, { "Value", 12345.6789m }, { "AsOfDate", DateTime.Today.AddMonths(-1) }, { "IsOk", false }, { "FormulaVal", "AVERAGE(B2:B4)" }
+					},
+				};
+
+				var sheet2 = fluent
+				.UseSheet("Summary", true)
+				.SetupGlobalCachedCellStyles((workbook, style) =>
+				{
+					style.SetAligment(HorizontalAlignment.Center);
+					style.SetBorderAllStyle(BorderStyle.Thin);
+					style.SetFontInfo(workbook, "Calibri", 10);
+				})
+				.SetupCellStyle("HeaderBlue", (workbook, style) =>
+				{
+					style.SetBorderAllStyle(BorderStyle.Thin);
+					style.SetAligment(HorizontalAlignment.Center);
+					style.FillPattern = FillPattern.SolidForeground;
+					style.SetCellFillForegroundColor(IndexedColors.LightCornflowerBlue);
+				})
+				.SetupCellStyle("AmountCurrency", (workbook, style) =>
+				{
+					style.SetDataFormat(workbook, "#,##0.00");
+					style.SetAligment(HorizontalAlignment.Right);
+				})
+				.SetupCellStyle("DateStyle", (workbook, style) =>
+				{
+					style.SetDataFormat(workbook, "yyyy-MM-dd");
+					style.SetAligment(HorizontalAlignment.Center);
+				});
+
+				sheet2
+				.SetTable(sheet2Data, ExcelColumns.A, 1)
+				.BeginMapCell("Title").SetCellStyle("HeaderBlue").End()
+				.BeginMapCell("Value").SetCellType(CellType.Numeric).SetCellStyle("AmountCurrency").End()
+				.BeginMapCell("AsOfDate").SetCellStyle("DateStyle").End()
+				.BeginMapCell("IsOk").SetCellType(CellType.Boolean).End()
+				.BeginMapCell("FormulaVal").SetCellType(CellType.Formula).End()
 				.SetRow()
 				.Save(outputPath);
 
