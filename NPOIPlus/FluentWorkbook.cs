@@ -51,6 +51,7 @@ namespace NPOIPlus
 		ITableCellStage SetFormulaValue(Func<TableCellParams, object> valueAction);
 		ITableCellStage SetCellStyle(string cellStyleKey, Action<TableCellStyleParams, ICellStyle> cellStyleAction);
 		ITableCellStage SetCellStyle(string cellStyleKey);
+		ITableCellStage SetCellType(CellType cellType);
 		ITableStage End();
 	}
 
@@ -500,6 +501,11 @@ namespace NPOIPlus
 			_cellNameMap.SetCellStyleAction = cellStyleAction;
 			return this;
 		}
+		public ITableCellStage SetCellType(CellType cellType)
+		{
+			_cellNameMap.CellType = cellType;
+			return this;
+		}
 
 		public ITableStage End()
 		{
@@ -539,6 +545,7 @@ namespace NPOIPlus
 		public Func<TableCellParams, object> SetFormulaValueAction { get; set; }
 		public string CellStyleKey { get; set; }
 		public Action<TableCellStyleParams, ICellStyle> SetCellStyleAction { get; set; }
+		public CellType CellType { get; set; }
 	}
 
 	public class TableCellStyleParams
