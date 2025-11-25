@@ -45,6 +45,12 @@ namespace NPOIPlus
 		IWorkbook Save(string filePath);
 	}
 
+	
+	public interface ITableHeaderStage
+	{
+		ITableStage End();
+	}
+
 	public interface ITableCellStage
 	{
 		ITableCellStage SetValue(object value);
@@ -506,6 +512,35 @@ namespace NPOIPlus
 			return _workbook;
 		}
 	}
+
+	public class FluentTableHeaderStage<T> : ITableHeaderStage
+	{
+		private List<TableCellNameMap> _cellNameMaps;
+		private TableCellNameMap _cellNameMap;
+		private IWorkbook _workbook;
+		private ISheet _sheet;
+		private IEnumerable<T> _table;
+		private ExcelColumns _startCol;
+		private int _startRow;
+		private Dictionary<string, ICellStyle> _cellStylesCached;
+
+		public FluentTableHeaderStage(IWorkbook workbook, ISheet sheet, IEnumerable<T> table, ExcelColumns startCol, int startRow, Dictionary<string, ICellStyle> cellStylesCached, string cellName, List<TableCellNameMap> cellNameMaps)
+		{
+			_workbook = workbook;
+			_sheet = sheet;
+			_table = table;
+			_startCol = startCol;
+			_startRow = startRow;
+			_cellStylesCached = cellStylesCached;
+			_cellNameMaps = cellNameMaps;
+			_cellNameMap = cellNameMaps.First(c => c.CellName == cellName);
+		}
+
+        public ITableStage End()
+        {
+            throw new NotImplementedException();
+        }
+    }
 
 	public class FluentTableCellStage<T> : ITableCellStage
 	{
