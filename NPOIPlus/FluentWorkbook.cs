@@ -449,48 +449,6 @@ namespace NPOIPlus
 			var rowObj = _sheet.GetRow(targetRowIndex) ?? _sheet.CreateRow(targetRowIndex);
 			SetCellAction(_cellBodySets, rowObj, colIndex, targetRowIndex, item);
 
-			// foreach (var cellNameMap in _cellBodySet)
-			// {
-			// 	var cell = rowObj.GetCell(colIndex) ?? rowObj.CreateCell(colIndex);
-
-			// 	// 優先使用 TableCellNameMap 中的 Value，如果沒有則從 item 中獲取
-			// 	Func<TableCellParams, object> setValueAction = cellNameMap.SetValueAction;
-			// 	Func<TableCellParams, object> setFormulaValueAction = cellNameMap.SetFormulaValueAction;
-
-			// 	TableCellParams cellParams = new TableCellParams { ColNum = (ExcelColumns)colIndex, RowNum = targetRowIndex };
-			// 	object value = cellNameMap.CellValue ?? GetTableCellValue(cellNameMap.CellName, item);
-			// 	cellParams.CellValue = value;
-
-			// 	TableCellStyleParams cellStyleParams =
-			// 	new TableCellStyleParams
-			// 	{
-			// 		Workbook = _workbook,
-			// 		ColNum = (ExcelColumns)colIndex,
-			// 		RowNum = targetRowIndex
-			// 	};
-			// 	SetCellStyle(cell, cellNameMap, cellStyleParams);
-
-			// 	if (cellNameMap.CellType == CellType.Formula)
-			// 	{
-			// 		if (setFormulaValueAction != null)
-			// 		{
-			// 			value = setFormulaValueAction(cellParams);
-			// 		}
-			// 		SetFormulaValue(cell, value);
-			// 	}
-			// 	else
-			// 	{
-			// 		if (setValueAction != null)
-			// 		{
-			// 			value = setValueAction(cellParams);
-			// 		}
-			// 		SetCellValue(cell, value, cellNameMap.CellType);
-			// 	}
-
-
-			// 	colIndex++;
-			// }
-
 			return this;
 		}
 
@@ -504,7 +462,12 @@ namespace NPOIPlus
 				Func<TableCellParams, object> setValueAction = cellset.SetValueAction;
 				Func<TableCellParams, object> setFormulaValueAction = cellset.SetFormulaValueAction;
 
-				TableCellParams cellParams = new TableCellParams { ColNum = (ExcelColumns)colIndex, RowNum = targetRowIndex };
+				TableCellParams cellParams = new TableCellParams
+				{
+					ColNum = (ExcelColumns)colIndex,
+					RowNum = targetRowIndex,
+					RowItem = item
+				};
 				object value = cellset.CellValue ?? GetTableCellValue(cellset.CellName, item);
 				cellParams.CellValue = value;
 
@@ -513,7 +476,7 @@ namespace NPOIPlus
 				{
 					Workbook = _workbook,
 					ColNum = (ExcelColumns)colIndex,
-					RowNum = targetRowIndex
+					RowNum = targetRowIndex,
 				};
 				SetCellStyle(cell, cellset, cellStyleParams);
 
@@ -785,6 +748,7 @@ namespace NPOIPlus
 		public object CellValue { get; set; }
 		public ExcelColumns ColNum { get; set; }
 		public int RowNum { get; set; }
+		public object RowItem { get; set; }
 	}
 
 
