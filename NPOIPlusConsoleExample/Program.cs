@@ -36,17 +36,24 @@ namespace NPOIPlusConsoleExample
 
 				var fluent = new FluentWorkbook(new XSSFWorkbook(filePath));
 
-				var sheet = fluent
-				.UseSheet("Sheet1")
-				.SetColumnWidth(ExcelColumns.C, 20)
+				fluent
+				// .UseSheet("Sheet1")
+				// .SetColumnWidth(ExcelColumns.C, 20)
 				.SetupGlobalCachedCellStyles((workbook, style) =>
 				{
 					style.SetAligment(HorizontalAlignment.Center);
-					style.SetBorderAllStyle(BorderStyle.None);
+					style.SetBorderAllStyle(BorderStyle.Thin);
 					style.SetFontInfo(workbook, "Calibri", 10);
 				})
 				// 日期格式樣式
-				.SetupCellStyle("DateOfBirth", (workbook, style) => { style.SetDataFormat(workbook, "yyyy-MM-dd"); })
+				.SetupCellStyle("DateOfBirth", (workbook, style) =>
+				{
+					style.SetDataFormat(workbook, "yyyy-MM-dd");
+					style.SetBorderAllStyle(BorderStyle.Thin);
+					style.SetAligment(HorizontalAlignment.Center);
+					style.FillPattern = FillPattern.SolidForeground;
+					style.SetCellFillForegroundColor(IndexedColors.LightGreen);
+				})
 				// 藍底白字標題風格（示意背景色）
 				.SetupCellStyle("HeaderBlue", (workbook, style) =>
 				{
@@ -65,18 +72,21 @@ namespace NPOIPlusConsoleExample
 				// 金額格式
 				.SetupCellStyle("AmountCurrency", (workbook, style) =>
 				{
+					style.SetBorderAllStyle(BorderStyle.Thin);
 					style.SetDataFormat(workbook, "#,##0.00");
 					style.SetAligment(HorizontalAlignment.Right);
 				})
 				// 黃底高亮
 				.SetupCellStyle("HighlightYellow", (workbook, style) =>
 				{
+					style.SetBorderAllStyle(BorderStyle.Thin);
 					style.FillPattern = FillPattern.SolidForeground;
 					style.SetCellFillForegroundColor(IndexedColors.Yellow);
 				});
 
 				// Sheet1：只放一個表（A 欄開始），並有抬頭（標題列），涵蓋多種欄位型別
-				sheet
+				fluent.UseSheet("Sheet1")
+				.SetColumnWidth(ExcelColumns.A, ExcelColumns.H, 20)
 				.SetTable(testData, ExcelColumns.A, 1)
 				.BeginTitleSet("ID").SetCellStyle("HeaderBlue")
 				.BeginBodySet("ID").SetCellStyle("BodyGreen").End()
@@ -85,7 +95,7 @@ namespace NPOIPlusConsoleExample
 				.BeginBodySet("Name").SetCellStyle("BodyGreen").End()
 
 				.BeginTitleSet("生日").SetCellStyle("HeaderBlue")
-				.BeginBodySet("DateOfBirth").SetCellStyle("DateOfBirth").SetCellStyle("BodyGreen").End()
+				.BeginBodySet("DateOfBirth").SetCellStyle("DateOfBirth").End()
 
 				.BeginTitleSet("是否活躍").SetCellStyle("HeaderBlue")
 				.BeginBodySet("IsActive").SetCellType(CellType.Boolean).End()
@@ -118,30 +128,7 @@ namespace NPOIPlusConsoleExample
 				};
 
 				var sheet2 = fluent
-				.UseSheet("Summary", true)
-				.SetupGlobalCachedCellStyles((workbook, style) =>
-				{
-					style.SetAligment(HorizontalAlignment.Center);
-					style.SetBorderAllStyle(BorderStyle.Thin);
-					style.SetFontInfo(workbook, "Calibri", 10);
-				})
-				.SetupCellStyle("HeaderBlue", (workbook, style) =>
-				{
-					style.SetBorderAllStyle(BorderStyle.Thin);
-					style.SetAligment(HorizontalAlignment.Center);
-					style.FillPattern = FillPattern.SolidForeground;
-					style.SetCellFillForegroundColor(IndexedColors.LightCornflowerBlue);
-				})
-				.SetupCellStyle("AmountCurrency", (workbook, style) =>
-				{
-					style.SetDataFormat(workbook, "#,##0.00");
-					style.SetAligment(HorizontalAlignment.Right);
-				})
-				.SetupCellStyle("DateStyle", (workbook, style) =>
-				{
-					style.SetDataFormat(workbook, "yyyy-MM-dd");
-					style.SetAligment(HorizontalAlignment.Center);
-				});
+				.UseSheet("Summary", true);
 
 				sheet2
 				.SetTable(sheet2Data, ExcelColumns.A, 1)

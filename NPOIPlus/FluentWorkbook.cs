@@ -21,6 +21,8 @@ namespace NPOIPlus
 	public interface IWorkbookStage
 	{
 		IWorkbookStage ReadExcelFile(string filePath);
+		IWorkbookStage SetupGlobalCachedCellStyles(Action<IWorkbook, ICellStyle> styles);
+		IWorkbookStage SetupCellStyle(string cellStyleKey, Action<IWorkbook, ICellStyle> styles);
 		ISheetStage UseSheet(string sheetName, bool createIfMissing = true);
 		ISheetStage UseSheet(ISheet sheet);
 		ISheetStage UseSheetAt(int index, bool createIfMissing = false);
@@ -28,11 +30,10 @@ namespace NPOIPlus
 
 	public interface ISheetStage
 	{
-		ISheetStage SetupGlobalCachedCellStyles(Action<IWorkbook, ICellStyle> styles);
-		ISheetStage SetupCellStyle(string cellStyleKey, Action<IWorkbook, ICellStyle> styles);
 		ITableStage<T> SetTable<T>(IEnumerable<T> table, ExcelColumns startCol, int startRow);
 		ICellStage SetCell(ExcelColumns startCol, int startRow);
 		ISheetStage SetColumnWidth(ExcelColumns col, int width);
+		ISheetStage SetColumnWidth(ExcelColumns startCol, ExcelColumns endCol, int width);
 	}
 
 
@@ -109,7 +110,6 @@ namespace NPOIPlus
 	{
 		private IWorkbook _workbook;
 		private ISheet _currentSheet;
-		private FileStream _fileStream;
 		private Dictionary<string, ICellStyle> _cellStylesCached = new Dictionary<string, ICellStyle>();
 		public FluentWorkbook(IWorkbook workbook)
 		{
@@ -148,6 +148,22 @@ namespace NPOIPlus
 			return this;
 		}
 
+		public IWorkbookStage SetupGlobalCachedCellStyles(Action<IWorkbook, ICellStyle> styles)
+		{
+			ICellStyle newCellStyle = _workbook.CreateCellStyle();
+			styles(_workbook, newCellStyle);
+			_cellStylesCached.Clear();
+			_cellStylesCached.Add("global", newCellStyle);
+			return this;
+		}
+
+		public IWorkbookStage SetupCellStyle(string cellStyleKey, Action<IWorkbook, ICellStyle> styles)
+		{
+			ICellStyle newCellStyle = _workbook.CreateCellStyle();
+			styles(_workbook, newCellStyle);
+			_cellStylesCached.Add(cellStyleKey, newCellStyle);
+			return this;
+		}
 
 		public ISheetStage UseSheet(string sheetName, bool createIfMissing = true)
 		{
@@ -156,13 +172,13 @@ namespace NPOIPlus
 			{
 				_currentSheet = _workbook.CreateSheet(sheetName);
 			}
-			return new FluentSheet(_workbook, _currentSheet);
+			return new FluentSheet(_workbook, _currentSheet, _cellStylesCached);
 		}
 
 		public ISheetStage UseSheet(ISheet sheet)
 		{
 			_currentSheet = sheet;
-			return new FluentSheet(_workbook, _currentSheet);
+			return new FluentSheet(_workbook, _currentSheet, _cellStylesCached);
 		}
 
 		public ISheetStage UseSheetAt(int index, bool createIfMissing = false)
@@ -172,7 +188,7 @@ namespace NPOIPlus
 			{
 				_currentSheet = _workbook.CreateSheet();
 			}
-			return new FluentSheet(_workbook, _currentSheet);
+			return new FluentSheet(_workbook, _currentSheet, _cellStylesCached);
 		}
 
 
@@ -183,18 +199,28 @@ namespace NPOIPlus
 	{
 		private ISheet _sheet;
 		private IWorkbook _workbook;
-		private Dictionary<string, ICellStyle> _cellStylesCached = new Dictionary<string, ICellStyle>();
-		private Action<IWorkbook, ICellStyle> _globalCellStylesAction;
-		public FluentSheet(IWorkbook workbook, ISheet sheet)
+		private Dictionary<string, ICellStyle> _cellStylesCached;
+
+		public FluentSheet(IWorkbook workbook, ISheet sheet, Dictionary<string, ICellStyle> cellStylesCached)
 		{
 			_workbook = workbook;
 			_sheet = sheet;
+			_cellStylesCached = cellStylesCached;
 		}
 
 		public ISheetStage SetColumnWidth(ExcelColumns col, int width)
 		{
 			_sheet.SetColumnWidth((int)col, width * 256);
-			return new FluentSheet(_workbook, _sheet);
+			return new FluentSheet(_workbook, _sheet, _cellStylesCached);
+		}
+
+		public ISheetStage SetColumnWidth(ExcelColumns startCol, ExcelColumns endCol, int width)
+		{
+			for (int i = (int)startCol; i <= (int)endCol; i++)
+			{
+				_sheet.SetColumnWidth(i, width * 256);
+			}
+			return new FluentSheet(_workbook, _sheet, _cellStylesCached);
 		}
 
 
@@ -210,22 +236,6 @@ namespace NPOIPlus
 		public ITableStage<T> SetTable<T>(IEnumerable<T> table, ExcelColumns startCol, int startRow)
 		{
 			return new FluentTable<T>(_workbook, _sheet, table, startCol, startRow, _cellStylesCached, new List<TableCellSet>(), new List<TableCellSet>());
-		}
-
-		public ISheetStage SetupGlobalCachedCellStyles(Action<IWorkbook, ICellStyle> styles)
-		{
-			ICellStyle newCellStyle = _workbook.CreateCellStyle();
-			styles(_workbook, newCellStyle);
-			_cellStylesCached.Add("global", newCellStyle);
-			return this;
-		}
-
-		public ISheetStage SetupCellStyle(string cellStyleKey, Action<IWorkbook, ICellStyle> styles)
-		{
-			ICellStyle newCellStyle = _workbook.CreateCellStyle();
-			styles(_workbook, newCellStyle);
-			_cellStylesCached.Add(cellStyleKey, newCellStyle);
-			return this;
 		}
 	}
 
@@ -630,7 +640,7 @@ namespace NPOIPlus
 		}
 	}
 
-public class FluentTableHeaderStage<T> : ITableHeaderStage, ITableHeaderStage<T>
+	public class FluentTableHeaderStage<T> : ITableHeaderStage, ITableHeaderStage<T>
 	{
 		private List<TableCellSet> _cellBodySets;
 		private List<TableCellSet> _cellTitleSets;
@@ -737,7 +747,7 @@ public class FluentTableHeaderStage<T> : ITableHeaderStage, ITableHeaderStage<T>
 		}
 	}
 
-public class FluentTableCellStage<T> : ITableCellStage, ITableCellStage<T>
+	public class FluentTableCellStage<T> : ITableCellStage, ITableCellStage<T>
 	{
 		private List<TableCellSet> _cellTitleSets;
 		private List<TableCellSet> _cellBodySets;
