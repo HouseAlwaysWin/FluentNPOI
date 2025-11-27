@@ -30,7 +30,7 @@ namespace NPOIPlus
 	{
 		ISheetStage SetupGlobalCachedCellStyles(Action<IWorkbook, ICellStyle> styles);
 		ISheetStage SetupCellStyle(string cellStyleKey, Action<IWorkbook, ICellStyle> styles);
-		ITableStage SetTable<T>(IEnumerable<T> table, ExcelColumns startCol, int startRow);
+		ITableStage<T> SetTable<T>(IEnumerable<T> table, ExcelColumns startCol, int startRow);
 		ICellStage SetCell(ExcelColumns startCol, int startRow);
 		ISheetStage SetColumnWidth(ExcelColumns col, int width);
 	}
@@ -66,6 +66,35 @@ namespace NPOIPlus
 		ITableCellStage SetCellStyle(string cellStyleKey);
 		ITableCellStage SetCellType(CellType cellType);
 		ITableStage End();
+	}
+
+	// 泛型版鏈式介面（不破壞舊介面，並存）
+	public interface ITableStage<T>
+	{
+		ITableCellStage<T> BeginCellSet(string cellName);
+		ITableHeaderStage<T> BeginTitleSet(string title);
+		ITableStage<T> SetRow();
+		FluentMemoryStream ToStream();
+		IWorkbook SaveToPath(string filePath);
+	}
+	public interface ITableHeaderStage<T>
+	{
+		ITableCellStage<T> BeginBodySet(string cellName);
+		ITableHeaderStage<T> SetValue(Func<TableCellParams<T>, object> valueAction);
+		ITableHeaderStage<T> SetFormulaValue(Func<TableCellParams<T>, object> valueAction);
+		ITableHeaderStage<T> SetCellStyle(string cellStyleKey, Action<TableCellStyleParams, ICellStyle> cellStyleAction);
+		ITableHeaderStage<T> SetCellStyle(string cellStyleKey);
+		ITableHeaderStage<T> SetCellType(CellType cellType);
+	}
+	public interface ITableCellStage<T>
+	{
+		ITableCellStage<T> SetValue(object value);
+		ITableCellStage<T> SetValue(Func<TableCellParams<T>, object> valueAction);
+		ITableCellStage<T> SetFormulaValue(Func<TableCellParams<T>, object> valueAction);
+		ITableCellStage<T> SetCellStyle(string cellStyleKey, Action<TableCellStyleParams, ICellStyle> cellStyleAction);
+		ITableCellStage<T> SetCellStyle(string cellStyleKey);
+		ITableCellStage<T> SetCellType(CellType cellType);
+		ITableStage<T> End();
 	}
 
 	public interface ICellStage
@@ -178,7 +207,7 @@ namespace NPOIPlus
 			return new FluentCell(_workbook, _sheet, cell);
 		}
 
-		public ITableStage SetTable<T>(IEnumerable<T> table, ExcelColumns startCol, int startRow)
+		public ITableStage<T> SetTable<T>(IEnumerable<T> table, ExcelColumns startCol, int startRow)
 		{
 			return new FluentTable<T>(_workbook, _sheet, table, startCol, startRow, _cellStylesCached, new List<TableCellSet>(), new List<TableCellSet>());
 		}
@@ -201,7 +230,7 @@ namespace NPOIPlus
 	}
 
 
-	public class FluentTable<T> : ITableStage
+	public class FluentTable<T> : ITableStage, ITableStage<T>
 	{
 		private ISheet _sheet;
 		private IWorkbook _workbook;
@@ -471,6 +500,15 @@ namespace NPOIPlus
 				object value = cellset.CellValue ?? GetTableCellValue(cellset.CellName, item);
 				cellParams.CellValue = value;
 
+				// 準備泛型參數（供泛型委派使用）
+				var cellParamsT = new TableCellParams<T>
+				{
+					ColNum = (ExcelColumns)colIndex,
+					RowNum = targetRowIndex,
+					RowItem = item is T tItem ? tItem : default,
+					CellValue = value
+				};
+
 				TableCellStyleParams cellStyleParams =
 				new TableCellStyleParams
 				{
@@ -482,7 +520,18 @@ namespace NPOIPlus
 
 				if (cellset.CellType == CellType.Formula)
 				{
-					if (setFormulaValueAction != null)
+					if (cellset.SetFormulaValueActionGeneric != null)
+					{
+						if (cellset.SetFormulaValueActionGeneric is Func<TableCellParams<T>, object> gFormula)
+						{
+							value = gFormula(cellParamsT);
+						}
+						else
+						{
+							value = cellset.SetFormulaValueActionGeneric.DynamicInvoke(cellParamsT);
+						}
+					}
+					else if (setFormulaValueAction != null)
 					{
 						value = setFormulaValueAction(cellParams);
 					}
@@ -490,7 +539,18 @@ namespace NPOIPlus
 				}
 				else
 				{
-					if (setValueAction != null)
+					if (cellset.SetValueActionGeneric != null)
+					{
+						if (cellset.SetValueActionGeneric is Func<TableCellParams<T>, object> gValue)
+						{
+							value = gValue(cellParamsT);
+						}
+						else
+						{
+							value = cellset.SetValueActionGeneric.DynamicInvoke(cellParamsT);
+						}
+					}
+					else if (setValueAction != null)
 					{
 						value = setValueAction(cellParams);
 					}
@@ -507,14 +567,32 @@ namespace NPOIPlus
 			_cellBodySets.Add(new TableCellSet { CellName = cellName });
 			return new FluentTableCellStage<T>(_workbook, _sheet, _table, _startCol, _startRow, _cellStylesCached, cellName, _cellTitleSets, _cellBodySets);
 		}
+		ITableCellStage<T> ITableStage<T>.BeginCellSet(string cellName)
+		{
+			_cellBodySets.Add(new TableCellSet { CellName = cellName });
+			return new FluentTableCellStage<T>(_workbook, _sheet, _table, _startCol, _startRow, _cellStylesCached, cellName, _cellTitleSets, _cellBodySets);
+		}
 
 		public ITableHeaderStage BeginTitleSet(string title)
 		{
 			_cellTitleSets.Add(new TableCellSet { CellName = $"{title}_TITLE", CellValue = title });
 			return new FluentTableHeaderStage<T>(_workbook, _sheet, _table, _startCol, _startRow, _cellStylesCached, title, _cellTitleSets, _cellBodySets);
 		}
+		ITableHeaderStage<T> ITableStage<T>.BeginTitleSet(string title)
+		{
+			_cellTitleSets.Add(new TableCellSet { CellName = $"{title}_TITLE", CellValue = title });
+			return new FluentTableHeaderStage<T>(_workbook, _sheet, _table, _startCol, _startRow, _cellStylesCached, title, _cellTitleSets, _cellBodySets);
+		}
 
 		public ITableStage SetRow()
+		{
+			for (int i = 0; i < _table.Count(); i++)
+			{
+				SetRow(i);
+			}
+			return this;
+		}
+		ITableStage<T> ITableStage<T>.SetRow()
 		{
 			for (int i = 0; i < _table.Count(); i++)
 			{
@@ -533,6 +611,10 @@ namespace NPOIPlus
 			ms.AllowClose = true;
 			return ms;
 		}
+		FluentMemoryStream ITableStage<T>.ToStream()
+		{
+			return ToStream();
+		}
 
 		public IWorkbook SaveToPath(string filePath)
 		{
@@ -542,9 +624,13 @@ namespace NPOIPlus
 			}
 			return _workbook;
 		}
+		IWorkbook ITableStage<T>.SaveToPath(string filePath)
+		{
+			return SaveToPath(filePath);
+		}
 	}
 
-	public class FluentTableHeaderStage<T> : ITableHeaderStage
+public class FluentTableHeaderStage<T> : ITableHeaderStage, ITableHeaderStage<T>
 	{
 		private List<TableCellSet> _cellBodySets;
 		private List<TableCellSet> _cellTitleSets;
@@ -578,6 +664,11 @@ namespace NPOIPlus
 			_cellTitleSet.SetValueAction = valueAction;
 			return this;
 		}
+		ITableHeaderStage<T> ITableHeaderStage<T>.SetValue(Func<TableCellParams<T>, object> valueAction)
+		{
+			_cellTitleSet.SetValueActionGeneric = valueAction;
+			return this;
+		}
 
 
 		public ITableHeaderStage SetFormulaValue(object value)
@@ -594,8 +685,19 @@ namespace NPOIPlus
 			_cellTitleSet.CellType = CellType.Formula;
 			return this;
 		}
+		ITableHeaderStage<T> ITableHeaderStage<T>.SetFormulaValue(Func<TableCellParams<T>, object> valueAction)
+		{
+			_cellTitleSet.SetFormulaValueActionGeneric = valueAction;
+			_cellTitleSet.CellType = CellType.Formula;
+			return this;
+		}
 
 		public ITableHeaderStage SetCellStyle(string cellStyleKey)
+		{
+			_cellTitleSet.CellStyleKey = cellStyleKey;
+			return this;
+		}
+		ITableHeaderStage<T> ITableHeaderStage<T>.SetCellStyle(string cellStyleKey)
 		{
 			_cellTitleSet.CellStyleKey = cellStyleKey;
 			return this;
@@ -607,7 +709,18 @@ namespace NPOIPlus
 			_cellTitleSet.SetCellStyleAction = cellStyleAction;
 			return this;
 		}
+		ITableHeaderStage<T> ITableHeaderStage<T>.SetCellStyle(string cellStyleKey, Action<TableCellStyleParams, ICellStyle> cellStyleAction)
+		{
+			_cellTitleSet.CellStyleKey = cellStyleKey;
+			_cellTitleSet.SetCellStyleAction = cellStyleAction;
+			return this;
+		}
 		public ITableHeaderStage SetCellType(CellType cellType)
+		{
+			_cellTitleSet.CellType = cellType;
+			return this;
+		}
+		ITableHeaderStage<T> ITableHeaderStage<T>.SetCellType(CellType cellType)
 		{
 			_cellTitleSet.CellType = cellType;
 			return this;
@@ -617,9 +730,14 @@ namespace NPOIPlus
 			_cellBodySets.Add(new TableCellSet { CellName = cellName });
 			return new FluentTableCellStage<T>(_workbook, _sheet, _table, _startCol, _startRow, _cellStylesCached, cellName, _cellTitleSets, _cellBodySets);
 		}
+		ITableCellStage<T> ITableHeaderStage<T>.BeginBodySet(string cellName)
+		{
+			_cellBodySets.Add(new TableCellSet { CellName = cellName });
+			return new FluentTableCellStage<T>(_workbook, _sheet, _table, _startCol, _startRow, _cellStylesCached, cellName, _cellTitleSets, _cellBodySets);
+		}
 	}
 
-	public class FluentTableCellStage<T> : ITableCellStage
+public class FluentTableCellStage<T> : ITableCellStage, ITableCellStage<T>
 	{
 		private List<TableCellSet> _cellTitleSets;
 		private List<TableCellSet> _cellBodySets;
@@ -660,6 +778,16 @@ namespace NPOIPlus
 			_cellSet.SetValueAction = valueAction;
 			return this;
 		}
+		ITableCellStage<T> ITableCellStage<T>.SetValue(object value)
+		{
+			_cellSet.CellValue = value;
+			return this;
+		}
+		ITableCellStage<T> ITableCellStage<T>.SetValue(Func<TableCellParams<T>, object> valueAction)
+		{
+			_cellSet.SetValueActionGeneric = valueAction;
+			return this;
+		}
 
 
 		public ITableCellStage SetFormulaValue(object value)
@@ -676,6 +804,12 @@ namespace NPOIPlus
 			_cellSet.CellType = CellType.Formula;
 			return this;
 		}
+		ITableCellStage<T> ITableCellStage<T>.SetFormulaValue(Func<TableCellParams<T>, object> valueAction)
+		{
+			_cellSet.SetFormulaValueActionGeneric = valueAction;
+			_cellSet.CellType = CellType.Formula;
+			return this;
+		}
 
 		public ITableCellStage SetCellStyle(string cellStyleKey)
 		{
@@ -689,13 +823,33 @@ namespace NPOIPlus
 			_cellSet.SetCellStyleAction = cellStyleAction;
 			return this;
 		}
+		ITableCellStage<T> ITableCellStage<T>.SetCellStyle(string cellStyleKey)
+		{
+			_cellSet.CellStyleKey = cellStyleKey;
+			return this;
+		}
+		ITableCellStage<T> ITableCellStage<T>.SetCellStyle(string cellStyleKey, Action<TableCellStyleParams, ICellStyle> cellStyleAction)
+		{
+			_cellSet.CellStyleKey = cellStyleKey;
+			_cellSet.SetCellStyleAction = cellStyleAction;
+			return this;
+		}
 		public ITableCellStage SetCellType(CellType cellType)
+		{
+			_cellSet.CellType = cellType;
+			return this;
+		}
+		ITableCellStage<T> ITableCellStage<T>.SetCellType(CellType cellType)
 		{
 			_cellSet.CellType = cellType;
 			return this;
 		}
 
 		public ITableStage End()
+		{
+			return new FluentTable<T>(_workbook, _sheet, _table, _startCol, _startRow, _cellStylesCached, _cellTitleSets, _cellBodySets);
+		}
+		ITableStage<T> ITableCellStage<T>.End()
 		{
 			return new FluentTable<T>(_workbook, _sheet, _table, _startCol, _startRow, _cellStylesCached, _cellTitleSets, _cellBodySets);
 		}
@@ -731,6 +885,9 @@ namespace NPOIPlus
 		public object CellValue { get; set; }
 		public Func<TableCellParams, object> SetValueAction { get; set; }
 		public Func<TableCellParams, object> SetFormulaValueAction { get; set; }
+		// 泛型委派（供 ITable*Stage<T> 使用）
+		public Delegate SetValueActionGeneric { get; set; }
+		public Delegate SetFormulaValueActionGeneric { get; set; }
 		public string CellStyleKey { get; set; }
 		public Action<TableCellStyleParams, ICellStyle> SetCellStyleAction { get; set; }
 		public CellType CellType { get; set; }
@@ -743,12 +900,26 @@ namespace NPOIPlus
 		public int RowNum { get; set; }
 	}
 
+	// 非泛型參數類型（相容舊 API）
 	public class TableCellParams
 	{
 		public object CellValue { get; set; }
 		public ExcelColumns ColNum { get; set; }
 		public int RowNum { get; set; }
 		public object RowItem { get; set; }
+
+		public T GetRowItem<T>()
+		{
+			return RowItem is T t ? t : default;
+		}
+	}
+
+	public class TableCellParams<T>
+	{
+		public object CellValue { get; set; }
+		public ExcelColumns ColNum { get; set; }
+		public int RowNum { get; set; }
+		public T RowItem { get; set; }
 	}
 
 
