@@ -20,6 +20,7 @@ namespace NPOIPlus
 
 	public interface IWorkbookStage
 	{
+		IWorkbook GetWorkbook();
 		IWorkbookStage ReadExcelFile(string filePath);
 		IWorkbookStage SetupGlobalCachedCellStyles(Action<IWorkbook, ICellStyle> styles);
 		IWorkbookStage SetupCellStyle(string cellStyleKey, Action<IWorkbook, ICellStyle> styles);
@@ -30,10 +31,12 @@ namespace NPOIPlus
 
 	public interface ISheetStage
 	{
+		ISheet GetSheet();
 		ITableStage<T> SetTable<T>(IEnumerable<T> table, ExcelColumns startCol, int startRow);
 		ICellStage SetCell(ExcelColumns startCol, int startRow);
 		ISheetStage SetColumnWidth(ExcelColumns col, int width);
 		ISheetStage SetColumnWidth(ExcelColumns startCol, ExcelColumns endCol, int width);
+		ISheetStage SetExcelCellMerge(ExcelColumns startCol, ExcelColumns endCol, int row);
 	}
 
 
@@ -116,6 +119,11 @@ namespace NPOIPlus
 			_workbook = workbook;
 		}
 
+		public IWorkbook GetWorkbook()
+		{
+			return _workbook;
+		}
+
 		public IWorkbookStage ReadExcelFile(string filePath)
 		{
 			if (string.IsNullOrWhiteSpace(filePath)) throw new ArgumentNullException(nameof(filePath));
@@ -192,7 +200,6 @@ namespace NPOIPlus
 		}
 
 
-
 	}
 
 	public class FluentSheet : ISheetStage
@@ -208,6 +215,11 @@ namespace NPOIPlus
 			_cellStylesCached = cellStylesCached;
 		}
 
+		public ISheet GetSheet()
+		{
+			return _sheet;
+		}
+
 		public ISheetStage SetColumnWidth(ExcelColumns col, int width)
 		{
 			_sheet.SetColumnWidth((int)col, width * 256);
@@ -220,6 +232,19 @@ namespace NPOIPlus
 			{
 				_sheet.SetColumnWidth(i, width * 256);
 			}
+			return new FluentSheet(_workbook, _sheet, _cellStylesCached);
+		}
+
+
+		public ISheetStage SetExcelCellMerge(ExcelColumns startCol, ExcelColumns endCol, int row)
+		{
+			_sheet.SetExcelCellMerge(startCol, endCol, row);
+			return new FluentSheet(_workbook, _sheet, _cellStylesCached);
+		}
+
+		public ISheetStage SetExcelCellMerge(ExcelColumns startCol, ExcelColumns endCol, int firstRow, int lastRow)
+		{
+			_sheet.SetExcelCellMerge(startCol, endCol, firstRow, lastRow);
 			return new FluentSheet(_workbook, _sheet, _cellStylesCached);
 		}
 

@@ -84,6 +84,7 @@ namespace NPOIPlusConsoleExample
 					style.SetCellFillForegroundColor(IndexedColors.Yellow);
 				});
 
+
 				// Sheet1：只放一個表（A 欄開始），並有抬頭（標題列），涵蓋多種欄位型別
 				fluent.UseSheet("Sheet1")
 				.SetColumnWidth(ExcelColumns.A, ExcelColumns.H, 20)
