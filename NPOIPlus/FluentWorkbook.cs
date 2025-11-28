@@ -777,7 +777,7 @@ namespace NPOIPlus
 
 	public ITableHeaderStage CopyStyleFromCell(ExcelColumns col, int rowIndex)
 	{
-		string key = $"{col}{rowIndex}";
+		string key = $"{_sheet.SheetName}_{col}{rowIndex}";
 		ICell cell = _sheet.GetExcelCell(col, rowIndex);
 		if (cell != null && cell.CellStyle != null && !_cellStylesCached.ContainsKey(key))
 		{
@@ -790,7 +790,7 @@ namespace NPOIPlus
 	}
 	ITableHeaderStage<T> ITableHeaderStage<T>.CopyStyleFromCell(ExcelColumns col, int rowIndex)
 	{
-		string key = $"{col}{rowIndex}";
+		string key = $"{_sheet.SheetName}_{col}{rowIndex}";
 		ICell cell = _sheet.GetExcelCell(col, rowIndex);
 		if (cell != null && cell.CellStyle != null && !_cellStylesCached.ContainsKey(key))
 		{
@@ -913,7 +913,7 @@ namespace NPOIPlus
 
 	public ITableCellStage CopyStyleFromCell(ExcelColumns col, int rowIndex)
 	{
-		string key = $"{col}{rowIndex}";
+		string key = $"{_sheet.SheetName}_{col}{rowIndex}";
 		ICell cell = _sheet.GetExcelCell(col, rowIndex);
 		if (cell != null && cell.CellStyle != null && !_cellStylesCached.ContainsKey(key))
 		{
@@ -926,7 +926,7 @@ namespace NPOIPlus
 	}
 	ITableCellStage<T> ITableCellStage<T>.CopyStyleFromCell(ExcelColumns col, int rowIndex)
 	{
-		string key = $"{col}{rowIndex}";
+		string key = $"{_sheet.SheetName}_{col}{rowIndex}";
 		ICell cell = _sheet.GetExcelCell(col, rowIndex);
 		if (cell != null && cell.CellStyle != null && !_cellStylesCached.ContainsKey(key))
 		{
