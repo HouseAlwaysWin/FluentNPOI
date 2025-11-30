@@ -137,7 +137,8 @@ namespace NPOIPlusConsoleExample
 				.BeginCellSet("Value").SetCellType(CellType.Numeric).SetCellStyle("AmountCurrency").End()
 				.BeginCellSet("AsOfDate").SetCellStyle("DateStyle").End()
 				.BeginCellSet("IsOk").SetCellType(CellType.Boolean).End()
-				.BeginCellSet("FormulaVal").SetCellType(CellType.Formula).End()
+				.BeginCellSet("FormulaVal")
+				.SetCellType(CellType.Formula).End()
 				.BuildRows();
 
 				// Sheet3：展示 CopyStyleFromCell 功能

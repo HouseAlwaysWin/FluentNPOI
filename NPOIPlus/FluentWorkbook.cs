@@ -40,69 +40,15 @@ namespace NPOIPlus
 	}
 
 
-	public interface ITableStage
-	{
-		// ITableStage SetCell(string cellName, object value);
-		ITableCellStage BeginCellSet(string cellName);
-		ITableHeaderStage BeginTitleSet(string title);
-		ITableStage BuildRows();
-		FluentMemoryStream ToStream();
-		IWorkbook SaveToPath(string filePath);
-	}
-
-
-	public interface ITableHeaderStage
-	{
-		ITableCellStage BeginBodySet(string cellName);
-		ITableHeaderStage SetValue(Func<TableCellParams, object> valueAction);
-		ITableHeaderStage SetFormulaValue(Func<TableCellParams, object> valueAction);
-		ITableHeaderStage SetCellStyle(string cellStyleKey, Action<TableCellStyleParams, ICellStyle> cellStyleAction);
-		ITableHeaderStage SetCellStyle(string cellStyleKey);
-		ITableHeaderStage SetCellType(CellType cellType);
-		ITableHeaderStage CopyStyleFromCell(ExcelColumns col, int rowIndex);
-	}
-
-	public interface ITableCellStage
-	{
-		ITableCellStage SetValue(object value);
-		ITableCellStage SetValue(Func<TableCellParams, object> valueAction);
-		ITableCellStage SetFormulaValue(Func<TableCellParams, object> valueAction);
-		ITableCellStage SetCellStyle(string cellStyleKey, Action<TableCellStyleParams, ICellStyle> cellStyleAction);
-		ITableCellStage SetCellStyle(string cellStyleKey);
-		ITableCellStage SetCellType(CellType cellType);
-		ITableCellStage CopyStyleFromCell(ExcelColumns col, int rowIndex);
-		ITableStage End();
-	}
 
 	// 泛型版鏈式介面（不破壞舊介面，並存）
 	public interface ITableStage<T>
 	{
-		ITableCellStage<T> BeginCellSet(string cellName);
-		ITableHeaderStage<T> BeginTitleSet(string title);
-		ITableStage<T> BuildRows();
+		FluentTableCellStage<T> BeginCellSet(string cellName);
+		FluentTableHeaderStage<T> BeginTitleSet(string title);
+		FluentTable<T> BuildRows();
 		FluentMemoryStream ToStream();
 		IWorkbook SaveToPath(string filePath);
-	}
-	public interface ITableHeaderStage<T>
-	{
-		ITableCellStage<T> BeginBodySet(string cellName);
-		ITableHeaderStage<T> SetValue(Func<TableCellParams<T>, object> valueAction);
-		ITableHeaderStage<T> SetFormulaValue(Func<TableCellParams<T>, object> valueAction);
-		ITableHeaderStage<T> SetCellStyle(string cellStyleKey, Action<TableCellStyleParams, ICellStyle> cellStyleAction);
-		ITableHeaderStage<T> SetCellStyle(string cellStyleKey);
-		ITableHeaderStage<T> SetCellType(CellType cellType);
-		ITableHeaderStage<T> CopyStyleFromCell(ExcelColumns col, int rowIndex);
-	}
-	public interface ITableCellStage<T>
-	{
-		ITableCellStage<T> SetValue(object value);
-		ITableCellStage<T> SetValue(Func<TableCellParams<T>, object> valueAction);
-		ITableCellStage<T> SetFormulaValue(Func<TableCellParams<T>, object> valueAction);
-		ITableCellStage<T> SetCellStyle(string cellStyleKey, Action<TableCellStyleParams, ICellStyle> cellStyleAction);
-		ITableCellStage<T> SetCellStyle(string cellStyleKey);
-		ITableCellStage<T> SetCellType(CellType cellType);
-		ITableCellStage<T> CopyStyleFromCell(ExcelColumns col, int rowIndex);
-		ITableStage<T> End();
 	}
 
 	public abstract class FluentSheetBase
@@ -572,7 +518,7 @@ namespace NPOIPlus
 		}
 	}
 
-	public class FluentTable<T> : FluentSheetBase, ITableStage, ITableStage<T>
+	public class FluentTable<T> : FluentSheetBase, ITableStage<T>
 	{
 		private ISheet _sheet;
 		private IEnumerable<T> _table;
@@ -601,7 +547,7 @@ namespace NPOIPlus
 			return items[index];
 		}
 
-		private ITableStage SetRow(int rowOffset = 0)
+		private FluentTable<T> SetRow(int rowOffset = 0)
 		{
 			if (_cellBodySets == null || _cellBodySets.Count == 0) return this;
 
@@ -623,73 +569,45 @@ namespace NPOIPlus
 			return this;
 		}
 
-		public ITableCellStage BeginCellSet(string cellName)
-		{
-			_cellBodySets.Add(new TableCellSet { CellName = cellName });
-			return new FluentTableCellStage<T>(_workbook, _sheet, _table, _startCol, _startRow, _cellStylesCached, cellName, _cellTitleSets, _cellBodySets);
-		}
-		ITableCellStage<T> ITableStage<T>.BeginCellSet(string cellName)
+		public FluentTableCellStage<T> BeginCellSet(string cellName)
 		{
 			_cellBodySets.Add(new TableCellSet { CellName = cellName });
 			return new FluentTableCellStage<T>(_workbook, _sheet, _table, _startCol, _startRow, _cellStylesCached, cellName, _cellTitleSets, _cellBodySets);
 		}
 
-		public ITableHeaderStage BeginTitleSet(string title)
-		{
-			_cellTitleSets.Add(new TableCellSet { CellName = $"{title}_TITLE", CellValue = title });
-			return new FluentTableHeaderStage<T>(_workbook, _sheet, _table, _startCol, _startRow, _cellStylesCached, title, _cellTitleSets, _cellBodySets);
-		}
-		ITableHeaderStage<T> ITableStage<T>.BeginTitleSet(string title)
+		public FluentTableHeaderStage<T> BeginTitleSet(string title)
 		{
 			_cellTitleSets.Add(new TableCellSet { CellName = $"{title}_TITLE", CellValue = title });
 			return new FluentTableHeaderStage<T>(_workbook, _sheet, _table, _startCol, _startRow, _cellStylesCached, title, _cellTitleSets, _cellBodySets);
 		}
 
-		public ITableStage BuildRows()
+		public FluentTable<T> BuildRows()
 		{
 			for (int i = 0; i < _table.Count(); i++)
 			{
 				SetRow(i);
 			}
 			return this;
-		}
-		ITableStage<T> ITableStage<T>.BuildRows()
-		{
-			for (int i = 0; i < _table.Count(); i++)
-			{
-				SetRow(i);
-			}
-			return this;
-		}
-
-		FluentMemoryStream ITableStage<T>.ToStream()
-		{
-			return ToStream();
-		}
-
-		IWorkbook ITableStage<T>.SaveToPath(string filePath)
-		{
-			return SaveToPath(filePath);
 		}
 	}
 
-	public class FluentTableHeaderStage<T> : ITableHeaderStage, ITableHeaderStage<T>
+	public abstract class FluentTableBase<T>
 	{
-		private IWorkbook _workbook;
-		private List<TableCellSet> _cellBodySets;
-		private List<TableCellSet> _cellTitleSets;
-		private TableCellSet _cellTitleSet;
-		private ISheet _sheet;
-		private IEnumerable<T> _table;
-		private ExcelColumns _startCol;
-		private int _startRow;
-		private Dictionary<string, ICellStyle> _cellStylesCached;
+		protected IWorkbook _workbook;
+		protected List<TableCellSet> _cellBodySets;
+		protected List<TableCellSet> _cellTitleSets;
+		protected ISheet _sheet;
+		protected IEnumerable<T> _table;
+		protected ExcelColumns _startCol;
+		protected int _startRow;
+		protected Dictionary<string, ICellStyle> _cellStylesCached;
 
-		public FluentTableHeaderStage(
+		protected abstract TableCellSet CurrentCellSet { get; }
+
+		protected FluentTableBase(
 			IWorkbook workbook, ISheet sheet, IEnumerable<T> table,
 			ExcelColumns startCol, int startRow, Dictionary<string, ICellStyle> cellStylesCached,
-			string title,
-			List<TableCellSet> titleCellSets, List<TableCellSet> cellBodySets)
+			List<TableCellSet> cellTitleSets, List<TableCellSet> cellBodySets)
 		{
 			_workbook = workbook;
 			_sheet = sheet;
@@ -698,126 +616,124 @@ namespace NPOIPlus
 			_startRow = startRow;
 			_cellStylesCached = cellStylesCached;
 			_cellBodySets = cellBodySets;
-			_cellTitleSets = titleCellSets;
+			_cellTitleSets = cellTitleSets;
+		}
+
+		protected void SetCellStyleInternal(string cellStyleKey)
+		{
+			CurrentCellSet.CellStyleKey = cellStyleKey;
+		}
+
+		protected void SetCellStyleInternal(string cellStyleKey, Action<TableCellStyleParams, ICellStyle> cellStyleAction)
+		{
+			CurrentCellSet.CellStyleKey = cellStyleKey;
+			CurrentCellSet.SetCellStyleAction = cellStyleAction;
+		}
+
+		protected void SetCellTypeInternal(CellType cellType)
+		{
+			CurrentCellSet.CellType = cellType;
+		}
+
+		protected void CopyStyleFromCellInternal(ExcelColumns col, int rowIndex)
+		{
+			string key = $"{_sheet.SheetName}_{col}{rowIndex}";
+			ICell cell = _sheet.GetExcelCell(col, rowIndex);
+			if (cell != null && cell.CellStyle != null && !_cellStylesCached.ContainsKey(key))
+			{
+				ICellStyle newCellStyle = _workbook.CreateCellStyle();
+				newCellStyle.CloneStyleFrom(cell.CellStyle);
+				_cellStylesCached.Add(key, newCellStyle);
+				CurrentCellSet.CellStyleKey = key;
+			}
+		}
+	}
+
+	public class FluentTableHeaderStage<T> : FluentTableBase<T>
+	{
+		private TableCellSet _cellTitleSet;
+
+		protected override TableCellSet CurrentCellSet => _cellTitleSet;
+
+		public FluentTableHeaderStage(
+			IWorkbook workbook, ISheet sheet, IEnumerable<T> table,
+			ExcelColumns startCol, int startRow, Dictionary<string, ICellStyle> cellStylesCached,
+			string title,
+			List<TableCellSet> titleCellSets, List<TableCellSet> cellBodySets)
+			: base(workbook, sheet, table, startCol, startRow, cellStylesCached, titleCellSets, cellBodySets)
+		{
 			_cellTitleSet = titleCellSets.FirstOrDefault(c => c.CellName == $"{title}_TITLE");
 			_cellTitleSet.CellValue = _cellTitleSet.CellValue;
 		}
-		public ITableHeaderStage SetValue(Func<TableCellParams, object> valueAction)
+		public FluentTableHeaderStage<T> SetValue(Func<TableCellParams, object> valueAction)
 		{
 			_cellTitleSet.SetValueAction = valueAction;
 			return this;
 		}
-		ITableHeaderStage<T> ITableHeaderStage<T>.SetValue(Func<TableCellParams<T>, object> valueAction)
+		
+		public FluentTableHeaderStage<T> SetValue(Func<TableCellParams<T>, object> valueAction)
 		{
 			_cellTitleSet.SetValueActionGeneric = valueAction;
 			return this;
 		}
 
 
-		public ITableHeaderStage SetFormulaValue(object value)
+		public FluentTableHeaderStage<T> SetFormulaValue(object value)
 		{
 			_cellTitleSet.CellValue = value;
 			_cellTitleSet.CellType = CellType.Formula;
 			return this;
 		}
 
-
-		public ITableHeaderStage SetFormulaValue(Func<TableCellParams, object> valueAction)
+		public FluentTableHeaderStage<T> SetFormulaValue(Func<TableCellParams, object> valueAction)
 		{
 			_cellTitleSet.SetFormulaValueAction = valueAction;
 			_cellTitleSet.CellType = CellType.Formula;
 			return this;
 		}
-		ITableHeaderStage<T> ITableHeaderStage<T>.SetFormulaValue(Func<TableCellParams<T>, object> valueAction)
+		
+		public FluentTableHeaderStage<T> SetFormulaValue(Func<TableCellParams<T>, object> valueAction)
 		{
 			_cellTitleSet.SetFormulaValueActionGeneric = valueAction;
 			_cellTitleSet.CellType = CellType.Formula;
 			return this;
 		}
 
-		public ITableHeaderStage SetCellStyle(string cellStyleKey)
+		public FluentTableHeaderStage<T> SetCellStyle(string cellStyleKey)
 		{
-			_cellTitleSet.CellStyleKey = cellStyleKey;
-			return this;
-		}
-		ITableHeaderStage<T> ITableHeaderStage<T>.SetCellStyle(string cellStyleKey)
-		{
-			_cellTitleSet.CellStyleKey = cellStyleKey;
+			SetCellStyleInternal(cellStyleKey);
 			return this;
 		}
 
-		public ITableHeaderStage SetCellStyle(string cellStyleKey, Action<TableCellStyleParams, ICellStyle> cellStyleAction)
+		public FluentTableHeaderStage<T> SetCellStyle(string cellStyleKey, Action<TableCellStyleParams, ICellStyle> cellStyleAction)
 		{
-			_cellTitleSet.CellStyleKey = cellStyleKey;
-			_cellTitleSet.SetCellStyleAction = cellStyleAction;
+			SetCellStyleInternal(cellStyleKey, cellStyleAction);
 			return this;
 		}
-		ITableHeaderStage<T> ITableHeaderStage<T>.SetCellStyle(string cellStyleKey, Action<TableCellStyleParams, ICellStyle> cellStyleAction)
+
+		public FluentTableHeaderStage<T> SetCellType(CellType cellType)
 		{
-			_cellTitleSet.CellStyleKey = cellStyleKey;
-			_cellTitleSet.SetCellStyleAction = cellStyleAction;
+			SetCellTypeInternal(cellType);
 			return this;
 		}
-		public ITableHeaderStage SetCellType(CellType cellType)
-		{
-			_cellTitleSet.CellType = cellType;
-			return this;
-		}
-		ITableHeaderStage<T> ITableHeaderStage<T>.SetCellType(CellType cellType)
-		{
-			_cellTitleSet.CellType = cellType;
-			return this;
-		}
-		public ITableCellStage BeginBodySet(string cellName)
-		{
-			_cellBodySets.Add(new TableCellSet { CellName = cellName });
-			return new FluentTableCellStage<T>(_workbook, _sheet, _table, _startCol, _startRow, _cellStylesCached, cellName, _cellTitleSets, _cellBodySets);
-		}
-		ITableCellStage<T> ITableHeaderStage<T>.BeginBodySet(string cellName)
+		public FluentTableCellStage<T> BeginBodySet(string cellName)
 		{
 			_cellBodySets.Add(new TableCellSet { CellName = cellName });
 			return new FluentTableCellStage<T>(_workbook, _sheet, _table, _startCol, _startRow, _cellStylesCached, cellName, _cellTitleSets, _cellBodySets);
 		}
 
-		public ITableHeaderStage CopyStyleFromCell(ExcelColumns col, int rowIndex)
+		public FluentTableHeaderStage<T> CopyStyleFromCell(ExcelColumns col, int rowIndex)
 		{
-			string key = $"{_sheet.SheetName}_{col}{rowIndex}";
-			ICell cell = _sheet.GetExcelCell(col, rowIndex);
-			if (cell != null && cell.CellStyle != null && !_cellStylesCached.ContainsKey(key))
-			{
-				SetCellStyle(key, (styleParams, style) =>
-				{
-					style.CloneStyleFrom(cell.CellStyle);
-				});
-			}
-			return this;
-		}
-		ITableHeaderStage<T> ITableHeaderStage<T>.CopyStyleFromCell(ExcelColumns col, int rowIndex)
-		{
-			string key = $"{_sheet.SheetName}_{col}{rowIndex}";
-			ICell cell = _sheet.GetExcelCell(col, rowIndex);
-			if (cell != null && cell.CellStyle != null && !_cellStylesCached.ContainsKey(key))
-			{
-				SetCellStyle(key, (styleParams, style) =>
-				{
-					style.CloneStyleFrom(cell.CellStyle);
-				});
-			}
+			CopyStyleFromCellInternal(col, rowIndex);
 			return this;
 		}
 	}
 
-	public class FluentTableCellStage<T> : ITableCellStage, ITableCellStage<T>
+	public class FluentTableCellStage<T> : FluentTableBase<T>
 	{
-		private IWorkbook _workbook;
-		private List<TableCellSet> _cellTitleSets;
-		private List<TableCellSet> _cellBodySets;
 		private TableCellSet _cellSet;
-		private ISheet _sheet;
-		private IEnumerable<T> _table;
-		private ExcelColumns _startCol;
-		private int _startRow;
-		private Dictionary<string, ICellStyle> _cellStylesCached;
+
+		protected override TableCellSet CurrentCellSet => _cellSet;
 
 		public FluentTableCellStage(
 			IWorkbook workbook, ISheet sheet, IEnumerable<T> table,
@@ -825,120 +741,76 @@ namespace NPOIPlus
 			Dictionary<string, ICellStyle> cellStylesCached,
 			string cellName,
 			List<TableCellSet> cellTitleSets, List<TableCellSet> cellBodySets)
+			: base(workbook, sheet, table, startCol, startRow, cellStylesCached, cellTitleSets, cellBodySets)
 		{
-			_workbook = workbook;
-			_cellStylesCached = cellStylesCached;
-			_sheet = sheet;
-			_table = table;
-			_startCol = startCol;
-			_startRow = startRow;
-			_cellTitleSets = cellTitleSets;
-			_cellBodySets = cellBodySets;
 			_cellSet = cellBodySets.First(c => c.CellName == cellName);
 		}
 
-		public ITableCellStage SetValue(object value)
+		public FluentTableCellStage<T> SetValue(object value)
 		{
 			_cellSet.CellValue = value;
 			return this;
 		}
 
-		public ITableCellStage SetValue(Func<TableCellParams, object> valueAction)
+		public FluentTableCellStage<T> SetValue(Func<TableCellParams, object> valueAction)
 		{
 			_cellSet.SetValueAction = valueAction;
 			return this;
 		}
-		ITableCellStage<T> ITableCellStage<T>.SetValue(object value)
-		{
-			_cellSet.CellValue = value;
-			return this;
-		}
-		ITableCellStage<T> ITableCellStage<T>.SetValue(Func<TableCellParams<T>, object> valueAction)
+		
+		public FluentTableCellStage<T> SetValue(Func<TableCellParams<T>, object> valueAction)
 		{
 			_cellSet.SetValueActionGeneric = valueAction;
 			return this;
 		}
 
 
-		public ITableCellStage SetFormulaValue(object value)
+		public FluentTableCellStage<T> SetFormulaValue(object value)
 		{
 			_cellSet.CellValue = value;
 			_cellSet.CellType = CellType.Formula;
 			return this;
 		}
 
-
-		public ITableCellStage SetFormulaValue(Func<TableCellParams, object> valueAction)
+		public FluentTableCellStage<T> SetFormulaValue(Func<TableCellParams, object> valueAction)
 		{
 			_cellSet.SetFormulaValueAction = valueAction;
 			_cellSet.CellType = CellType.Formula;
 			return this;
 		}
-		ITableCellStage<T> ITableCellStage<T>.SetFormulaValue(Func<TableCellParams<T>, object> valueAction)
+		
+		public FluentTableCellStage<T> SetFormulaValue(Func<TableCellParams<T>, object> valueAction)
 		{
 			_cellSet.SetFormulaValueActionGeneric = valueAction;
 			_cellSet.CellType = CellType.Formula;
 			return this;
 		}
 
-		public ITableCellStage SetCellStyle(string cellStyleKey)
+		public FluentTableCellStage<T> SetCellStyle(string cellStyleKey)
 		{
-			_cellSet.CellStyleKey = cellStyleKey;
+			SetCellStyleInternal(cellStyleKey);
 			return this;
 		}
 
-		public ITableCellStage SetCellStyle(string cellStyleKey, Action<TableCellStyleParams, ICellStyle> cellStyleAction)
+		public FluentTableCellStage<T> SetCellStyle(string cellStyleKey, Action<TableCellStyleParams, ICellStyle> cellStyleAction)
 		{
-			_cellSet.CellStyleKey = cellStyleKey;
-			_cellSet.SetCellStyleAction = cellStyleAction;
-			return this;
-		}
-		ITableCellStage<T> ITableCellStage<T>.SetCellStyle(string cellStyleKey)
-		{
-			_cellSet.CellStyleKey = cellStyleKey;
-			return this;
-		}
-		ITableCellStage<T> ITableCellStage<T>.SetCellStyle(string cellStyleKey, Action<TableCellStyleParams, ICellStyle> cellStyleAction)
-		{
-			_cellSet.CellStyleKey = cellStyleKey;
-			_cellSet.SetCellStyleAction = cellStyleAction;
-			return this;
-		}
-		public ITableCellStage SetCellType(CellType cellType)
-		{
-			_cellSet.CellType = cellType;
-			return this;
-		}
-		ITableCellStage<T> ITableCellStage<T>.SetCellType(CellType cellType)
-		{
-			_cellSet.CellType = cellType;
+			SetCellStyleInternal(cellStyleKey, cellStyleAction);
 			return this;
 		}
 
-		public ITableCellStage CopyStyleFromCell(ExcelColumns col, int rowIndex)
+		public FluentTableCellStage<T> SetCellType(CellType cellType)
 		{
-			string key = $"{_sheet.SheetName}_{col}{rowIndex}";
-			ICell cell = _sheet.GetExcelCell(col, rowIndex);
-			if (cell != null && cell.CellStyle != null && !_cellStylesCached.ContainsKey(key))
-			{
-				SetCellStyle(key, (styleParams, style) =>
-				{
-					style.CloneStyleFrom(cell.CellStyle);
-				});
-			}
-			return this;
-		}
-		ITableCellStage<T> ITableCellStage<T>.CopyStyleFromCell(ExcelColumns col, int rowIndex)
-		{
-			CopyStyleFromCell(col, rowIndex);
+			SetCellTypeInternal(cellType);
 			return this;
 		}
 
-		public ITableStage End()
+		public FluentTableCellStage<T> CopyStyleFromCell(ExcelColumns col, int rowIndex)
 		{
-			return new FluentTable<T>(_workbook, _sheet, _table, _startCol, _startRow, _cellStylesCached, _cellTitleSets, _cellBodySets);
+			CopyStyleFromCellInternal(col, rowIndex);
+			return this;
 		}
-		ITableStage<T> ITableCellStage<T>.End()
+
+		public FluentTable<T> End()
 		{
 			return new FluentTable<T>(_workbook, _sheet, _table, _startCol, _startRow, _cellStylesCached, _cellTitleSets, _cellBodySets);
 		}
