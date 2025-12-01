@@ -2,16 +2,16 @@ using NPOI.SS.Formula.Functions;
 using NPOI.SS.UserModel;
 using NPOI.SS.Util;
 using NPOI.XSSF.UserModel;
-using NPOIPlus.Models;
+using FluentNPOI.Models;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Runtime.CompilerServices;
 using System.Text;
 
-namespace NPOIPlus
+namespace FluentNPOI
 {
-	public static class NPOIPlusExtensions
+	public static class FluentNPOIExtensions
 	{
 		public static ICell GetExcelCell(this ISheet sheet, ExcelColumns colIndex, int rowIndex)
 		{

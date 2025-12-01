@@ -1,6 +1,6 @@
 using NPOI.SS.UserModel;
-using NPOIPlus.Helpers;
-using NPOIPlus.Models;
+using FluentNPOI.Helpers;
+using FluentNPOI.Models;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -8,7 +8,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 
-namespace NPOIPlus.Base
+namespace FluentNPOI.Base
 {
 	public abstract class FluentSheetBase : FluentCellBase
 	{

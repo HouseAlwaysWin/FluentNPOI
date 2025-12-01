@@ -1,7 +1,7 @@
 using NPOI.SS.UserModel;
 using System;
 
-namespace NPOIPlus.Models
+namespace FluentNPOI.Models
 {
 	/// <summary>
 	/// 單元格樣式配置

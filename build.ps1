@@ -1,4 +1,4 @@
-# NPOIPlus Build Script
+# FluentNPOI Build Script
 # 本地構建和測試腳本
 
 param(
@@ -16,8 +16,8 @@ param(
 
 $ErrorActionPreference = 'Stop'
 $ProjectRoot = $PSScriptRoot
-$ProjectFile = Join-Path $ProjectRoot "NPOIPlus\NPOIPlus.csproj"
-$TestProject = Join-Path $ProjectRoot "NPOIPlusUnitTest\NPOIPlusUnitTest.csproj"
+$ProjectFile = Join-Path $ProjectRoot "FluentNPOI\FluentNPOI.csproj"
+$TestProject = Join-Path $ProjectRoot "FluentNPOIUnitTest\FluentNPOIUnitTest.csproj"
 $OutputDir = Join-Path $ProjectRoot "artifacts"
 
 function Write-TaskHeader {
@@ -47,7 +47,7 @@ function Build-Project {
     Write-Host "恢復依賴 / Restoring dependencies..." -ForegroundColor Yellow
     dotnet restore $ProjectFile
     
-    Write-Host "`n構建 NPOIPlus / Building NPOIPlus..." -ForegroundColor Yellow
+    Write-Host "`n構建 FluentNPOI / Building FluentNPOI..." -ForegroundColor Yellow
     dotnet build $ProjectFile --configuration $Configuration --no-restore
     
     if ($LASTEXITCODE -ne 0) {

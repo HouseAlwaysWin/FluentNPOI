@@ -1,6 +1,6 @@
 using Xunit;
-using NPOIPlus;
-using NPOIPlus.Models;
+using FluentNPOI;
+using FluentNPOI.Models;
 using NPOI.XSSF.UserModel;
 using NPOI.SS.UserModel;
 using System;

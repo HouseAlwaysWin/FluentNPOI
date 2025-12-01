@@ -1,11 +1,11 @@
 using NPOI.SS.UserModel;
-using NPOIPlus.Base;
-using NPOIPlus.Helpers;
-using NPOIPlus.Models;
+using FluentNPOI.Base;
+using FluentNPOI.Helpers;
+using FluentNPOI.Models;
 using System;
 using System.Collections.Generic;
 
-namespace NPOIPlus
+namespace FluentNPOI
 {
 	public class FluentCell : FluentCellBase
 	{

@@ -25,13 +25,13 @@ jobs:
         dotnet-version: '6.0.x'
     
     - name: Restore dependencies
-      run: dotnet restore NPOIPlus/NPOIPlus.csproj
+      run: dotnet restore FluentNPOI/FluentNPOI.csproj
     
     - name: Build
-      run: dotnet build NPOIPlus/NPOIPlus.csproj --configuration Release --no-restore
+      run: dotnet build FluentNPOI/FluentNPOI.csproj --configuration Release --no-restore
     
     - name: Run Tests
-      run: dotnet test NPOIPlusUnitTest/NPOIPlusUnitTest.csproj --configuration Release --no-build --verbosity normal
+      run: dotnet test FluentNPOIUnitTest/FluentNPOIUnitTest.csproj --configuration Release --no-build --verbosity normal
     
     - name: Set Version (from release)
       if: github.event_name == 'release'
@@ -50,7 +50,7 @@ jobs:
     - name: Pack NuGet Package
       run: |
         Write-Host "Packing with version: ${{ env.VERSION }}"
-        dotnet pack NPOIPlus/NPOIPlus.csproj --configuration Release --output ./artifacts /p:PackageVersion=${{ env.VERSION }} /p:Version=${{ env.VERSION }}
+        dotnet pack FluentNPOI/FluentNPOI.csproj --configuration Release --output ./artifacts /p:PackageVersion=${{ env.VERSION }} /p:Version=${{ env.VERSION }}
         if ($LASTEXITCODE -ne 0) {
           Write-Error "Pack failed with exit code $LASTEXITCODE"
           exit 1
@@ -100,7 +100,7 @@ jobs:
         foreach ($file in $nupkgFiles) {
           Write-Host "Pushing: $($file.FullName)"
           
-          # 從文件名提取包名（例如：NPOIPlusLib.1.0.0.nupkg -> NPOIPlusLib）
+          # 從文件名提取包名（例如：FluentNPOI.1.0.0.nupkg -> FluentNPOI）
           $packageName = $file.BaseName -replace '\.\d+\.\d+\.\d+.*$', ''
           Write-Host "Package name: $packageName"
           
@@ -120,7 +120,7 @@ jobs:
             Write-Host "`nSolutions:" -ForegroundColor Yellow
             Write-Host "1. Request access from the owner of the reserved prefix" -ForegroundColor Cyan
             Write-Host "   Visit: https://docs.microsoft.com/nuget/reference/id-prefix-reservation" -ForegroundColor Cyan
-            Write-Host "2. Use a different package name (e.g., HouseAlwaysWin.NPOIPlus)" -ForegroundColor Cyan
+            Write-Host "2. Use a different package name (e.g., HouseAlwaysWin.FluentNPOI)" -ForegroundColor Cyan
             Write-Host "3. Contact NuGet support for assistance" -ForegroundColor Cyan
             exit 1
           }

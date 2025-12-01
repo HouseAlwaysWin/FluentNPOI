@@ -1,7 +1,7 @@
-﻿# NPOIPlus Push to GitHub Script
+﻿# FluentNPOI Push to GitHub Script
 $ErrorActionPreference = 'Stop'
 
-Write-Host "NPOIPlus - Pushing to GitHub" -ForegroundColor Cyan
+Write-Host "FluentNPOI - Pushing to GitHub" -ForegroundColor Cyan
 Write-Host ""
 
 # Check if Git is initialized

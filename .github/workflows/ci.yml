@@ -33,21 +33,21 @@ jobs:
     
     - name: Restore dependencies
       run: |
-        dotnet restore NPOIPlus/NPOIPlus.csproj
-        dotnet restore NPOIPlusConsoleExample/NPOIPlusConsoleExample.csproj
-        dotnet restore NPOIPlusUnitTest/NPOIPlusUnitTest.csproj
+        dotnet restore FluentNPOI/FluentNPOI.csproj
+        dotnet restore FluentNPOIConsoleExample/FluentNPOIConsoleExample.csproj
+        dotnet restore FluentNPOIUnitTest/FluentNPOIUnitTest.csproj
     
-    - name: Build NPOIPlus
-      run: dotnet build NPOIPlus/NPOIPlus.csproj --configuration Release --no-restore
+    - name: Build FluentNPOI
+      run: dotnet build FluentNPOI/FluentNPOI.csproj --configuration Release --no-restore
     
     - name: Build Console Example
-      run: dotnet build NPOIPlusConsoleExample/NPOIPlusConsoleExample.csproj --configuration Release --no-restore
+      run: dotnet build FluentNPOIConsoleExample/FluentNPOIConsoleExample.csproj --configuration Release --no-restore
     
     - name: Build Unit Tests
-      run: dotnet build NPOIPlusUnitTest/NPOIPlusUnitTest.csproj --configuration Release --no-restore
+      run: dotnet build FluentNPOIUnitTest/FluentNPOIUnitTest.csproj --configuration Release --no-restore
     
     - name: Run Unit Tests
-      run: dotnet test NPOIPlusUnitTest/NPOIPlusUnitTest.csproj --configuration Release --no-build --verbosity normal --logger "trx;LogFileName=test-results.trx" --results-directory ./TestResults
+      run: dotnet test FluentNPOIUnitTest/FluentNPOIUnitTest.csproj --configuration Release --no-build --verbosity normal --logger "trx;LogFileName=test-results.trx" --results-directory ./TestResults
     
     - name: Publish Test Results
       uses: dorny/test-reporter@v1
@@ -62,6 +62,6 @@ jobs:
       with:
         name: build-artifacts
         path: |
-          NPOIPlus/bin/Release/
-          NPOIPlusConsoleExample/bin/Release/
+          FluentNPOI/bin/Release/
+          FluentNPOIConsoleExample/bin/Release/
 

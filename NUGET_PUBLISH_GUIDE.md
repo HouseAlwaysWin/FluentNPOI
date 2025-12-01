@@ -10,7 +10,7 @@ This document explains how to publish FluentNPOI to NuGet.org.
 
 ### 1. 確保項目配置正確
 
-確認 `NPOIPlus/NPOIPlus.csproj` 包含以下 NuGet 包元數據（注意：項目文件夾名稱保持不變，只更改 PackageId）：
+確認 `NPOIPlus/NPOIPlus.csproj` 包含以下 NuGet 包元數據：
 
 - ✅ `PackageId` - 包名稱（必須唯一）
 - ✅ `Version` - 版本號
@@ -225,7 +225,7 @@ Install-Package FluentNPOI -Version 1.0.1
 
 ### Q: 如何更新包描述或標籤？
 
-**A:** 修改 `NPOIPlus.csproj` 中的元數據，然後發布新版本。
+**A:** 修改項目文件中的元數據，然後發布新版本。
 
 ### Q: 可以撤回已發布的版本嗎？
 

@@ -1,9 +1,9 @@
 using NPOI.SS.UserModel;
-using NPOIPlus.Models;
+using FluentNPOI.Models;
 using System;
 using System.Collections.Generic;
 
-namespace NPOIPlus.Base
+namespace FluentNPOI.Base
 {
 	public abstract class FluentTableBase<T> : FluentCellBase
 	{

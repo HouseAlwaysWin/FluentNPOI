@@ -45,7 +45,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Helpers
 - `FluentMemoryStream` - Memory stream wrapper
-- `NPOIPlusExtensions` - Rich extension methods
+- `FluentNPOIExtensions` - Rich extension methods
 
 #### Key Features
 - **Style Management**

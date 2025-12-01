@@ -1,6 +1,6 @@
 using System.IO;
 
-namespace NPOIPlus.Helpers
+namespace FluentNPOI.Helpers
 {
 	public class FluentMemoryStream : MemoryStream
 	{

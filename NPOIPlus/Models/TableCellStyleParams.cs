@@ -1,6 +1,6 @@
 using NPOI.SS.UserModel;
 
-namespace NPOIPlus.Models
+namespace FluentNPOI.Models
 {
 	// 非泛型參數類型（相容舊 API）
 	public class TableCellStyleParams

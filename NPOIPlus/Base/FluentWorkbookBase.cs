@@ -1,8 +1,8 @@
 using NPOI.SS.UserModel;
-using NPOIPlus.Helpers;
+using FluentNPOI.Helpers;
 using System.IO;
 
-namespace NPOIPlus.Base
+namespace FluentNPOI.Base
 {
 	public abstract class FluentWorkbookBase
 	{

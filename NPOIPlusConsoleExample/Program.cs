@@ -1,11 +1,11 @@
 ﻿using System.Data;
 using System;
 using System.IO;
-using NPOIPlus;
+using FluentNPOI;
 using NPOI.XSSF.UserModel;
 using NPOI.SS.UserModel;
 using System.Collections.Generic;
-using NPOIPlus.Models;
+using FluentNPOI.Models;
 using System.Linq;
 
 namespace NPOIPlusConsoleExample

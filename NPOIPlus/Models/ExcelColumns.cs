@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace NPOIPlus.Models
+namespace FluentNPOI.Models
 {
     public enum ExcelColumns
     {

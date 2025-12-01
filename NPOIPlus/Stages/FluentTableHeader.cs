@@ -1,11 +1,11 @@
 using NPOI.SS.UserModel;
-using NPOIPlus.Base;
-using NPOIPlus.Models;
+using FluentNPOI.Base;
+using FluentNPOI.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace NPOIPlus
+namespace FluentNPOI
 {
 	public class FluentTableHeader<T> : FluentTableBase<T>
 	{

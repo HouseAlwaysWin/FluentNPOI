@@ -1,12 +1,12 @@
 using NPOI.HSSF.UserModel;
 using NPOI.SS.UserModel;
 using NPOI.XSSF.UserModel;
-using NPOIPlus.Base;
+using FluentNPOI.Base;
 using System;
 using System.Collections.Generic;
 using System.IO;
 
-namespace NPOIPlus
+namespace FluentNPOI
 {
 	public class FluentWorkbook : FluentWorkbookBase
 	{

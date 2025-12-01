@@ -37,9 +37,9 @@ dotnet add package FluentNPOI
 #### 基本寫入
 
 ```csharp
-using NPOIPlus;
+using FluentNPOI;
 using NPOI.XSSF.UserModel;
-using NPOIPlus.Models;
+using FluentNPOI.Models;
 
 // 創建 Workbook
 var fluent = new FluentWorkbook(new XSSFWorkbook());
@@ -423,7 +423,7 @@ fluent.SaveToPath("multi-sheet.xlsx");
 
 ### 🔧 樣式緩存機制
 
-NPOIPlus 實現了智能樣式緩存機制，避免 Excel 檔案樣式數量超過 64000 的限制：
+FluentNPOI 實現了智能樣式緩存機制，避免 Excel 檔案樣式數量超過 64000 的限制：
 
 ```csharp
 // ✅ 使用 Key 緩存樣式（推薦）
@@ -456,8 +456,8 @@ NPOIPlus 實現了智能樣式緩存機制，避免 Excel 檔案樣式數量超�
 ### 📝 範例專案
 
 完整範例請參考：
-- [NPOIPlusConsoleExample](NPOIPlusConsoleExample/Program.cs) - 控制台範例
-- [NPOIPlusUnitTest](NPOIPlusUnitTest/UnitTest1.cs) - 單元測試範例
+- [FluentNPOIConsoleExample](NPOIPlusConsoleExample/Program.cs) - 控制台範例
+- [FluentNPOIUnitTest](NPOIPlusUnitTest/UnitTest1.cs) - 單元測試範例
 
 ### 🤝 貢獻
 
@@ -486,10 +486,10 @@ NPOIPlus 實現了智能樣式緩存機制，避免 Excel 檔案樣式數量超�
 
 ```bash
 # Using NuGet Package Manager
-Install-Package NPOIPlus
+Install-Package FluentNPOI
 
 # Using .NET CLI
-dotnet add package NPOIPlus
+dotnet add package FluentNPOI
 ```
 
 ### 🎯 Quick Start
@@ -497,9 +497,9 @@ dotnet add package NPOIPlus
 #### Basic Write
 
 ```csharp
-using NPOIPlus;
+using FluentNPOI;
 using NPOI.XSSF.UserModel;
-using NPOIPlus.Models;
+using FluentNPOI.Models;
 
 // Create Workbook
 var fluent = new FluentWorkbook(new XSSFWorkbook());

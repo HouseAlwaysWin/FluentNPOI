@@ -1,4 +1,4 @@
-# NPOIPlus GitHub 设置配置脚本
+# FluentNPOI GitHub 设置配置脚本
 # 运行此脚本来自动替换文档中的占位符
 
 param(
@@ -15,7 +15,7 @@ param(
 $ErrorActionPreference = 'Stop'
 
 Write-Host "========================================" -ForegroundColor Cyan
-Write-Host "NPOIPlus GitHub 设置配置" -ForegroundColor Cyan
+Write-Host "FluentNPOI GitHub 设置配置" -ForegroundColor Cyan
 Write-Host "========================================`n" -ForegroundColor Cyan
 
 Write-Host "GitHub 用户名: $GitHubUsername" -ForegroundColor Yellow

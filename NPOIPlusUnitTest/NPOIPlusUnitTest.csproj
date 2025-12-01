@@ -21,7 +21,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\NPOIPlus\NPOIPlus.csproj" />
+    <ProjectReference Include="..\FluentNPOI\FluentNPOI.csproj" />
   </ItemGroup>
 
 </Project>
