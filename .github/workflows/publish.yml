@@ -48,10 +48,37 @@ jobs:
       run: New-Item -ItemType Directory -Force -Path ./artifacts
     
     - name: Pack NuGet Package
-      run: dotnet pack NPOIPlus/NPOIPlus.csproj --configuration Release --no-build --output ./artifacts /p:PackageVersion=${{ env.VERSION }}
+      run: |
+        Write-Host "Packing with version: ${{ env.VERSION }}"
+        dotnet pack NPOIPlus/NPOIPlus.csproj --configuration Release --output ./artifacts /p:PackageVersion=${{ env.VERSION }} /p:Version=${{ env.VERSION }}
+        if ($LASTEXITCODE -ne 0) {
+          Write-Error "Pack failed with exit code $LASTEXITCODE"
+          exit 1
+        }
     
-    - name: List artifacts
-      run: Get-ChildItem -Path ./artifacts -Filter *.nupkg
+    - name: Verify artifacts directory
+      run: |
+        Write-Host "Checking artifacts directory..."
+        if (Test-Path ./artifacts) {
+          Write-Host "artifacts directory exists"
+          Get-ChildItem -Path ./artifacts | ForEach-Object { Write-Host "  - $($_.Name)" }
+        } else {
+          Write-Error "artifacts directory does not exist!"
+          exit 1
+        }
+    
+    - name: List .nupkg files
+      run: |
+        $nupkgFiles = Get-ChildItem -Path ./artifacts -Filter *.nupkg -ErrorAction SilentlyContinue
+        if ($nupkgFiles) {
+          Write-Host "Found .nupkg files:"
+          $nupkgFiles | ForEach-Object { Write-Host "  - $($_.FullName)" }
+        } else {
+          Write-Error "No .nupkg files found in ./artifacts directory!"
+          Write-Host "Contents of ./artifacts:"
+          Get-ChildItem -Path ./artifacts | ForEach-Object { Write-Host "  - $($_.Name) ($($_.GetType().Name))" }
+          exit 1
+        }
     
     - name: Upload Package Artifact
       uses: actions/upload-artifact@v4
@@ -64,10 +91,20 @@ jobs:
         $nupkgFiles = Get-ChildItem -Path ./artifacts -Filter *.nupkg
         if ($nupkgFiles.Count -eq 0) {
           Write-Error "No .nupkg files found in ./artifacts directory"
+          Write-Host "Current directory: $(Get-Location)"
+          Write-Host "artifacts directory contents:"
+          Get-ChildItem -Path ./artifacts -ErrorAction SilentlyContinue | ForEach-Object { Write-Host "  - $($_.Name)" }
           exit 1
         }
+        Write-Host "Pushing $($nupkgFiles.Count) package(s) to NuGet.org..."
         foreach ($file in $nupkgFiles) {
+          Write-Host "Pushing: $($file.FullName)"
           dotnet nuget push $file.FullName --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
+          if ($LASTEXITCODE -ne 0) {
+            Write-Error "Failed to push $($file.Name)"
+            exit 1
+          }
+          Write-Host "Successfully pushed $($file.Name)"
         }
       if: github.event_name == 'release' || github.event_name == 'workflow_dispatch'
 
