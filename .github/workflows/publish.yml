@@ -44,8 +44,14 @@ jobs:
       run: |
         echo "VERSION=${{ github.event.inputs.version }}" >> $env:GITHUB_ENV
     
+    - name: Create artifacts directory
+      run: New-Item -ItemType Directory -Force -Path ./artifacts
+    
     - name: Pack NuGet Package
       run: dotnet pack NPOIPlus/NPOIPlus.csproj --configuration Release --no-build --output ./artifacts /p:PackageVersion=${{ env.VERSION }}
+    
+    - name: List artifacts
+      run: Get-ChildItem -Path ./artifacts -Filter *.nupkg
     
     - name: Upload Package Artifact
       uses: actions/upload-artifact@v4
@@ -54,6 +60,14 @@ jobs:
         path: ./artifacts/*.nupkg
     
     - name: Push to NuGet
-      run: dotnet nuget push ./artifacts/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
+      run: |
+        $nupkgFiles = Get-ChildItem -Path ./artifacts -Filter *.nupkg
+        if ($nupkgFiles.Count -eq 0) {
+          Write-Error "No .nupkg files found in ./artifacts directory"
+          exit 1
+        }
+        foreach ($file in $nupkgFiles) {
+          dotnet nuget push $file.FullName --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
+        }
       if: github.event_name == 'release' || github.event_name == 'workflow_dispatch'
 
