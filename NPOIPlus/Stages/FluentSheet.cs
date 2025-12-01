@@ -51,8 +51,11 @@ namespace NPOIPlus
 		{
 			if (_sheet == null) throw new System.InvalidOperationException("No active sheet. Call UseSheet(...) first.");
 
-			var rowObj = _sheet.GetRow(row) ?? _sheet.CreateRow(row);
-			var cell = rowObj.GetCell((int)col) ?? rowObj.CreateCell((int)col);
+			var normalizedCol = NormalizeStartCol(col);
+			var normalizedRow = NormalizeStartRow(row);
+
+			var rowObj = _sheet.GetRow(normalizedRow) ?? _sheet.CreateRow(normalizedRow);
+			var cell = rowObj.GetCell((int)normalizedCol) ?? rowObj.CreateCell((int)normalizedCol);
 			return new FluentCell(_workbook, _sheet, cell);
 		}
 

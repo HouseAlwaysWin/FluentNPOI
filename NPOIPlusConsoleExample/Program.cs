@@ -85,7 +85,7 @@ namespace NPOIPlusConsoleExample
 					style.SetCellFillForegroundColor(IndexedColors.Yellow);
 				});
 
-			
+
 
 				// Sheet1：只放一個表（A 欄開始），並有抬頭（標題列），涵蓋多種欄位型別
 				fluent.UseSheet("Sheet1")
@@ -190,6 +190,12 @@ namespace NPOIPlusConsoleExample
 				.BeginBodySet("InStock").SetCellType(CellType.Boolean).End()
 				.BuildRows()
 				.SaveToPath(outputPath);
+
+				fluent.UseSheet("SetCellValueExample", true)
+				.SetCell(ExcelColumns.A, 1)
+				.SetValue("Hello, World!");
+
+				fluent.SaveToPath(outputPath);
 
 			}
 			catch (Exception ex)

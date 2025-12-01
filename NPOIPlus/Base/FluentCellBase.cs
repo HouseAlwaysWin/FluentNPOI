@@ -19,6 +19,20 @@ namespace NPOIPlus.Base
 			_cellStylesCached = cellStylesCached;
 		}
 
+		protected ExcelColumns NormalizeStartCol(ExcelColumns col)
+		{
+			int idx = (int)col;
+			if (idx < 0) idx = 0;
+			return (ExcelColumns)idx;
+		}
+
+		protected int NormalizeStartRow(int row)
+		{
+			// 將使用者常見的 1-based 列號轉為 0-based，並確保不為負數
+			if (row < 1) return 0;
+			return row - 1;
+		}
+
 		protected void SetCellStyle(ICell cell, TableCellSet cellNameMap, TableCellStyleParams cellStyleParams)
 		{
 			if (!string.IsNullOrWhiteSpace(cellNameMap.CellStyleKey) && _cellStylesCached.ContainsKey(cellNameMap.CellStyleKey))

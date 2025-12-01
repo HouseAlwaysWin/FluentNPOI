@@ -1,21 +1,21 @@
 using NPOI.HSSF.UserModel;
 using NPOI.SS.UserModel;
 using NPOI.XSSF.UserModel;
+using NPOIPlus.Base;
 using System;
 using System.Collections.Generic;
 using System.IO;
 
 namespace NPOIPlus
 {
-	public class FluentWorkbook : IWorkbookStage
+	public class FluentWorkbook : FluentWorkbookBase, IWorkbookStage
 	{
-		private IWorkbook _workbook;
 		private ISheet _currentSheet;
 		private Dictionary<string, ICellStyle> _cellStylesCached = new Dictionary<string, ICellStyle>();
 
 		public FluentWorkbook(IWorkbook workbook)
+			: base(workbook)
 		{
-			_workbook = workbook;
 		}
 
 		public IWorkbook GetWorkbook()
