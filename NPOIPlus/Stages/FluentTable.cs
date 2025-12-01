@@ -64,14 +64,15 @@ namespace NPOIPlus
 				CellValue = value
 			};
 
-			TableCellStyleParams cellStyleParams =
-			new TableCellStyleParams
-			{
-				Workbook = _workbook,
-				ColNum = (ExcelColumns)colIndex,
-				RowNum = targetRowIndex,
-			};
-			SetCellStyle(cell, cellset, cellStyleParams);
+		TableCellStyleParams cellStyleParams =
+		new TableCellStyleParams
+		{
+			Workbook = _workbook,
+			ColNum = (ExcelColumns)colIndex,
+			RowNum = targetRowIndex,
+			RowItem = item
+		};
+		SetCellStyle(cell, cellset, cellStyleParams);
 
 			if (cellset.CellType == CellType.Formula)
 			{

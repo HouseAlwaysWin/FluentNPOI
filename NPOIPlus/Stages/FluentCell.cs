@@ -50,14 +50,15 @@ namespace NPOIPlus
 
 			if (!string.IsNullOrWhiteSpace(cellStyleKey) && !_cellStylesCached.ContainsKey(cellStyleKey))
 			{
-				ICellStyle newCellStyle = _workbook.CreateCellStyle();
-				var cellStyleParams = new TableCellStyleParams
-				{
-					Workbook = _workbook,
-					ColNum = (ExcelColumns)_cell.ColumnIndex,
-					RowNum = _cell.RowIndex
-				};
-				cellStyleAction(cellStyleParams, newCellStyle);
+			ICellStyle newCellStyle = _workbook.CreateCellStyle();
+			var cellStyleParams = new TableCellStyleParams
+			{
+				Workbook = _workbook,
+				ColNum = (ExcelColumns)_cell.ColumnIndex,
+				RowNum = _cell.RowIndex,
+				RowItem = null
+			};
+			cellStyleAction(cellStyleParams, newCellStyle);
 				_cellStylesCached.Add(cellStyleKey, newCellStyle);
 			}
 
