@@ -1,4 +1,4 @@
-﻿using NPOI.SS.Formula.Functions;
+using NPOI.SS.Formula.Functions;
 using NPOI.SS.UserModel;
 using NPOI.SS.Util;
 using NPOI.XSSF.UserModel;
@@ -206,3 +206,5 @@ namespace NPOIPlus
 		}
 	}
 }
+
+
