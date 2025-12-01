@@ -16,7 +16,7 @@ namespace NPOIPlusConsoleExample
 		{
 			try
 			{
-			var testData = new List<ExampleData>(){
+				var testData = new List<ExampleData>(){
 				new ExampleData(1, "Alice Chen", new DateTime(1994, 1, 1), true, 95.5, 12500.75m, "優秀學生"),
 				new ExampleData(2, "Bob Lee", new DateTime(1989, 5, 12), false, 78.0, 8900.50m, "需改進"),
 				new ExampleData(3, "Søren", new DateTime(1985, 7, 23), true, 88.5, 15000.00m, "表現良好"),
@@ -116,57 +116,73 @@ namespace NPOIPlusConsoleExample
 				.BeginBodySet("MaybeNull").End()
 				.BuildRows();
 
-			// 第二個分頁（Summary）：使用同一份 testData 展示不同欄位組合
-			fluent.UseSheet("Summary", true)
-			.SetColumnWidth(ExcelColumns.A, ExcelColumns.E, 20)
-			.SetTable(testData, ExcelColumns.A, 1)
-			.BeginTitleSet("姓名").SetCellStyle("HeaderBlue")
-			.BeginBodySet("Name").End()
-			
-			.BeginTitleSet("分數").SetCellStyle("HeaderBlue")
-			.BeginBodySet("Score").SetCellType(CellType.Numeric).SetCellStyle("AmountCurrency").End()
-			
-			.BeginTitleSet("日期").SetCellStyle("HeaderBlue")
-			.BeginBodySet("DateOfBirth").SetCellStyle("DateOfBirth").End()
-			
-			.BeginTitleSet("狀態").SetCellStyle("HeaderBlue")
-			.BeginBodySet("IsActive").SetCellType(CellType.Boolean).End()
-			
-			.BeginTitleSet("備註").SetCellStyle("HeaderBlue")
-			.BeginBodySet("Notes").SetCellStyle("HighlightYellow").End()
-			.BuildRows();
+				// 第二個分頁（Summary）：使用同一份 testData 展示不同欄位組合
+				fluent.UseSheet("Summary", true)
+				.SetColumnWidth(ExcelColumns.A, ExcelColumns.E, 20)
+				.SetTable(testData, ExcelColumns.A, 1)
+				.BeginTitleSet("姓名").SetCellStyle("HeaderBlue")
+				.BeginBodySet("Name").End()
 
-			// Sheet3：展示 CopyStyleFromCell 功能，使用同一份 testData
-			fluent.UseSheet("CopyStyleExample", true)
-			.SetColumnWidth(ExcelColumns.A, ExcelColumns.D, 20)
-			.SetTable(testData, ExcelColumns.A, 1)
+				.BeginTitleSet("分數").SetCellStyle("HeaderBlue")
+				.BeginBodySet("Score").SetCellType(CellType.Numeric).SetCellStyle("AmountCurrency").End()
+
+				.BeginTitleSet("日期").SetCellStyle("HeaderBlue")
+				.BeginBodySet("DateOfBirth").SetCellStyle("DateOfBirth").End()
+
+				.BeginTitleSet("狀態").SetCellStyle("HeaderBlue")
+				.BeginBodySet("IsActive").SetCellType(CellType.Boolean).End()
+
+				.BeginTitleSet("備註").SetCellStyle("HeaderBlue")
+				.BeginBodySet("Notes").SetCellStyle("HighlightYellow").End()
+				.BuildRows();
+
+				// Sheet3：展示 CopyStyleFromCell 功能，使用同一份 testData
+				fluent.UseSheet("CopyStyleExample", true)
+				.SetColumnWidth(ExcelColumns.A, ExcelColumns.D, 20)
+				.SetTable(testData, ExcelColumns.A, 1)
 			// 展示 ID 欄位並套用自訂樣式
 			.BeginTitleSet("編號").SetCellStyle("HeaderBlue")
 			.BeginBodySet("ID")
-			.SetCellStyle("IDStyle", (styleParams, style) =>
+			.SetCellStyle((styleParams, style) =>
 			{
 				style.SetAligment(HorizontalAlignment.Center);
 				style.FillPattern = FillPattern.SolidForeground;
 				style.SetCellFillForegroundColor(IndexedColors.LightGreen);
 				style.SetBorderAllStyle(BorderStyle.Thin);
+				return "IDStyle"; // 返回樣式鍵名
 			})
 			.End()
 
-			// 從 Sheet1 的樣式複製
-			.BeginTitleSet("姓名").CopyStyleFromCell(ExcelColumns.A, 1)
-			.BeginBodySet("Name").SetCellType(CellType.String).End()
+				// 從 Sheet1 的樣式複製
+				.BeginTitleSet("姓名").CopyStyleFromCell(ExcelColumns.A, 1)
+				.BeginBodySet("Name").SetCellType(CellType.String).End()
 
-			// 展示金額欄位並套用金額格式
-			.BeginTitleSet("金額").SetCellStyle("HeaderBlue")
-			.BeginBodySet("Amount").SetCellType(CellType.Numeric)
-			.SetCellStyle("AmountCurrency")
-			.End()
+				// 展示金額欄位並套用金額格式
+				.BeginTitleSet("金額").SetCellStyle("HeaderBlue")
+				.BeginBodySet("Amount").SetCellType(CellType.Numeric)
+				.SetCellStyle("AmountCurrency")
+				.End()
 
-			// 展示活躍狀態欄位
-			.BeginTitleSet("活躍").SetCellStyle("HeaderBlue")
-			.BeginBodySet("IsActive").SetCellType(CellType.Boolean).End()
-			.BuildRows()
-			.SaveToPath(outputPath);
+				// 展示活躍狀態欄位
+				.BeginTitleSet("活躍").SetCellStyle("HeaderBlue")
+				.BeginBodySet("IsActive").SetCellType(CellType.Boolean)
+				.SetCellStyle((styleParams, style) =>
+				{
+					style.SetAligment(HorizontalAlignment.Center);
+					style.FillPattern = FillPattern.SolidForeground;
+					style.SetBorderAllStyle(BorderStyle.Thin);
+
+					if (styleParams.GetRowItem<ExampleData>().IsActive)
+					{
+						style.SetCellFillForegroundColor(IndexedColors.LightGreen);
+						return "IsActiveStyle1";
+					}
+					style.SetCellFillForegroundColor(IndexedColors.LightYellow);
+					return "IsActiveStyle2"; // 返回樣式鍵名
+				})
+				.End()
+
+				.BuildRows();
 
 				fluent.UseSheet("SetCellValueExample", true)
 				.SetCellPosition(ExcelColumns.A, 1)

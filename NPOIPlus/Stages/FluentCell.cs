@@ -44,30 +44,37 @@ namespace NPOIPlus
 			return this;
 		}
 
-		public FluentCell SetCellStyle(string cellStyleKey, Action<TableCellStyleParams, ICellStyle> cellStyleAction)
+	public FluentCell SetCellStyle(Func<TableCellStyleParams, ICellStyle, string> cellStyleAction)
+	{
+		if (_cell == null) return this;
+
+		ICellStyle newCellStyle = _workbook.CreateCellStyle();
+		var cellStyleParams = new TableCellStyleParams
 		{
-			if (_cell == null) return this;
-
-			if (!string.IsNullOrWhiteSpace(cellStyleKey) && !_cellStylesCached.ContainsKey(cellStyleKey))
+			Workbook = _workbook,
+			ColNum = (ExcelColumns)_cell.ColumnIndex,
+			RowNum = _cell.RowIndex,
+			RowItem = null
+		};
+		
+		string key = cellStyleAction(cellStyleParams, newCellStyle);
+		
+		if (!string.IsNullOrWhiteSpace(key))
+		{
+			if (!_cellStylesCached.ContainsKey(key))
 			{
-			ICellStyle newCellStyle = _workbook.CreateCellStyle();
-			var cellStyleParams = new TableCellStyleParams
-			{
-				Workbook = _workbook,
-				ColNum = (ExcelColumns)_cell.ColumnIndex,
-				RowNum = _cell.RowIndex,
-				RowItem = null
-			};
-			cellStyleAction(cellStyleParams, newCellStyle);
-				_cellStylesCached.Add(cellStyleKey, newCellStyle);
+				_cellStylesCached.Add(key, newCellStyle);
 			}
-
-			if (_cellStylesCached.ContainsKey(cellStyleKey))
-			{
-				_cell.CellStyle = _cellStylesCached[cellStyleKey];
-			}
-			return this;
+			_cell.CellStyle = _cellStylesCached[key];
 		}
+		else
+		{
+			// 如果沒有返回 key，直接使用新建的樣式（不緩存）
+			_cell.CellStyle = newCellStyle;
+		}
+		
+		return this;
+	}
 
 		public FluentCell SetCellType(CellType cellType)
 		{

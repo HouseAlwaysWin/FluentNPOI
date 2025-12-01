@@ -62,9 +62,9 @@ namespace NPOIPlus
 		return this;
 	}
 
-	public FluentTableCell<T> SetCellStyle(string cellStyleKey, Action<TableCellStyleParams, ICellStyle> cellStyleAction)
+	public FluentTableCell<T> SetCellStyle(Func<TableCellStyleParams, ICellStyle, string> cellStyleAction)
 	{
-		SetCellStyleInternal(cellStyleKey, cellStyleAction);
+		SetCellStyleInternal(cellStyleAction);
 		return this;
 	}
 

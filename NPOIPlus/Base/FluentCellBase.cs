@@ -33,27 +33,39 @@ namespace NPOIPlus.Base
 			return row - 1;
 		}
 
-		protected void SetCellStyle(ICell cell, TableCellSet cellNameMap, TableCellStyleParams cellStyleParams)
+	protected void SetCellStyle(ICell cell, TableCellSet cellNameMap, TableCellStyleParams cellStyleParams)
+	{
+		// 如果有動態樣式設置函數，優先使用
+		if (cellNameMap.SetCellStyleAction != null)
 		{
-			if (!string.IsNullOrWhiteSpace(cellNameMap.CellStyleKey) && _cellStylesCached.ContainsKey(cellNameMap.CellStyleKey))
+			ICellStyle newCellStyle = _workbook.CreateCellStyle();
+			string key = cellNameMap.SetCellStyleAction(cellStyleParams, newCellStyle);
+			
+			if (!string.IsNullOrWhiteSpace(key))
 			{
-				cell.CellStyle = _cellStylesCached[cellNameMap.CellStyleKey];
+				if (!_cellStylesCached.ContainsKey(key))
+				{
+					_cellStylesCached.Add(key, newCellStyle);
+				}
+				cell.CellStyle = _cellStylesCached[key];
 			}
-			else if (string.IsNullOrWhiteSpace(cellNameMap.CellStyleKey) &&
-					 _cellStylesCached.ContainsKey("global") &&
-					 cellNameMap.SetCellStyleAction == null)
+			else
 			{
-				cell.CellStyle = _cellStylesCached["global"];
-			}
-			else if (!string.IsNullOrWhiteSpace(cellNameMap.CellStyleKey) && cellNameMap.SetCellStyleAction != null)
-			{
-				ICellStyle newCellStyle = _workbook.CreateCellStyle();
-				cellNameMap.SetCellStyleAction(cellStyleParams, newCellStyle);
-				cellNameMap.CellStyleKey = cellNameMap.CellStyleKey;
-				_cellStylesCached.Add(cellNameMap.CellStyleKey, newCellStyle);
+				// 如果沒有返回 key，直接使用新建的樣式（不緩存）
 				cell.CellStyle = newCellStyle;
 			}
 		}
+		// 如果有固定的樣式 key，使用緩存的樣式
+		else if (!string.IsNullOrWhiteSpace(cellNameMap.CellStyleKey) && _cellStylesCached.ContainsKey(cellNameMap.CellStyleKey))
+		{
+			cell.CellStyle = _cellStylesCached[cellNameMap.CellStyleKey];
+		}
+		// 如果都沒有，使用全局樣式
+		else if (_cellStylesCached.ContainsKey("global"))
+		{
+			cell.CellStyle = _cellStylesCached["global"];
+		}
+	}
 
 		protected void SetCellValue(ICell cell, object value)
 		{

@@ -14,7 +14,7 @@ namespace NPOIPlus.Models
 		public Delegate SetValueActionGeneric { get; set; }
 		public Delegate SetFormulaValueActionGeneric { get; set; }
 		public string CellStyleKey { get; set; }
-		public Action<TableCellStyleParams, ICellStyle> SetCellStyleAction { get; set; }
+		public Func<TableCellStyleParams, ICellStyle, string> SetCellStyleAction { get; set; }
 		public CellType CellType { get; set; }
 	}
 }
