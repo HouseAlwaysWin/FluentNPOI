@@ -1,9 +1,9 @@
-# NPOIPlus
+# FluentNPOI
 
 [![.NET Standard 2.0](https://img.shields.io/badge/.NET%20Standard-2.0-blue.svg)](https://docs.microsoft.com/en-us/dotnet/standard/net-standard)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-**NPOIPlus** 是基於 [NPOI](https://github.com/dotnetcore/NPOI) 的流暢（Fluent）風格 Excel 操作庫，提供更直觀、更易用的 API 來讀寫 Excel 文件。
+**FluentNPOI** 是基於 [NPOI](https://github.com/dotnetcore/NPOI) 的流暢（Fluent）風格 Excel 操作庫，提供更直觀、更易用的 API 來讀寫 Excel 文件。
 
 [English](#english) | [繁體中文](#繁體中文)
 
@@ -26,10 +26,10 @@
 
 ```bash
 # 使用 NuGet Package Manager
-Install-Package NPOIPlus
+Install-Package FluentNPOI
 
 # 使用 .NET CLI
-dotnet add package NPOIPlus
+dotnet add package FluentNPOI
 ```
 
 ### 🎯 快速開始

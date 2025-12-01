@@ -1,8 +1,8 @@
 # NuGet 發布指南 / NuGet Publishing Guide
 
-本文檔說明如何將 NPOIPlus 發布到 NuGet.org。
+本文檔說明如何將 FluentNPOI 發布到 NuGet.org。
 
-This document explains how to publish NPOIPlus to NuGet.org.
+This document explains how to publish FluentNPOI to NuGet.org.
 
 ---
 
@@ -10,7 +10,7 @@ This document explains how to publish NPOIPlus to NuGet.org.
 
 ### 1. 確保項目配置正確
 
-確認 `NPOIPlus/NPOIPlus.csproj` 包含以下 NuGet 包元數據：
+確認 `NPOIPlus/NPOIPlus.csproj` 包含以下 NuGet 包元數據（注意：項目文件夾名稱保持不變，只更改 PackageId）：
 
 - ✅ `PackageId` - 包名稱（必須唯一）
 - ✅ `Version` - 版本號
@@ -28,9 +28,9 @@ This document explains how to publish NPOIPlus to NuGet.org.
 4. 選擇 **API Keys** 標籤
 5. 點擊 **Create** 創建新的 API Key
 6. 填寫資訊：
-   - **Key name**: `NPOIPlus GitHub Actions`（或任何名稱）
+   - **Key name**: `FluentNPOI GitHub Actions`（或任何名稱）
    - **Select scopes**: 選擇 **Push new packages and package versions**
-   - **Select packages**: 選擇 **NPOIPlus**（如果已存在）或 **All packages**
+   - **Select packages**: 選擇 **All packages**（推薦）
    - **Expires**: 選擇過期時間（建議選擇較長時間，如 1 年）
 7. 點擊 **Create**
 8. **重要**：複製生成的 API Key（只會顯示一次！）
@@ -79,7 +79,7 @@ This document explains how to publish NPOIPlus to NuGet.org.
    - 點擊 **Draft a new release**
    - 填寫資訊：
      - **Tag version**: `v1.0.1`（**必須以 `v` 開頭**）
-     - **Release title**: `Version 1.0.1` 或 `NPOIPlus 1.0.1`
+     - **Release title**: `Version 1.0.1` 或 `FluentNPOI 1.0.1`
      - **Description**: 填寫更新說明（可參考 CHANGELOG.md）
    - 點擊 **Publish release**
 
@@ -92,7 +92,7 @@ This document explains how to publish NPOIPlus to NuGet.org.
      - 發布到 NuGet.org
 
 6. **驗證發布**
-   - 前往 [NuGet.org](https://www.nuget.org/packages/NPOIPlus)
+   - 前往 [NuGet.org](https://www.nuget.org/packages/FluentNPOI)
    - 確認新版本已出現（可能需要等待幾分鐘）
 
 ---
@@ -135,7 +135,7 @@ This document explains how to publish NPOIPlus to NuGet.org.
 
 2. **發布到 NuGet.org**
    ```bash
-   dotnet nuget push bin/Release/NPOIPlus.*.nupkg --api-key YOUR_API_KEY --source https://api.nuget.org/v3/index.json
+   dotnet nuget push bin/Release/FluentNPOI.*.nupkg --api-key YOUR_API_KEY --source https://api.nuget.org/v3/index.json
    ```
 
 ---
@@ -188,7 +188,7 @@ This document explains how to publish NPOIPlus to NuGet.org.
 ### 檢查 NuGet.org
 
 1. 前往 [NuGet.org](https://www.nuget.org/)
-2. 搜索 `NPOIPlus`
+2. 搜索 `FluentNPOI`
 3. 確認新版本已出現
 4. 檢查包資訊是否正確
 
@@ -196,10 +196,10 @@ This document explains how to publish NPOIPlus to NuGet.org.
 
 ```bash
 # 使用 .NET CLI
-dotnet add package NPOIPlus --version 1.0.1
+dotnet add package FluentNPOI --version 1.0.1
 
 # 或使用 Package Manager
-Install-Package NPOIPlus -Version 1.0.1
+Install-Package FluentNPOI -Version 1.0.1
 ```
 
 ---

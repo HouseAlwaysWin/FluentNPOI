@@ -4,11 +4,11 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     
     <!-- NuGet Package Metadata -->
-    <PackageId>NPOIPlus</PackageId>
+    <PackageId>FluentNPOI</PackageId>
     <Version>1.0.0</Version>
     <Authors>HouseAlwaysWin</Authors>
     <Company>HouseAlwaysWin</Company>
-    <Product>NPOIPlus</Product>
+    <Product>FluentNPOI</Product>
     <Description>基於 NPOI 的流暢（Fluent）風格 Excel 操作庫，提供更直觀、更易用的 API 來讀寫 Excel 文件。A fluent-style Excel operation library based on NPOI, providing more intuitive and easier-to-use APIs for reading and writing Excel files.</Description>
     <PackageTags>NPOI;Excel;Fluent;XLSX;XLS;Office;Spreadsheet</PackageTags>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
