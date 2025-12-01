@@ -138,7 +138,7 @@ namespace NPOIPlus
 			return this;
 		}
 
-		public FluentTableCellStage<T> BeginCellSet(string cellName)
+		public FluentTableCellStage<T> BeginBodySet(string cellName)
 		{
 			_cellBodySets.Add(new TableCellSet { CellName = cellName });
 			return new FluentTableCellStage<T>(_workbook, _sheet, _table, _startCol, _startRow, _cellStylesCached, cellName, _cellTitleSets, _cellBodySets);

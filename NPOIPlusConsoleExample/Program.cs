@@ -135,11 +135,11 @@ namespace NPOIPlusConsoleExample
 
 				sheet2
 				.SetTable(sheet2Data, ExcelColumns.A, 1)
-				.BeginCellSet("Title").SetCellStyle("HeaderBlue").End()
-				.BeginCellSet("Value").SetCellType(CellType.Numeric).SetCellStyle("AmountCurrency").End()
-				.BeginCellSet("AsOfDate").SetCellStyle("DateStyle").End()
-				.BeginCellSet("IsOk").SetCellType(CellType.Boolean).End()
-				.BeginCellSet("FormulaVal")
+				.BeginBodySet("Title").SetCellStyle("HeaderBlue").End()
+				.BeginBodySet("Value").SetCellType(CellType.Numeric).SetCellStyle("AmountCurrency").End()
+				.BeginBodySet("AsOfDate").SetCellStyle("DateStyle").End()
+				.BeginBodySet("IsOk").SetCellType(CellType.Boolean).End()
+				.BeginBodySet("FormulaVal")
 				.SetCellType(CellType.Formula).End()
 				.BuildRows();
 
