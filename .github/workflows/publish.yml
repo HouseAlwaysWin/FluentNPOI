@@ -99,12 +99,45 @@ jobs:
         Write-Host "Pushing $($nupkgFiles.Count) package(s) to NuGet.org..."
         foreach ($file in $nupkgFiles) {
           Write-Host "Pushing: $($file.FullName)"
-          dotnet nuget push $file.FullName --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
-          if ($LASTEXITCODE -ne 0) {
-            Write-Error "Failed to push $($file.Name)"
+          $pushOutput = dotnet nuget push $file.FullName --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json 2>&1
+          $pushExitCode = $LASTEXITCODE
+          
+          # 檢查輸出中是否包含衝突信息
+          if ($pushOutput -match "already exists" -or $pushOutput -match "Conflict") {
+            Write-Warning "Package $($file.Name) already exists. This might mean:"
+            Write-Warning "  1. The package was already published successfully"
+            Write-Warning "  2. The package name is taken by another user"
+            Write-Warning "  3. There's a caching issue on NuGet.org"
+            Write-Host "Checking if package exists on NuGet.org..."
+            
+            # 嘗試查詢包是否存在
+            $packageName = "NPOIPlus"
+            $checkUrl = "https://api.nuget.org/v3-flatcontainer/$packageName/index.json"
+            try {
+              $response = Invoke-RestMethod -Uri $checkUrl -ErrorAction Stop
+              Write-Host "✅ Package exists on NuGet.org with versions:" -ForegroundColor Green
+              $response.versions | ForEach-Object { Write-Host "  - $_" -ForegroundColor Cyan }
+            } catch {
+              if ($_.Exception.Response.StatusCode -eq 404) {
+                Write-Warning "⚠️ Package does NOT exist on NuGet.org (404). The conflict might be a false positive."
+                Write-Warning "This could indicate an issue with the NuGet API or your API key permissions."
+              } else {
+                Write-Warning "Could not verify package existence: $_"
+              }
+            }
+            
+            # 即使有衝突，如果包不存在，我們仍然視為失敗
+            if ($pushExitCode -ne 0) {
+              Write-Error "Push failed with exit code $pushExitCode"
+              exit 1
+            }
+          } elseif ($pushExitCode -ne 0) {
+            Write-Error "Failed to push $($file.Name) with exit code $pushExitCode"
+            Write-Host "Push output: $pushOutput"
             exit 1
+          } else {
+            Write-Host "✅ Successfully pushed $($file.Name)" -ForegroundColor Green
           }
-          Write-Host "Successfully pushed $($file.Name)"
         }
       if: github.event_name == 'release' || github.event_name == 'workflow_dispatch'
 
