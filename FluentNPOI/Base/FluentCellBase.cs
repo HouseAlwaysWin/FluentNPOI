@@ -331,7 +331,7 @@ namespace FluentNPOI.Base
 
         protected void SetCellStyleRange(
             CellStyleConfig cellStyleConfig,
-             ExcelColumns startCol, int startRow, ExcelColumns endCol, int endRow)
+             ExcelColumns startCol, ExcelColumns endCol, int startRow, int endRow)
         {
             int startColIndex = (int)startCol;
             int endColIndex = (int)endCol;
@@ -343,7 +343,7 @@ namespace FluentNPOI.Base
                 IRow row = _sheet.GetRow(rowIndex) ?? _sheet.CreateRow(rowIndex);
                 if (row != null)
                 {
-                    for (int colIndex = startColIndex; colIndex < endColIndex; colIndex++)
+                    for (int colIndex = startColIndex; colIndex <= endColIndex; colIndex++)
                     {
                         ICell cell = row.GetCell(colIndex) ?? row.CreateCell(colIndex);
                         ApplyCellStyleFromConfig(cell, cellStyleConfig);

@@ -127,6 +127,16 @@ namespace FluentNPOI
 
             return new FluentCell(_workbook, _sheet, cell, _cellStylesCached);
         }
+
+        public void SetCellStyleRange(string cellStyleKey, ExcelColumns startCol, ExcelColumns endCol, int startRow, int endRow)
+        {
+            base.SetCellStyleRange(new CellStyleConfig(cellStyleKey, null), startCol, endCol, startRow, endRow);
+        }
+
+        public void SetCellStyleRange(CellStyleConfig cellStyleConfig, ExcelColumns startCol, ExcelColumns endCol, int startRow, int endRow)
+        {
+            base.SetCellStyleRange(cellStyleConfig, startCol, endCol, startRow, endRow);
+        }
     }
 }
 
