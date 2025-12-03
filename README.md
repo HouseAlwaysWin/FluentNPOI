@@ -325,16 +325,76 @@ fluent.UseSheet("Report")
 
 #### 複製樣式
 
+**在表格中複製當前工作表的樣式**
+
 ```csharp
 fluent.UseSheet("Sheet2")
     .SetTable(data, ExcelColumns.A, 1)
 
-    // 從 Sheet1 的 A1 複製樣式
+    // 從當前工作表的 A1 複製樣式
     .BeginTitleSet("標題").CopyStyleFromCell(ExcelColumns.A, 1)
     .BeginBodySet("Name").End()
 
     .BuildRows();
 ```
+
+**使用 CopyStyleFromSheetCell 跨工作表複製樣式**
+
+`CopyStyleFromSheetCell` 方法允許您從任何工作表的指定單元格複製樣式，並將其緩存到工作簿級別供後續使用。這對於建立樣式模板工作表或在多個工作表間共享樣式非常有用。
+
+```csharp
+var fluent = new FluentWorkbook(new XSSFWorkbook());
+
+// 創建模板工作表並設置樣式
+var templateSheet = fluent
+    .SetupCellStyle("templateStyle", (wb, style) =>
+    {
+        style.FillPattern = FillPattern.SolidForeground;
+        style.SetCellFillForegroundColor(IndexedColors.LightBlue);
+        style.SetFontInfo(wb, isBold: true);
+        style.SetBorderAllStyle(BorderStyle.Thin);
+    })
+    .UseSheet("Template");
+
+// 在模板工作表中應用樣式到單元格
+templateSheet
+    .SetCellPosition(ExcelColumns.A, 1)
+    .SetCellStyle("templateStyle")
+    .SetValue("標題樣式範本");
+
+// 從模板工作表複製樣式到工作簿級別緩存
+var templateSheetRef = templateSheet.GetSheet();
+fluent.CopyStyleFromSheetCell("copiedHeaderStyle", templateSheetRef, ExcelColumns.A, 1);
+
+// 在其他工作表使用複製的樣式
+fluent.UseSheet("Data1")
+    .SetCellPosition(ExcelColumns.A, 1)
+    .SetCellStyle("copiedHeaderStyle")
+    .SetValue("資料表1標題");
+
+fluent.UseSheet("Data2")
+    .SetCellPosition(ExcelColumns.A, 1)
+    .SetCellStyle("copiedHeaderStyle")
+    .SetValue("資料表2標題");
+```
+
+**方法簽名**
+
+```csharp
+public FluentWorkbook CopyStyleFromSheetCell(
+    string cellStyleKey,      // 樣式緩存的鍵名
+    ISheet sheet,             // 來源工作表
+    ExcelColumns col,         // 來源欄位
+    int rowIndex)             // 來源列號
+```
+
+**特點**
+
+- ✅ 支援跨工作表複製樣式
+- ✅ 自動緩存樣式避免重複創建
+- ✅ 如果樣式鍵已存在則不會覆蓋
+- ✅ 可在任何工作表中重複使用複製的樣式
+- ✅ 適合建立樣式模板工作表
 
 #### 多工作表操作
 
@@ -363,16 +423,17 @@ fluent.SaveToPath("multi-sheet.xlsx");
 
 #### FluentWorkbook
 
-| 方法                                            | 說明                           |
-| ----------------------------------------------- | ------------------------------ |
-| `UseSheet(string name)`                         | 使用指定名稱的工作表           |
-| `UseSheet(string name, bool createIfNotExists)` | 使用工作表，不存在時可選擇創建 |
-| `UseSheetAt(int index)`                         | 使用指定索引的工作表           |
-| `SetupGlobalCachedCellStyles(Action)`           | 設置全局預設樣式               |
-| `SetupCellStyle(string key, Action)`            | 註冊命名樣式                   |
-| `GetWorkbook()`                                 | 取得底層 NPOI IWorkbook 物件   |
-| `ToStream()`                                    | 輸出為記憶體串流               |
-| `SaveToPath(string path)`                       | 儲存到檔案路徑                 |
+| 方法                                                                          | 說明                                     |
+| ----------------------------------------------------------------------------- | ---------------------------------------- |
+| `UseSheet(string name)`                                                       | 使用指定名稱的工作表                     |
+| `UseSheet(string name, bool createIfNotExists)`                               | 使用工作表，不存在時可選擇創建           |
+| `UseSheetAt(int index)`                                                       | 使用指定索引的工作表                     |
+| `SetupGlobalCachedCellStyles(Action)`                                         | 設置全局預設樣式                         |
+| `SetupCellStyle(string key, Action)`                                          | 註冊命名樣式                             |
+| `CopyStyleFromSheetCell(string key, ISheet sheet, ExcelColumns col, int row)` | 從任何工作表的單元格複製樣式到工作簿級別 |
+| `GetWorkbook()`                                                               | 取得底層 NPOI IWorkbook 物件             |
+| `ToStream()`                                                                  | 輸出為記憶體串流                         |
+| `SaveToPath(string path)`                                                     | 儲存到檔案路徑                           |
 
 #### FluentSheet
 

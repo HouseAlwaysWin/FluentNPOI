@@ -55,13 +55,13 @@ var data = new List<Person> { /* ... */ };
 
 fluent.UseSheet("People")
     .SetTable(data, ExcelColumns.A, 1)
-    
+
     .BeginTitleSet("姓名").SetCellStyle("HeaderStyle")
     .BeginBodySet("Name").End()
-    
+
     .BeginTitleSet("年齡").SetCellStyle("HeaderStyle")
     .BeginBodySet("Age").SetCellType(CellType.Numeric).End()
-    
+
     .BuildRows();
 ```
 
@@ -79,38 +79,59 @@ fluent.UseSheet("People")
 .End()
 ```
 
+### 📋 跨工作表複製樣式 / Copy Style Across Sheets
+
+```csharp
+// 從模板工作表複製樣式 / Copy style from template sheet
+var templateSheet = fluent.UseSheet("Template");
+templateSheet.SetCellPosition(ExcelColumns.A, 1)
+    .SetCellStyle("HeaderStyle")
+    .SetValue("樣式範本");
+
+// 複製到工作簿級別 / Copy to workbook level
+var sheetRef = templateSheet.GetSheet();
+fluent.CopyStyleFromSheetCell("copiedStyle", sheetRef, ExcelColumns.A, 1);
+
+// 在其他工作表使用 / Use in other sheets
+fluent.UseSheet("Data")
+    .SetCellPosition(ExcelColumns.A, 1)
+    .SetCellStyle("copiedStyle")
+    .SetValue("使用複製的樣式");
+```
+
 ---
 
 ## 常用方法 / Common Methods
 
 ### FluentWorkbook
 
-| 方法 | 說明 | Example |
-|------|------|---------|
-| `UseSheet(name)` | 使用工作表 | `fluent.UseSheet("Sheet1")` |
-| `UseSheet(name, true)` | 創建工作表 | `fluent.UseSheet("New", true)` |
-| `SetupCellStyle(key, action)` | 註冊樣式 | `fluent.SetupCellStyle("MyStyle", ...)` |
-| `SaveToPath(path)` | 儲存檔案 | `fluent.SaveToPath("file.xlsx")` |
-| `ToStream()` | 輸出串流 | `var stream = fluent.ToStream()` |
+| 方法                                           | 說明           | Example                                                          |
+| ---------------------------------------------- | -------------- | ---------------------------------------------------------------- |
+| `UseSheet(name)`                               | 使用工作表     | `fluent.UseSheet("Sheet1")`                                      |
+| `UseSheet(name, true)`                         | 創建工作表     | `fluent.UseSheet("New", true)`                                   |
+| `SetupCellStyle(key, action)`                  | 註冊樣式       | `fluent.SetupCellStyle("MyStyle", ...)`                          |
+| `CopyStyleFromSheetCell(key, sheet, col, row)` | 複製單元格樣式 | `fluent.CopyStyleFromSheetCell("key", sheet, ExcelColumns.A, 1)` |
+| `SaveToPath(path)`                             | 儲存檔案       | `fluent.SaveToPath("file.xlsx")`                                 |
+| `ToStream()`                                   | 輸出串流       | `var stream = fluent.ToStream()`                                 |
 
 ### FluentSheet
 
-| 方法 | 說明 | Example |
-|------|------|---------|
-| `SetCellPosition(col, row)` | 設定位置 | `.SetCellPosition(ExcelColumns.A, 1)` |
-| `GetCellValue<T>(col, row)` | 讀取值 | `.GetCellValue<string>(ExcelColumns.A, 1)` |
-| `SetColumnWidth(col, width)` | 設定欄寬 | `.SetColumnWidth(ExcelColumns.A, 20)` |
-| `SetTable<T>(data, col, row)` | 綁定表格 | `.SetTable(list, ExcelColumns.A, 1)` |
+| 方法                          | 說明     | Example                                    |
+| ----------------------------- | -------- | ------------------------------------------ |
+| `SetCellPosition(col, row)`   | 設定位置 | `.SetCellPosition(ExcelColumns.A, 1)`      |
+| `GetCellValue<T>(col, row)`   | 讀取值   | `.GetCellValue<string>(ExcelColumns.A, 1)` |
+| `SetColumnWidth(col, width)`  | 設定欄寬 | `.SetColumnWidth(ExcelColumns.A, 20)`      |
+| `SetTable<T>(data, col, row)` | 綁定表格 | `.SetTable(list, ExcelColumns.A, 1)`       |
 
 ### FluentCell
 
-| 方法 | 說明 | Example |
-|------|------|---------|
-| `SetValue(value)` | 設定值 | `.SetValue("Text")` |
-| `GetValue<T>()` | 讀取值 | `.GetValue<string>()` |
-| `SetCellStyle(key)` | 套用樣式 | `.SetCellStyle("MyStyle")` |
+| 方法                       | 說明     | Example                      |
+| -------------------------- | -------- | ---------------------------- |
+| `SetValue(value)`          | 設定值   | `.SetValue("Text")`          |
+| `GetValue<T>()`            | 讀取值   | `.GetValue<string>()`        |
+| `SetCellStyle(key)`        | 套用樣式 | `.SetCellStyle("MyStyle")`   |
 | `SetFormulaValue(formula)` | 設定公式 | `.SetFormulaValue("=A1+B1")` |
-| `GetFormula()` | 讀取公式 | `.GetFormula()` |
+| `GetFormula()`             | 讀取公式 | `.GetFormula()`              |
 
 ---
 
@@ -125,8 +146,8 @@ style.SetCellFillForegroundColor("#FF0000");         // Hex
 style.SetCellFillForegroundColor(IndexedColors.Red); // Indexed
 
 // 字型 / Font
-style.SetFontInfo(workbook, 
-    fontFamily: "Arial", 
+style.SetFontInfo(workbook,
+    fontFamily: "Arial",
     fontHeight: 12,
     isBold: true,
     color: IndexedColors.Black);
@@ -220,7 +241,7 @@ fluent.SaveToPath("multi-sheet.xlsx");
 .SetCellStyle(p =>
 {
     var amount = p.GetRowItem<Sale>().Amount;
-    
+
     if (amount > 10000)
         return new("High", s => s.SetCellFillForegroundColor("#90EE90"));
     else if (amount > 5000)
@@ -240,23 +261,23 @@ DataTable dt = GetDataTable();
 
 fluent.UseSheet("DataSheet")
     .SetTable<DataRow>(dt.Rows.Cast<DataRow>(), ExcelColumns.A, 1)
-    
+
     .BeginTitleSet("欄位1")
     .BeginBodySet("Column1").End()
-    
+
     .BeginTitleSet("欄位2")
     .BeginBodySet("Column2")
     .SetCellStyle(p =>
     {
         var row = p.RowItem as DataRow;
         var value = row["Column2"].ToString();
-        
+
         if (value == "特殊")
             return new("Special", s => s.SetCellFillForegroundColor("#FFFF00"));
         return new("Normal", s => { });
     })
     .End()
-    
+
     .BuildRows();
 ```
 
@@ -264,14 +285,14 @@ fluent.UseSheet("DataSheet")
 
 ## 資料類型對應 / Data Type Mapping
 
-| C# Type | Excel Type | 注意事項 / Notes |
-|---------|------------|------------------|
-| `string` | Text | 自動處理 / Auto |
-| `int`, `long` | Numeric | 自動轉換 / Auto convert |
-| `double`, `decimal`, `float` | Numeric | 自動轉換 / Auto convert |
-| `bool` | Boolean | 自動處理 / Auto |
-| `DateTime` | Numeric (Date) | 需要日期格式 / Need date format |
-| `DBNull`, `null` | Blank | 空白單元格 / Empty cell |
+| C# Type                      | Excel Type     | 注意事項 / Notes                |
+| ---------------------------- | -------------- | ------------------------------- |
+| `string`                     | Text           | 自動處理 / Auto                 |
+| `int`, `long`                | Numeric        | 自動轉換 / Auto convert         |
+| `double`, `decimal`, `float` | Numeric        | 自動轉換 / Auto convert         |
+| `bool`                       | Boolean        | 自動處理 / Auto                 |
+| `DateTime`                   | Numeric (Date) | 需要日期格式 / Need date format |
+| `DBNull`, `null`             | Blank          | 空白單元格 / Empty cell         |
 
 ---
 
@@ -361,5 +382,3 @@ var number = sheet.GetCellValue<double>(ExcelColumns.A, 1);
 - 🧪 [單元測試 / Unit Tests](NPOIPlusUnitTest/UnitTest1.cs)
 - 🤝 [貢獻指南 / Contributing](CONTRIBUTING.md)
 - 📝 [變更記錄 / Changelog](CHANGELOG.md)
-
-
