@@ -66,6 +66,20 @@ namespace FluentNPOI.Stages
         }
 
         /// <summary>
+        /// 從 Excel 讀取表格數據並轉換為物件集合（自動判斷最後一行）
+        /// </summary>
+        /// <typeparam name="T">目標類型</typeparam>
+        /// <param name="startCol">起始列</param>
+        /// <param name="startRow">起始行（1-based）</param>
+        /// <returns>物件集合</returns>
+        public List<T> GetTable<T>(ExcelColumns startCol, int startRow)
+        {
+            // 自動檢測最後一行（檢查起始列是否有數據）
+            int lastRow = GetLastRowWithData(startCol, startRow);
+            return GetTable<T>(startCol, startRow, lastRow);
+        }
+
+        /// <summary>
         /// 從 Excel 讀取表格數據並轉換為物件集合
         /// </summary>
         /// <typeparam name="T">目標類型</typeparam>
@@ -254,6 +268,64 @@ namespace FluentNPOI.Stages
         {
             base.SetCellStyleRange(cellStyleConfig, startCol, endCol, startRow, endRow);
             return this;
+        }
+
+        /// <summary>
+        /// 獲取指定列的最後一行（從指定起始行開始向下查找）
+        /// </summary>
+        /// <param name="col">要檢查的列</param>
+        /// <param name="startRow">起始行（1-based）</param>
+        /// <returns>最後一行的行號（1-based），如果沒有找到則返回起始行</returns>
+        private int GetLastRowWithData(ExcelColumns col, int startRow)
+        {
+            if (_sheet == null) return startRow;
+
+            // LastRowNum 是 0-based，轉換為 1-based
+            int lastRowNum = _sheet.LastRowNum + 1;
+            
+            // 從最後一行向上查找，找到第一個有數據的行
+            for (int row = lastRowNum; row >= startRow; row--)
+            {
+                var normalizedRow = NormalizeRow(row);
+                var rowObj = _sheet.GetRow(normalizedRow);
+                
+                if (rowObj != null)
+                {
+                    var cell = rowObj.GetCell((int)col);
+                    if (cell != null && !IsCellEmpty(cell))
+                    {
+                        return row;
+                    }
+                }
+            }
+
+            // 如果沒有找到有數據的行，返回起始行
+            return startRow;
+        }
+
+        /// <summary>
+        /// 檢查單元格是否為空
+        /// </summary>
+        private bool IsCellEmpty(ICell cell)
+        {
+            if (cell == null) return true;
+
+            switch (cell.CellType)
+            {
+                case CellType.Blank:
+                    return true;
+                case CellType.String:
+                    return string.IsNullOrWhiteSpace(cell.StringCellValue);
+                case CellType.Numeric:
+                    // 可以根據需要決定是否將 0 視為空
+                    return false;
+                case CellType.Boolean:
+                    return false;
+                case CellType.Formula:
+                    return false;
+                default:
+                    return true;
+            }
         }
     }
 }

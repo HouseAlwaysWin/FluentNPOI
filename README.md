@@ -631,6 +631,16 @@ for (int row = 2; row <= 10; row++)
 }
 ```
 
+#### Using FluentCell for Chained Operations
+
+```csharp
+fluent.UseSheet("Sheet1")
+    .SetCellPosition(ExcelColumns.A, 1)
+    .SetValue("Test")
+    .SetCellStyle("MyStyle")
+    .GetValue<string>(); // Read the value immediately after setting
+```
+
 ### 📚 Main Features
 
 #### 1. Style Management
@@ -702,9 +712,337 @@ fluent.UseSheet("DataTableSheet")
     .BuildRows();
 ```
 
+#### 3. Cell Operations
+
+**Setting Values**
+
+```csharp
+// String
+sheet.SetCellPosition(ExcelColumns.A, 1).SetValue("Text");
+
+// Number
+sheet.SetCellPosition(ExcelColumns.B, 1).SetValue(123.45);
+
+// Date
+sheet.SetCellPosition(ExcelColumns.C, 1).SetValue(DateTime.Now);
+
+// Boolean
+sheet.SetCellPosition(ExcelColumns.D, 1).SetValue(true);
+
+// Formula
+sheet.SetCellPosition(ExcelColumns.E, 1).SetFormulaValue("=A1+B1");
+```
+
+**Reading Values**
+
+```csharp
+// Read as specific type
+string text = sheet.GetCellValue<string>(ExcelColumns.A, 1);
+double number = sheet.GetCellValue<double>(ExcelColumns.B, 1);
+DateTime date = sheet.GetCellValue<DateTime>(ExcelColumns.C, 1);
+bool flag = sheet.GetCellValue<bool>(ExcelColumns.D, 1);
+
+// Read formula
+string formula = sheet.GetCellFormula(ExcelColumns.E, 1);
+
+// Read as object (auto-detect type)
+object value = sheet.GetCellValue(ExcelColumns.A, 1);
+```
+
+#### 4. Sheet Operations
+
+**Setting Column Width**
+
+```csharp
+// Single column
+sheet.SetColumnWidth(ExcelColumns.A, 20);
+
+// Multiple columns
+sheet.SetColumnWidth(ExcelColumns.A, ExcelColumns.E, 15);
+```
+
+**Merging Cells**
+
+```csharp
+// Horizontal merge
+sheet.SetExcelCellMerge(ExcelColumns.A, ExcelColumns.C, 1);
+
+// Vertical merge
+sheet.SetExcelCellMerge(ExcelColumns.A, ExcelColumns.A, 1, 5);
+
+// Region merge
+sheet.SetExcelCellMerge(ExcelColumns.A, ExcelColumns.C, 1, 3);
+```
+
+#### 5. Extension Methods
+
+**Color Settings**
+
+```csharp
+style.SetCellFillForegroundColor(255, 0, 0); // RGB
+style.SetCellFillForegroundColor("#FF0000"); // Hex
+style.SetCellFillForegroundColor(IndexedColors.Red); // Predefined color
+```
+
+**Font Settings**
+
+```csharp
+style.SetFontInfo(workbook,
+    fontFamily: "Arial",
+    fontHeight: 12,
+    isBold: true,
+    color: IndexedColors.Black);
+```
+
+**Border Settings**
+
+```csharp
+style.SetBorderAllStyle(BorderStyle.Thin); // All borders
+style.SetBorderStyle(
+    top: BorderStyle.Thick,
+    right: BorderStyle.Thin,
+    bottom: BorderStyle.Thin,
+    left: BorderStyle.Thin
+);
+```
+
+**Alignment Settings**
+
+```csharp
+style.SetAligment(HorizontalAlignment.Center, VerticalAlignment.Center);
+```
+
+**Data Format**
+
+```csharp
+style.SetDataFormat(workbook, "yyyy-MM-dd"); // Date
+style.SetDataFormat(workbook, "#,##0.00"); // Number
+```
+
+### 🎨 Advanced Examples
+
+#### Conditional Formatting
+
+```csharp
+fluent.UseSheet("Report")
+    .SetTable(salesData, ExcelColumns.A, 1)
+
+    .BeginTitleSet("Amount")
+    .BeginBodySet("Amount")
+    .SetCellStyle((styleParams) =>
+    {
+        var sale = styleParams.GetRowItem<Sale>();
+
+        if (sale.Amount > 10000)
+            return new("HighSales", s => s.SetCellFillForegroundColor("#90EE90"));
+        else if (sale.Amount > 5000)
+            return new("MediumSales", s => s.SetCellFillForegroundColor("#FFFFE0"));
+        else
+            return new("LowSales", s => s.SetCellFillForegroundColor("#FFB6C1"));
+    })
+    .End()
+
+    .BuildRows();
+```
+
+#### Copying Styles
+
+**Copy style from current sheet in table**
+
+```csharp
+fluent.UseSheet("Sheet2")
+    .SetTable(data, ExcelColumns.A, 1)
+
+    // Copy style from A1 of current sheet
+    .BeginTitleSet("Title").CopyStyleFromCell(ExcelColumns.A, 1)
+    .BeginBodySet("Name").End()
+
+    .BuildRows();
+```
+
+**Using CopyStyleFromSheetCell to copy styles across sheets**
+
+The `CopyStyleFromSheetCell` method allows you to copy a style from any sheet's specified cell and cache it at the workbook level for later use. This is useful for creating style template sheets or sharing styles across multiple sheets.
+
+```csharp
+var fluent = new FluentWorkbook(new XSSFWorkbook());
+
+// Create template sheet and set styles
+var templateSheet = fluent
+    .SetupCellStyle("templateStyle", (wb, style) =>
+    {
+        style.FillPattern = FillPattern.SolidForeground;
+        style.SetCellFillForegroundColor(IndexedColors.LightBlue);
+        style.SetFontInfo(wb, isBold: true);
+        style.SetBorderAllStyle(BorderStyle.Thin);
+    })
+    .UseSheet("Template");
+
+// Apply style to cell in template sheet
+templateSheet
+    .SetCellPosition(ExcelColumns.A, 1)
+    .SetCellStyle("templateStyle")
+    .SetValue("Header Style Template");
+
+// Copy style from template sheet to workbook-level cache
+var templateSheetRef = templateSheet.GetSheet();
+fluent.CopyStyleFromSheetCell("copiedHeaderStyle", templateSheetRef, ExcelColumns.A, 1);
+
+// Use copied style in other sheets
+fluent.UseSheet("Data1")
+    .SetCellPosition(ExcelColumns.A, 1)
+    .SetCellStyle("copiedHeaderStyle")
+    .SetValue("Data Sheet 1 Header");
+
+fluent.UseSheet("Data2")
+    .SetCellPosition(ExcelColumns.A, 1)
+    .SetCellStyle("copiedHeaderStyle")
+    .SetValue("Data Sheet 2 Header");
+```
+
+**Method Signature**
+
+```csharp
+public FluentWorkbook CopyStyleFromSheetCell(
+    string cellStyleKey,      // Style cache key name
+    ISheet sheet,             // Source sheet
+    ExcelColumns col,         // Source column
+    int rowIndex)             // Source row number
+```
+
+**Features**
+
+- ✅ Supports copying styles across sheets
+- ✅ Automatically caches styles to avoid duplicate creation
+- ✅ Won't overwrite if style key already exists
+- ✅ Can reuse copied styles in any sheet
+- ✅ Suitable for creating style template sheets
+
+#### Multi-Sheet Operations
+
+```csharp
+var fluent = new FluentWorkbook(new XSSFWorkbook());
+
+// Sheet1
+fluent.UseSheet("Summary")
+    .SetCellPosition(ExcelColumns.A, 1)
+    .SetValue("Overview");
+
+// Sheet2 (create new)
+fluent.UseSheet("Details", createIfNotExists: true)
+    .SetTable(detailData, ExcelColumns.A, 1)
+    .BuildRows();
+
+// Sheet3
+fluent.UseSheetAt(0) // Use index to select sheet
+    .SetCellPosition(ExcelColumns.B, 1)
+    .SetValue("Updated");
+
+fluent.SaveToPath("multi-sheet.xlsx");
+```
+
 ### 📖 API Reference
 
-See the Chinese section above for detailed API documentation.
+#### FluentWorkbook
+
+| Method                                                                          | Description                                    |
+| ----------------------------------------------------------------------------- | ---------------------------------------- |
+| `UseSheet(string name)`                                                       | Use sheet with specified name                     |
+| `UseSheet(string name, bool createIfNotExists)`                               | Use sheet, optionally create if not exists           |
+| `UseSheetAt(int index)`                                                       | Use sheet at specified index                     |
+| `SetupGlobalCachedCellStyles(Action)`                                         | Setup global default styles                         |
+| `SetupCellStyle(string key, Action)`                                          | Register named style                             |
+| `CopyStyleFromSheetCell(string key, ISheet sheet, ExcelColumns col, int row)` | Copy style from any sheet's cell to workbook level |
+| `GetWorkbook()`                                                               | Get underlying NPOI IWorkbook object             |
+| `ToStream()`                                                                  | Output as memory stream                         |
+| `SaveToPath(string path)`                                                     | Save to file path                           |
+
+#### FluentSheet
+
+| Method                                             | Description                           |
+| ------------------------------------------------ | ------------------------------ |
+| `SetCellPosition(ExcelColumns col, int row)`     | Set current cell position       |
+| `GetCellPosition(ExcelColumns col, int row)`     | Get FluentCell object at specified position |
+| `GetCellValue<T>(ExcelColumns col, int row)`     | Read value at specified position               |
+| `GetCellFormula(ExcelColumns col, int row)`      | Read formula at specified position             |
+| `SetTable<T>(IEnumerable<T>, ExcelColumns, int)` | Bind data table                     |
+| `SetColumnWidth(ExcelColumns col, int width)`    | Set column width                       |
+| `SetExcelCellMerge(...)`                         | Merge cells                     |
+| `GetSheet()`                                     | Get underlying NPOI ISheet object      |
+
+#### FluentCell
+
+| Method                            | Description                           |
+| ------------------------------- | ------------------------------ |
+| `SetValue<T>(T value)`          | Set cell value                   |
+| `SetFormulaValue(object value)` | Set formula                       |
+| `SetCellStyle(string key)`      | Apply named style                   |
+| `SetCellStyle(Func<...>)`       | Apply dynamic style                   |
+| `SetCellType(CellType type)`    | Set cell type                 |
+| `GetValue()`                    | Read cell value (returns object)    |
+| `GetValue<T>()`                 | Read cell value (converted to specified type) |
+| `GetFormula()`                  | Read formula string                   |
+| `GetCell()`                     | Get underlying NPOI ICell object       |
+
+#### FluentTable
+
+| Method                                | Description                 |
+| ----------------------------------- | -------------------- |
+| `BeginTitleSet(string title)`       | Start setting header         |
+| `BeginBodySet(string propertyName)` | Start setting data field     |
+| `BuildRows()`                       | Execute data binding and generate rows |
+
+#### FluentTableHeader / FluentTableCell
+
+| Method                                           | Description                           |
+| ---------------------------------------------- | ------------------------------ |
+| `SetValue(object value)`                       | Set fixed value                     |
+| `SetValue(Func<...>)`                          | Set dynamic value                     |
+| `SetFormulaValue(...)`                         | Set formula                       |
+| `SetCellStyle(string key)`                     | Apply named style                   |
+| `SetCellStyle(Func<...>)`                      | Apply dynamic style                   |
+| `SetCellType(CellType type)`                   | Set cell type                 |
+| `CopyStyleFromCell(ExcelColumns col, int row)` | Copy style from other cell           |
+| `End()`                                        | End current setting and return FluentTable |
+
+### 🔧 Style Caching Mechanism
+
+FluentNPOI implements an intelligent style caching mechanism to avoid exceeding Excel's 64,000 style limit:
+
+```csharp
+// ✅ Use Key to cache styles (Recommended)
+.SetCellStyle((styleParams) =>
+{
+    return new CellStyleConfig("unique-key", style =>
+    {
+        style.SetCellFillForegroundColor(IndexedColors.Yellow);
+    });
+})
+
+// ❌ Don't use Key (creates new style every time)
+.SetCellStyle((styleParams) =>
+{
+    return new CellStyleConfig("", style => // Empty key
+    {
+        style.SetCellFillForegroundColor(IndexedColors.Yellow);
+    });
+})
+```
+
+### 💡 Best Practices
+
+1. **Use Style Caching** - Set Keys for commonly used styles to avoid duplicate creation
+2. **Global Styles First** - Use `SetupGlobalCachedCellStyles` to set base styles
+3. **Named Styles** - Use `SetupCellStyle` to pre-register commonly used styles
+4. **Dynamic Styles Need Keys** - Return `CellStyleConfig` with Key in dynamic style functions
+5. **Release Resources** - Release Stream and Workbook promptly after processing
+
+### 📝 Example Projects
+
+Complete examples can be found at:
+
+- [FluentNPOIConsoleExample](FluentNPOIConsoleExample/Program.cs) - Console example
+- [FluentNPOIUnitTest](FluentNPOIUnitTest/UnitTest1.cs) - Unit test example
 
 ### 🤝 Contributing
 

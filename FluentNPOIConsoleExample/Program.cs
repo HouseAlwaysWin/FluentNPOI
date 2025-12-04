@@ -492,15 +492,21 @@ namespace FluentNPOIConsoleExample
             Console.WriteLine("\n【使用 GetTable<T> 讀取表格】:");
             var sheet1 = fluent.UseSheet("Sheet1");
 
-            // 讀取表格數據 (跳過標題行,從第2行開始讀取到第13行)
-            var readData = sheet1.GetTable<ExampleData>(ExcelColumns.A, 2, 13);
+            // 方法1：指定結束行（舊方法，仍然可用）
+            Console.WriteLine("\n方法1：指定結束行");
+            var readData1 = sheet1.GetTable<ExampleData>(ExcelColumns.A, 2, 13);
+            Console.WriteLine($"成功讀取 {readData1.Count} 筆資料（指定結束行）");
 
-            Console.WriteLine($"成功讀取 {readData.Count} 筆資料");
+            // 方法2：自動判斷最後一行（新方法）
+            Console.WriteLine("\n方法2：自動判斷最後一行");
+            var readData2 = sheet1.GetTable<ExampleData>(ExcelColumns.A, 2);
+            Console.WriteLine($"成功讀取 {readData2.Count} 筆資料（自動判斷最後一行）");
+
             Console.WriteLine("\n前5筆資料詳情:");
 
-            for (int i = 0; i < Math.Min(5, readData.Count); i++)
+            for (int i = 0; i < Math.Min(5, readData2.Count); i++)
             {
-                var item = readData[i];
+                var item = readData2[i];
                 Console.WriteLine($"  [{i + 1}] ID={item.ID}, Name={item.Name}, " +
                     $"Birth={item.DateOfBirth:yyyy-MM-dd}, Active={item.IsActive}, " +
                     $"Score={item.Score:F1}, Amount={item.Amount:C}");
