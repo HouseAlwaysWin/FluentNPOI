@@ -58,11 +58,11 @@ Get-Help .\build.ps1 -Detailed
 
 ### 參數說明 / Parameters
 
-| 參數 | 類型 | 默認值 | 說明 |
-|------|------|--------|------|
-| `-Task` | String | 'All' | 要執行的任務：Build, Test, Pack, Clean, All |
-| `-Configuration` | String | 'Release' | 構建配置：Debug 或 Release |
-| `-Version` | String | '1.0.0' | NuGet 套件版本號 |
+| 參數             | 類型   | 默認值    | 說明                                        |
+| ---------------- | ------ | --------- | ------------------------------------------- |
+| `-Task`          | String | 'All'     | 要執行的任務：Build, Test, Pack, Clean, All |
+| `-Configuration` | String | 'Release' | 構建配置：Debug 或 Release                  |
+| `-Version`       | String | '1.0.0'   | NuGet 套件版本號                            |
 
 ### 範例 / Examples
 
@@ -148,12 +148,12 @@ dotnet pack NPOIPlus/NPOIPlus.csproj `
 dotnet nuget add source "D:\LocalNuGet" --name LocalNuGet
 
 # 推送套件到本地源
-dotnet nuget push ./artifacts/NPOIPlus.1.0.0.nupkg --source LocalNuGet
+dotnet nuget push ./artifacts/FluentNPOI.1.0.0.nupkg --source LocalNuGet
 ```
 
 ## Visual Studio 構建 / Build in Visual Studio
 
-1. 打開 `NPOIPlus.sln`
+1. 打開 `FluentNPOI.sln`
 2. 選擇配置：Debug 或 Release
 3. 按 `Ctrl + Shift + B` 構建整個解決方案
 4. 按 `Ctrl + R, A` 運行所有測試
@@ -165,6 +165,7 @@ dotnet nuget push ./artifacts/NPOIPlus.1.0.0.nupkg --source LocalNuGet
 **錯誤：** `The command 'dotnet' was not found`
 
 **解決方案：**
+
 1. 從 [Microsoft 官網](https://dotnet.microsoft.com/download) 下載並安裝 .NET SDK
 2. 重啟終端或 IDE
 3. 驗證安裝：`dotnet --version`
@@ -174,6 +175,7 @@ dotnet nuget push ./artifacts/NPOIPlus.1.0.0.nupkg --source LocalNuGet
 **錯誤：** `Unable to load the service index for source`
 
 **解決方案：**
+
 ```bash
 # 清除 NuGet 緩存
 dotnet nuget locals all --clear
@@ -188,8 +190,9 @@ dotnet restore
 
 **解決方案：**
 確保在項目根目錄執行命令，或提供完整路徑：
+
 ```bash
-dotnet test NPOIPlusUnitTest/NPOIPlusUnitTest.csproj
+dotnet test FluentNPOIUnitTest/FluentNPOIUnitTest.csproj
 ```
 
 ### 問題 4：權限錯誤
@@ -197,6 +200,7 @@ dotnet test NPOIPlusUnitTest/NPOIPlusUnitTest.csproj
 **錯誤：** `Access to the path is denied`
 
 **解決方案：**
+
 1. 以管理員身份運行終端
 2. 檢查文件權限
 3. 關閉可能鎖定文件的程序（如 Excel）
@@ -216,6 +220,7 @@ dotnet build --configuration Release /maxcpucount
 ### 3. 使用本地 NuGet 緩存
 
 確保 NuGet 緩存未被禁用：
+
 ```bash
 dotnet nuget locals all --list
 ```
@@ -256,24 +261,24 @@ FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build
 WORKDIR /src
 
 # 複製項目文件
-COPY ["NPOIPlus/NPOIPlus.csproj", "NPOIPlus/"]
-COPY ["NPOIPlusUnitTest/NPOIPlusUnitTest.csproj", "NPOIPlusUnitTest/"]
+COPY ["FluentNPOI/FluentNPOI.csproj", "FluentNPOI/"]
+COPY ["FluentNPOIUnitTest/FluentNPOIUnitTest.csproj", "FluentNPOIUnitTest/"]
 
 # 恢復依賴
-RUN dotnet restore "NPOIPlus/NPOIPlus.csproj"
+RUN dotnet restore "FluentNPOI/FluentNPOI.csproj"
 
 # 複製所有文件並構建
 COPY . .
-WORKDIR "/src/NPOIPlus"
-RUN dotnet build "NPOIPlus.csproj" -c Release -o /app/build
+WORKDIR "/src/FluentNPOI"
+RUN dotnet build "FluentNPOI.csproj" -c Release -o /app/build
 
 # 運行測試
-WORKDIR "/src/NPOIPlusUnitTest"
-RUN dotnet test "NPOIPlusUnitTest.csproj" -c Release --no-build
+WORKDIR "/src/FluentNPOIUnitTest"
+RUN dotnet test "FluentNPOIUnitTest.csproj" -c Release --no-build
 
 # 打包
-WORKDIR "/src/NPOIPlus"
-RUN dotnet pack "NPOIPlus.csproj" -c Release -o /app/publish
+WORKDIR "/src/FluentNPOI"
+RUN dotnet pack "FluentNPOI.csproj" -c Release -o /app/publish
 ```
 
 ### 使用 Docker 構建
@@ -307,7 +312,7 @@ dotnet --info
 dotnet sln list
 
 # 檢查項目引用
-dotnet list NPOIPlus/NPOIPlus.csproj reference
+dotnet list FluentNPOI/FluentNPOI.csproj reference
 ```
 
 ### 清理所有構建產物
@@ -324,15 +329,15 @@ git clean -xdf
 
 ### 典型構建時間（參考）
 
-| 任務 | 時間 | 備註 |
-|------|------|------|
-| Clean | ~2 秒 | |
-| Restore | ~5-10 秒 | 首次較慢 |
-| Build | ~10-15 秒 | |
-| Test | ~5-10 秒 | 依測試數量 |
-| Pack | ~2-3 秒 | |
-| Coverage Report | ~5-10 秒 | |
-| **Total** | ~30-50 秒 | 完整流程 |
+| 任務            | 時間      | 備註       |
+| --------------- | --------- | ---------- |
+| Clean           | ~2 秒     |            |
+| Restore         | ~5-10 秒  | 首次較慢   |
+| Build           | ~10-15 秒 |            |
+| Test            | ~5-10 秒  | 依測試數量 |
+| Pack            | ~2-3 秒   |            |
+| Coverage Report | ~5-10 秒  |            |
+| **Total**       | ~30-50 秒 | 完整流程   |
 
 ## 資源 / Resources
 
@@ -340,5 +345,3 @@ git clean -xdf
 - [MSBuild 參考](https://docs.microsoft.com/en-us/visualstudio/msbuild/msbuild-reference)
 - [NuGet 文檔](https://docs.microsoft.com/en-us/nuget/)
 - [xUnit 文檔](https://xunit.net/)
-
-

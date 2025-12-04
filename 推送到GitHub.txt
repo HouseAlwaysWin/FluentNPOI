@@ -11,7 +11,7 @@
 ═══════════════════════════════════════════════════════
 
 1. 前往: https://github.com/new
-2. 仓库名称: NPOIPlus
+2. 仓库名称: FluentNPOI
 3. 描述: A fluent API wrapper for NPOI to simplify Excel operations in .NET
 4. 选择: Public 或 Private
 5. 不要勾选任何选项（README, .gitignore, License）
@@ -48,7 +48,7 @@
    git commit -m "feat: initial commit with CI/CD setup"
 
 5. 添加远程仓库：
-   git remote add origin https://github.com/HouseAlwaysWin/NPOIPlus.git
+   git remote add origin https://github.com/HouseAlwaysWin/FluentNPOI.git
 
 6. 推送：
    git branch -M main
@@ -65,7 +65,7 @@
    登录 → Account Settings → API Keys → Create
 
 2. 在 GitHub 添加 Secret：
-   前往: https://github.com/HouseAlwaysWin/NPOIPlus/settings/secrets/actions
+   前往: https://github.com/HouseAlwaysWin/FluentNPOI/settings/secrets/actions
    点击: New repository secret
    名称: NUGET_API_KEY
    值: 粘贴你的 NuGet API Key
@@ -75,10 +75,10 @@
 ═══════════════════════════════════════════════════════
 
 1. 查看仓库:
-   https://github.com/HouseAlwaysWin/NPOIPlus
+   https://github.com/HouseAlwaysWin/FluentNPOI
 
 2. 查看 CI 状态:
-   https://github.com/HouseAlwaysWin/NPOIPlus/actions
+   https://github.com/HouseAlwaysWin/FluentNPOI/actions
 
 3. 确认所有检查通过（绿色勾）
 

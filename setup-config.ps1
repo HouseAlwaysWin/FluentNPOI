@@ -97,13 +97,13 @@ Write-Host "3. 提交：" -ForegroundColor White
 Write-Host "   git commit -m `"feat: initial commit with CI/CD setup`"" -ForegroundColor Cyan
 Write-Host ""
 Write-Host "4. 添加远程仓库：" -ForegroundColor White
-Write-Host "   git remote add origin https://github.com/$GitHubUsername/NPOIPlus.git" -ForegroundColor Cyan
+Write-Host "   git remote add origin https://github.com/$GitHubUsername/FluentNPOI.git" -ForegroundColor Cyan
 Write-Host ""
 Write-Host "5. 推送到 GitHub：" -ForegroundColor White
 Write-Host "   git push -u origin main" -ForegroundColor Cyan
 Write-Host ""
 Write-Host "6. ⚠️  重要！设置 GitHub Secrets：" -ForegroundColor Yellow
-Write-Host "   前往: https://github.com/$GitHubUsername/NPOIPlus/settings/secrets/actions" -ForegroundColor Cyan
+Write-Host "   前往: https://github.com/$GitHubUsername/FluentNPOI/settings/secrets/actions" -ForegroundColor Cyan
 Write-Host "   添加 Secret: NUGET_API_KEY" -ForegroundColor Cyan
 Write-Host ""
 

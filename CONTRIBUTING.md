@@ -1,6 +1,6 @@
 # 貢獻指南 / Contributing Guide
 
-感謝您考慮為 NPOIPlus 做出貢獻！/ Thank you for considering contributing to NPOIPlus!
+感謝您考慮為 FluentNPOI 做出貢獻！/ Thank you for considering contributing to FluentNPOI!
 
 [繁體中文](#繁體中文) | [English](#english)
 
@@ -17,7 +17,7 @@
 1. **檢查現有 Issues** - 確認該 Bug 尚未被報告
 2. **創建新 Issue** - 使用 Bug 報告模板
 3. **提供詳細資訊**：
-   - NPOIPlus 版本
+   - FluentNPOI 版本
    - .NET 版本
    - 作業系統
    - 重現步驟
@@ -65,7 +65,7 @@
 - 使用 **Tab 縮排**
 - 大括號 `{` 另起一行
 - 類別、方法使用 **PascalCase**
-- 私有欄位使用 **_camelCase**（前綴底線）
+- 私有欄位使用 **\_camelCase**（前綴底線）
 - 公開屬性使用 **PascalCase**
 
 ```csharp
@@ -146,6 +146,7 @@ public void SetValue_WithString_ShouldSetCellValue()
 ```
 
 #### Type
+
 - `feat`: 新功能
 - `fix`: Bug 修復
 - `docs`: 文檔變更
@@ -193,8 +194,8 @@ Closes #123
 
 ```bash
 # 克隆專案
-git clone https://github.com/your-org/NPOIPlus.git
-cd NPOIPlus
+git clone https://github.com/your-org/FluentNPOI.git
+cd FluentNPOI
 
 # 還原套件
 dotnet restore
@@ -206,21 +207,21 @@ dotnet build
 dotnet test
 
 # 執行範例
-cd NPOIPlusConsoleExample
+cd FluentNPOIConsoleExample
 dotnet run
 ```
 
 ### 專案結構
 
 ```
-NPOIPlus/
-├── NPOIPlus/                  # 主要函式庫專案
+FluentNPOI/
+├── FluentNPOI/                  # 主要函式庫專案
 │   ├── Base/                  # 基礎類別
 │   ├── Stages/                # 流暢 API 階段類別
 │   ├── Models/                # 資料模型
 │   └── Helpers/               # 輔助類別和擴展方法
-├── NPOIPlusConsoleExample/    # 控制台範例專案
-├── NPOIPlusUnitTest/          # 單元測試專案
+├── FluentNPOIConsoleExample/    # 控制台範例專案
+├── FluentNPOIUnitTest/          # 單元測試專案
 ├── README.md                  # 專案說明
 ├── CHANGELOG.md               # 變更記錄
 └── CONTRIBUTING.md            # 本文件
@@ -264,7 +265,7 @@ If you find a bug:
 1. **Check existing Issues** - Make sure it hasn't been reported
 2. **Create a new Issue** - Use the Bug Report template
 3. **Provide details**:
-   - NPOIPlus version
+   - FluentNPOI version
    - .NET version
    - Operating system
    - Steps to reproduce
@@ -312,7 +313,7 @@ If you find a bug:
 - Use **Tab indentation**
 - Opening brace `{` on new line
 - Classes, methods use **PascalCase**
-- Private fields use **_camelCase** (underscore prefix)
+- Private fields use **\_camelCase** (underscore prefix)
 - Public properties use **PascalCase**
 
 ```csharp
@@ -333,8 +334,8 @@ public class ExampleClass
 
 ```bash
 # Clone repository
-git clone https://github.com/your-org/NPOIPlus.git
-cd NPOIPlus
+git clone https://github.com/your-org/FluentNPOI.git
+cd FluentNPOI
 
 # Restore packages
 dotnet restore
@@ -346,7 +347,7 @@ dotnet build
 dotnet test
 
 # Run examples
-cd NPOIPlusConsoleExample
+cd FluentNPOIConsoleExample
 dotnet run
 ```
 
@@ -360,8 +361,6 @@ dotnet run
 
 ## 致謝 / Acknowledgments
 
-感謝所有為 NPOIPlus 做出貢獻的開發者！
+感謝所有為 FluentNPOI 做出貢獻的開發者！
 
-Thank you to all developers who contributed to NPOIPlus!
-
-
+Thank you to all developers who contributed to FluentNPOI!

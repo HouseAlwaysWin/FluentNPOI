@@ -1,4 +1,4 @@
-# NPOIPlus Quick Reference / 快速參考
+# FluentNPOI Quick Reference / 快速參考
 
 ## 常用操作速查表 / Common Operations Cheat Sheet
 
@@ -378,7 +378,7 @@ var number = sheet.GetCellValue<double>(ExcelColumns.A, 1);
 ## 更多資源 / More Resources
 
 - 📖 [完整文檔 / Full Documentation](README.md)
-- 💻 [範例程式 / Examples](NPOIPlusConsoleExample/Program.cs)
-- 🧪 [單元測試 / Unit Tests](NPOIPlusUnitTest/UnitTest1.cs)
+- 💻 [範例程式 / Examples](FluentNPOIConsoleExample/Program.cs)
+- 🧪 [單元測試 / Unit Tests](FluentNPOIUnitTest/UnitTest1.cs)
 - 🤝 [貢獻指南 / Contributing](CONTRIBUTING.md)
 - 📝 [變更記錄 / Changelog](CHANGELOG.md)

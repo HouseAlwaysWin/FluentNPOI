@@ -1,6 +1,6 @@
 # FluentNPOI
 
-[![CI](https://github.com/HouseAlwaysWin/NPOIPlus/workflows/CI/badge.svg)](https://github.com/HouseAlwaysWin/NPOIPlus/actions/workflows/ci.yml)
+[![CI](https://github.com/HouseAlwaysWin/FluentNPOI/workflows/CI/badge.svg)](https://github.com/HouseAlwaysWin/FluentNPOI/actions/workflows/ci.yml)
 [![.NET Standard 2.0](https://img.shields.io/badge/.NET%20Standard-2.0-blue.svg)](https://docs.microsoft.com/en-us/dotnet/standard/net-standard)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
@@ -519,8 +519,8 @@ FluentNPOI 實現了智能樣式緩存機制，避免 Excel 檔案樣式數量�
 
 完整範例請參考：
 
-- [FluentNPOIConsoleExample](NPOIPlusConsoleExample/Program.cs) - 控制台範例
-- [FluentNPOIUnitTest](NPOIPlusUnitTest/UnitTest1.cs) - 單元測試範例
+- [FluentNPOIConsoleExample](FluentNPOIConsoleExample/Program.cs) - 控制台範例
+- [FluentNPOIUnitTest](FluentNPOIUnitTest/UnitTest1.cs) - 單元測試範例
 
 ### 🤝 貢獻
 
@@ -720,4 +720,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 - [NPOI](https://github.com/dotnetcore/NPOI) - The underlying library
 - [Issues](../../issues) - Report bugs or request features
-- [Examples](NPOIPlusConsoleExample/Program.cs) - More code examples
+- [Examples](FluentNPOIConsoleExample/Program.cs) - More code examples

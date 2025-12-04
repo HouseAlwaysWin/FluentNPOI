@@ -2,20 +2,20 @@
 
 ## 🎉 重大更新：專案重命名
 
-本次發布將專案從 **NPOIPlus** 重命名為 **FluentNPOI**，以更好地反映專案的核心特性——流暢（Fluent）風格的 API 設計。
+本次發布將專案從 **FluentNPOI** 重命名為 **FluentNPOI**，以更好地反映專案的核心特性——流暢（Fluent）風格的 API 設計。
 
 ## 📝 變更內容
 
 ### ✨ 主要變更
 
-- **專案重命名**：從 `NPOIPlus` 重命名為 `FluentNPOI`
+- **專案重命名**：從 `FluentNPOI` 重命名為 `FluentNPOI`
 - **命名空間更新**：
-  - `NPOIPlusUnitTest` → `FluentNPOIUnitTest`
-  - `NPOIPlusConsoleExample` → `FluentNPOIConsoleExample`
+  - `FluentNPOIUnitTest` → `FluentNPOIUnitTest`
+  - `FluentNPOIConsoleExample` → `FluentNPOIConsoleExample`
 - **專案檔案更新**：
-  - `NPOIPlus.csproj` → `FluentNPOI.csproj`
-  - `NPOIPlusConsoleExample.csproj` → `FluentNPOIConsoleExample.csproj`
-  - `NPOIPlusUnitTest.csproj` → `FluentNPOIUnitTest.csproj`
+  - `FluentNPOI.csproj` → `FluentNPOI.csproj`
+  - `FluentNPOIConsoleExample.csproj` → `FluentNPOIConsoleExample.csproj`
+  - `FluentNPOIUnitTest.csproj` → `FluentNPOIUnitTest.csproj`
 - **GitHub 倉庫 URL 更新**：更新為新的倉庫地址
 
 ### 🔧 技術細節
@@ -46,14 +46,14 @@
 
 ## 🔄 遷移指南
 
-如果您之前使用 NPOIPlus，請注意以下變更：
+如果您之前使用 FluentNPOI，請注意以下變更：
 
 ### 命名空間變更
 
 ```csharp
 // 舊版本
-using NPOIPlus;
-using NPOIPlus.Models;
+using FluentNPOI;
+using FluentNPOI.Models;
 
 // 新版本
 using FluentNPOI;
@@ -64,7 +64,7 @@ using FluentNPOI.Models;
 
 ```bash
 # 卸載舊套件
-Uninstall-Package NPOIPlus
+Uninstall-Package FluentNPOI
 
 # 安裝新套件
 Install-Package FluentNPOI
@@ -98,6 +98,5 @@ fluent.UseSheet("Sheet1")
 
 ---
 
-**發布日期**：2024年  
+**發布日期**：2024 年  
 **維護者**：HouseAlwaysWin
-
