@@ -56,9 +56,11 @@ namespace FluentNPOI.Base
 				}
 			}
 
-		if (value == null || value == DBNull.Value) return default;
-		return value;
+			if (value == null || value == DBNull.Value) return default;
+			return value;
+		}
+
+		
 	}
-}
 }
 

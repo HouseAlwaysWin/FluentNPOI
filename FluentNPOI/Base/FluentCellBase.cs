@@ -402,6 +402,17 @@ namespace FluentNPOI.Base
                 }
             }
         }
+
+        protected ICell SetCellPositionInternal(ExcelCol col, int row)
+		{
+			if (_sheet == null) throw new System.InvalidOperationException("No active sheet. Call UseSheet(...) first.");
+
+			var normalizedRow = NormalizeRow(row);
+
+			var rowObj = _sheet.GetRow(normalizedRow) ?? _sheet.CreateRow(normalizedRow);
+			var cell = rowObj.GetCell((int)col) ?? rowObj.CreateCell((int)col);
+			return cell;
+		}
     }
 }
 

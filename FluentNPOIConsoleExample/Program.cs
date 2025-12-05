@@ -26,12 +26,17 @@ namespace FluentNPOIConsoleExample
                 // 設置樣式
                 SetupStyles(fluent);
 
-                // 創建各種範例工作表
+                // ========== 寫入範例 ==========
+                // 表格寫入範例
                 CreateBasicTableExample(fluent, testData);
                 CreateSummaryExample(fluent, testData);
-                CreateCopyStyleExample(fluent, testData);
                 CreateDataTableExample(fluent);
+
+                // 樣式寫入範例
+                CreateCopyStyleExample(fluent, testData);
                 CreateCellStyleRangeExample(fluent);
+
+                // 單元格寫入範例
                 CreateSetCellValueExample(fluent);
                 CreateCellMergeExample(fluent);
                 CreatePictureExample(fluent);
@@ -120,7 +125,7 @@ namespace FluentNPOIConsoleExample
 
         #endregion
 
-        #region Write Examples
+        #region 表格寫入範例
 
         /// <summary>
         /// 範例1：基本表格 - 展示多種欄位型別
@@ -180,6 +185,10 @@ namespace FluentNPOIConsoleExample
                 .BeginBodySet("Notes").SetCellStyle("HighlightYellow").End()
                 .BuildRows();
         }
+
+        #endregion
+
+        #region 樣式寫入範例
 
         /// <summary>
         /// 範例3：複製樣式與動態樣式
@@ -373,9 +382,11 @@ namespace FluentNPOIConsoleExample
                         style.SetCellFillForegroundColor("#FF00FF");
                         style.SetBorderAllStyle(BorderStyle.Thin);
                     }), ExcelCol.A, ExcelCol.D, 16, 18);
-
-
         }
+
+        #endregion
+
+        #region 單元格寫入範例
 
         /// <summary>
         /// 範例6：設置單個單元格值並套用樣式
@@ -471,7 +482,7 @@ namespace FluentNPOIConsoleExample
 
             // 讀取圖片文件
             var imagePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Resources", "pain.jpg");
-            
+
             if (!File.Exists(imagePath))
             {
                 Console.WriteLine($"警告：圖片文件不存在: {imagePath}");
@@ -484,7 +495,7 @@ namespace FluentNPOIConsoleExample
             sheet.SetCellPosition(ExcelCol.A, 1)
                 .SetValue("基本插入（自動高度）")
                 .SetCellStyle("HeaderBlue");
-            
+
             sheet.SetCellPosition(ExcelCol.A, 2)
                 .SetPictureOnCell(imageBytes, 200); // 寬度 200 像素，高度自動計算（1:1）
 
@@ -492,7 +503,7 @@ namespace FluentNPOIConsoleExample
             sheet.SetCellPosition(ExcelCol.B, 1)
                 .SetValue("手動設置尺寸")
                 .SetCellStyle("HeaderBlue");
-            
+
             sheet.SetCellPosition(ExcelCol.B, 2)
                 .SetPictureOnCell(imageBytes, 200, 150); // 寬度 200，高度 150 像素
 
@@ -500,7 +511,7 @@ namespace FluentNPOIConsoleExample
             sheet.SetCellPosition(ExcelCol.C, 1)
                 .SetValue("自定義列寬比例")
                 .SetCellStyle("HeaderBlue");
-            
+
             sheet.SetCellPosition(ExcelCol.C, 2)
                 .SetPictureOnCell(imageBytes, 300, AnchorType.MoveAndResize, 5.0); // 使用 5.0 作為轉換比例
 
@@ -508,30 +519,31 @@ namespace FluentNPOIConsoleExample
             sheet.SetCellPosition(ExcelCol.D, 1)
                 .SetValue("鏈式調用示例")
                 .SetCellStyle("HeaderBlue");
-            
+
             sheet.SetCellPosition(ExcelCol.D, 2)
                 .SetPictureOnCell(imageBytes, 180, 180, AnchorType.MoveAndResize, 7.0)
+                .SetCellPosition(ExcelCol.D, 10)
                 .SetValue("圖片下方文字"); // 鏈式調用，在圖片後設置文字
 
             // 5. 不同錨點類型示例
             sheet.SetCellPosition(ExcelCol.A, 5)
                 .SetValue("MoveAndResize（默認）")
                 .SetCellStyle("HeaderBlue");
-            
+
             sheet.SetCellPosition(ExcelCol.A, 6)
                 .SetPictureOnCell(imageBytes, 150, 150, AnchorType.MoveAndResize);
 
             sheet.SetCellPosition(ExcelCol.B, 5)
                 .SetValue("MoveDontResize")
                 .SetCellStyle("HeaderBlue");
-            
+
             sheet.SetCellPosition(ExcelCol.B, 6)
                 .SetPictureOnCell(imageBytes, 150, 150, AnchorType.MoveDontResize);
 
             sheet.SetCellPosition(ExcelCol.C, 5)
                 .SetValue("DontMoveAndResize")
                 .SetCellStyle("HeaderBlue");
-            
+
             sheet.SetCellPosition(ExcelCol.C, 6)
                 .SetPictureOnCell(imageBytes, 150, 150, AnchorType.DontMoveAndResize);
 
@@ -551,17 +563,20 @@ namespace FluentNPOIConsoleExample
 
         #endregion
 
-        #region Read Examples
+        #region 表格讀取範例
 
         static void ReadExcelExamples(FluentWorkbook fluent)
         {
             Console.WriteLine("\n========== 讀取 Excel 數據示例 ==========");
 
+            // 表格讀取範例
             ReadSheet1Example(fluent);
             ReadDataTableExample(fluent);
+            ReadGetTableExample(fluent);
+
+            // 單元格讀取範例
             ReadFluentCellExample(fluent);
             ReadSetCellValueExample(fluent);
-            ReadGetTableExample(fluent);
             ReadCellMergeExample(fluent);
 
             Console.WriteLine("\n========== 讀取完成 ==========\n");
@@ -621,34 +636,7 @@ namespace FluentNPOIConsoleExample
         }
 
         /// <summary>
-        /// 讀取範例3：使用 FluentCell 讀取單個單元格
-        /// </summary>
-        static void ReadFluentCellExample(FluentWorkbook fluent)
-        {
-            Console.WriteLine("\n【使用 FluentCell 讀取】:");
-            var sheet1 = fluent.UseSheet("Sheet1");
-            var cellA1 = sheet1.SetCellPosition(ExcelCol.A, 1);
-            if (cellA1 != null)
-            {
-                var value = cellA1.GetValue();
-                var cellType = cellA1.GetCell().CellType;
-                Console.WriteLine($"A1 單元格: 值={value}, 類型={cellType}");
-            }
-        }
-
-        /// <summary>
-        /// 讀取範例4：讀取 SetCellValueExample
-        /// </summary>
-        static void ReadSetCellValueExample(FluentWorkbook fluent)
-        {
-            Console.WriteLine("\n【SetCellValueExample 示例】:");
-            var exampleSheet = fluent.UseSheet("SetCellValueExample");
-            var helloValue = exampleSheet.GetCellValue<string>(ExcelCol.A, 1);
-            Console.WriteLine($"A1 值: {helloValue}");
-        }
-
-        /// <summary>
-        /// 讀取範例5：使用 GetTable<T> 讀取整個表格
+        /// 讀取範例3：使用 GetTable<T> 讀取整個表格
         /// </summary>
         static void ReadGetTableExample(FluentWorkbook fluent)
         {
@@ -698,8 +686,39 @@ namespace FluentNPOIConsoleExample
             }
         }
 
+        #endregion
+
+        #region 單元格讀取範例
+
         /// <summary>
-        /// 讀取範例6：讀取合併儲存格示例
+        /// 讀取範例1：使用 FluentCell 讀取單個單元格
+        /// </summary>
+        static void ReadFluentCellExample(FluentWorkbook fluent)
+        {
+            Console.WriteLine("\n【使用 FluentCell 讀取】:");
+            var sheet1 = fluent.UseSheet("Sheet1");
+            var cellA1 = sheet1.SetCellPosition(ExcelCol.A, 1);
+            if (cellA1 != null)
+            {
+                var value = cellA1.GetValue();
+                var cellType = cellA1.GetCell().CellType;
+                Console.WriteLine($"A1 單元格: 值={value}, 類型={cellType}");
+            }
+        }
+
+        /// <summary>
+        /// 讀取範例2：讀取 SetCellValueExample
+        /// </summary>
+        static void ReadSetCellValueExample(FluentWorkbook fluent)
+        {
+            Console.WriteLine("\n【SetCellValueExample 示例】:");
+            var exampleSheet = fluent.UseSheet("SetCellValueExample");
+            var helloValue = exampleSheet.GetCellValue<string>(ExcelCol.A, 1);
+            Console.WriteLine($"A1 值: {helloValue}");
+        }
+
+        /// <summary>
+        /// 讀取範例3：讀取合併儲存格示例
         /// </summary>
         static void ReadCellMergeExample(FluentWorkbook fluent)
         {

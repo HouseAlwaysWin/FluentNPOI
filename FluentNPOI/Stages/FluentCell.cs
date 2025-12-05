@@ -16,12 +16,12 @@ namespace FluentNPOI.Stages
         private ExcelCol _col;
         private int _row;
         public FluentCell(IWorkbook workbook, ISheet sheet,
-        ICell cell, ExcelCol col, int row, Dictionary<string, ICellStyle> cellStylesCached = null)
+        ICell cell, Dictionary<string, ICellStyle> cellStylesCached = null)
             : base(workbook, sheet, cellStylesCached ?? new Dictionary<string, ICellStyle>())
         {
             _cell = cell;
-            _col = col;
-            _row = row;
+            _col = (ExcelCol)cell.ColumnIndex;
+            _row = cell.RowIndex;
         }
 
         public FluentCell SetValue<T>(T value)
@@ -332,6 +332,12 @@ namespace FluentNPOI.Stages
             }
 
             throw new NotSupportedException($"Unsupported picture format. File header: {BitConverter.ToString(pictureBytes, 0, Math.Min(8, pictureBytes.Length))}");
+        }
+
+        public FluentCell SetCellPosition(ExcelCol col, int row)
+        {
+            _cell = SetCellPositionInternal(col, row);
+            return this;
         }
     }
 }

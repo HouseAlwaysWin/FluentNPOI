@@ -51,13 +51,8 @@ namespace FluentNPOI.Stages
 
         public FluentCell SetCellPosition(ExcelCol col, int row)
         {
-            if (_sheet == null) throw new System.InvalidOperationException("No active sheet. Call UseSheet(...) first.");
-
-            var normalizedRow = NormalizeRow(row);
-
-            var rowObj = _sheet.GetRow(normalizedRow) ?? _sheet.CreateRow(normalizedRow);
-            var cell = rowObj.GetCell((int)col) ?? rowObj.CreateCell((int)col);
-            return new FluentCell(_workbook, _sheet, cell, col, normalizedRow, _cellStylesCached);
+            var cell = SetCellPositionInternal(col, row);
+            return new FluentCell(_workbook, _sheet, cell, _cellStylesCached);
         }
 
         public FluentTable<T> SetTable<T>(IEnumerable<T> table, ExcelCol startCol, int startRow)
@@ -185,11 +180,11 @@ namespace FluentNPOI.Stages
 
             // 計算要讀取的列數
             int columnCount = (int)endCol - (int)startCol + 1;
-            
+
             // 如果起始列大於結束列，返回空列表
             if (columnCount <= 0)
                 return result;
-            
+
             // 如果指定的列數超過可用的成員數，只使用可用的成員數
             int membersToUse = Math.Min(columnCount, totalAvailableMembers);
 
@@ -215,7 +210,7 @@ namespace FluentNPOI.Stages
                         break;
 
                     var colIndex = (int)startCol + memberIndex;
-                    
+
                     // 確保不超過結束列
                     if (colIndex > (int)endCol)
                         break;
@@ -242,7 +237,7 @@ namespace FluentNPOI.Stages
                         break;
 
                     var colIndex = (int)startCol + memberIndex;
-                    
+
                     // 確保不超過結束列
                     if (colIndex > (int)endCol)
                         break;
@@ -395,13 +390,13 @@ namespace FluentNPOI.Stages
 
             // LastRowNum 是 0-based，轉換為 1-based
             int lastRowNum = _sheet.LastRowNum + 1;
-            
+
             // 從最後一行向上查找，找到第一個有數據的行
             for (int row = lastRowNum; row >= startRow; row--)
             {
                 var normalizedRow = NormalizeRow(row);
                 var rowObj = _sheet.GetRow(normalizedRow);
-                
+
                 if (rowObj != null)
                 {
                     var cell = rowObj.GetCell((int)col);
