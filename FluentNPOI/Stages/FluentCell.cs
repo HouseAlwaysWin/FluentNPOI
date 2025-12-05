@@ -155,8 +155,10 @@ namespace FluentNPOI.Stages
         /// <param name="imgHeight">圖片高度（像素）</param>
         /// <param name="anchorType">錨點類型</param>
         /// <param name="columnWidthRatio">列寬轉換比例（默認 7.0，表示像素寬度除以該值得到 Excel 列寬字符數）</param>
+        /// <param name="pictureAction">圖片操作委托</param>
         /// <returns>FluentCell 實例，支持鏈式調用</returns>
-        public FluentCell SetPictureOnCell(byte[] pictureBytes, int imgWidth, int imgHeight, AnchorType anchorType = AnchorType.MoveAndResize, double columnWidthRatio = 7.0)
+        public FluentCell SetPictureOnCell(byte[] pictureBytes, int imgWidth, int imgHeight, AnchorType anchorType = AnchorType.MoveAndResize,
+        double columnWidthRatio = 7.0, Action<IPicture> pictureAction = null)
         {
             // 參數驗證
             ValidatePictureParameters(pictureBytes, imgWidth, imgHeight, columnWidthRatio);
@@ -176,9 +178,7 @@ namespace FluentNPOI.Stages
             // 創建圖片
             IPicture pict = drawing.CreatePicture(anchor, picIndex);
 
-            // 調整圖片大小（如果需要）
-            // NPOI 的 IPicture.Resize() 方法可以根據錨點自動調整，但也可以手動調用
-            // pict.Resize(); // 可選：根據錨點自動調整大小
+            pictureAction?.Invoke(pict);
 
             return this;
         }
@@ -247,15 +247,15 @@ namespace FluentNPOI.Stages
             // 根據圖片尺寸和單元格大小計算需要跨越多少列和行
             // Excel 默認列寬約為 8.43 字符（約 64 像素），行高約為 15 像素
             // 這裡使用簡化的計算方式
-            
+
             // 獲取當前列寬（以字符為單位）
             // GetColumnWidth 返回 int（以 1/256 字符為單位），轉換為字符數
             double columnWidthInChars = _sheet.GetColumnWidth((int)_col) / 256.0;
-            
+
             // 獲取當前行高（以點為單位，1 點 ≈ 1.33 像素）
             IRow row = _sheet.GetRow(_row) ?? _sheet.CreateRow(_row);
             short rowHeightInPoints = row.Height > 0 ? (short)(row.Height / 20.0) : (short)15; // 默認行高約 15 點
-            
+
             // 計算需要跨越的列數（考慮列寬）
             // 假設 1 字符寬度 ≈ 7 像素（可根據實際情況調整）
             double pixelsPerChar = 7.0;

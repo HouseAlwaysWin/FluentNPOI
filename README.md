@@ -252,6 +252,50 @@ sheet.SetExcelCellMerge(ExcelColumns.A, ExcelColumns.A, 1, 5);
 sheet.SetExcelCellMerge(ExcelColumns.A, ExcelColumns.C, 1, 3);
 ```
 
+**插入圖片**
+
+```csharp
+// 讀取圖片文件
+byte[] imageBytes = File.ReadAllBytes("image.png");
+
+// 基本插入（自動計算高度，使用默認列寬比例）
+sheet.SetCellPosition(ExcelColumns.A, 1)
+    .SetPictureOnCell(imageBytes, 200); // 寬度 200 像素
+
+// 手動設置寬度和高度
+sheet.SetCellPosition(ExcelColumns.B, 1)
+    .SetPictureOnCell(imageBytes, 200, 150); // 寬度 200，高度 150 像素
+
+// 自定義列寬轉換比例和錨點類型
+sheet.SetCellPosition(ExcelColumns.C, 1)
+    .SetPictureOnCell(imageBytes, 300, AnchorType.MoveAndResize, 5.0);
+
+// 鏈式調用（插入圖片後繼續設置其他值）
+sheet.SetCellPosition(ExcelColumns.D, 1)
+    .SetPictureOnCell(imageBytes, 180, 180)
+    .SetValue("圖片下方文字");
+
+// 使用 pictureAction 參數進行自定義操作
+sheet.SetCellPosition(ExcelColumns.E, 1)
+    .SetPictureOnCell(imageBytes, 200, 200, AnchorType.MoveAndResize, 7.0, 
+        picture => 
+        {
+            // 可以對 IPicture 對象進行自定義操作
+            // 例如：調整圖片大小、設置圖片邊框等
+            picture.Resize(); // 根據錨點自動調整大小
+        });
+```
+
+> **注意：**
+> - 支援的圖片格式：PNG、JPEG、GIF、BMP/DIB、EMF、WMF
+> - 圖片類型會根據文件頭自動識別
+> - `columnWidthRatio` 參數用於將像素寬度轉換為 Excel 列寬（默認值為 7.0）
+> - `AnchorType` 控制圖片在單元格調整時的行為：
+>   - `MoveAndResize`（默認）：移動並調整大小
+>   - `MoveDontResize`：移動但不調整大小
+>   - `DontMoveAndResize`：不移動也不調整大小
+> - `pictureAction` 參數（可選）：允許在圖片創建後對 `IPicture` 對象執行自定義操作，例如調用 `Resize()` 方法或進行其他 NPOI 圖片操作
+
 #### 5. 擴展方法
 
 **顏色設置**
@@ -446,6 +490,7 @@ fluent.SaveToPath("multi-sheet.xlsx");
 | `SetTable<T>(IEnumerable<T>, ExcelColumns, int)` | 綁定資料表                     |
 | `SetColumnWidth(ExcelColumns col, int width)`    | 設置欄寬                       |
 | `SetExcelCellMerge(...)`                         | 合併儲存格                     |
+| `SetPictureOnCell(...)`                          | 插入圖片                       |
 | `GetSheet()`                                     | 取得底層 NPOI ISheet 物件      |
 
 #### FluentCell
@@ -457,6 +502,7 @@ fluent.SaveToPath("multi-sheet.xlsx");
 | `SetCellStyle(string key)`      | 套用命名樣式                   |
 | `SetCellStyle(Func<...>)`       | 套用動態樣式                   |
 | `SetCellType(CellType type)`    | 設置單元格類型                 |
+| `SetPictureOnCell(...)`         | 插入圖片                       |
 | `GetValue()`                    | 讀取單元格值（返回 object）    |
 | `GetValue<T>()`                 | 讀取單元格值（轉換為指定類型） |
 | `GetFormula()`                  | 讀取公式字串                   |
@@ -774,6 +820,50 @@ sheet.SetExcelCellMerge(ExcelColumns.A, ExcelColumns.A, 1, 5);
 sheet.SetExcelCellMerge(ExcelColumns.A, ExcelColumns.C, 1, 3);
 ```
 
+**Inserting Pictures**
+
+```csharp
+// Read image file
+byte[] imageBytes = File.ReadAllBytes("image.png");
+
+// Basic insertion (auto-calculate height, use default column width ratio)
+sheet.SetCellPosition(ExcelColumns.A, 1)
+    .SetPictureOnCell(imageBytes, 200); // Width 200 pixels
+
+// Manual width and height
+sheet.SetCellPosition(ExcelColumns.B, 1)
+    .SetPictureOnCell(imageBytes, 200, 150); // Width 200, height 150 pixels
+
+// Custom column width ratio and anchor type
+sheet.SetCellPosition(ExcelColumns.C, 1)
+    .SetPictureOnCell(imageBytes, 300, AnchorType.MoveAndResize, 5.0);
+
+// Chained calls (continue setting other values after inserting picture)
+sheet.SetCellPosition(ExcelColumns.D, 1)
+    .SetPictureOnCell(imageBytes, 180, 180)
+    .SetValue("Text below image");
+
+// Using pictureAction parameter for custom operations
+sheet.SetCellPosition(ExcelColumns.E, 1)
+    .SetPictureOnCell(imageBytes, 200, 200, AnchorType.MoveAndResize, 7.0, 
+        picture => 
+        {
+            // Can perform custom operations on IPicture object
+            // For example: resize picture, set picture border, etc.
+            picture.Resize(); // Auto-resize based on anchor
+        });
+```
+
+> **Note:**
+> - Supported image formats: PNG, JPEG, GIF, BMP/DIB, EMF, WMF
+> - Image type is automatically detected based on file header
+> - `columnWidthRatio` parameter converts pixel width to Excel column width (default: 7.0)
+> - `AnchorType` controls picture behavior when cells are adjusted:
+>   - `MoveAndResize` (default): Move and resize
+>   - `MoveDontResize`: Move but don't resize
+>   - `DontMoveAndResize`: Don't move or resize
+> - `pictureAction` parameter (optional): Allows custom operations on the `IPicture` object after creation, such as calling `Resize()` method or performing other NPOI picture operations
+
 #### 5. Extension Methods
 
 **Color Settings**
@@ -968,6 +1058,7 @@ fluent.SaveToPath("multi-sheet.xlsx");
 | `SetTable<T>(IEnumerable<T>, ExcelColumns, int)` | Bind data table                     |
 | `SetColumnWidth(ExcelColumns col, int width)`    | Set column width                       |
 | `SetExcelCellMerge(...)`                         | Merge cells                     |
+| `SetPictureOnCell(...)`                          | Insert picture                       |
 | `GetSheet()`                                     | Get underlying NPOI ISheet object      |
 
 #### FluentCell
@@ -979,6 +1070,7 @@ fluent.SaveToPath("multi-sheet.xlsx");
 | `SetCellStyle(string key)`      | Apply named style                   |
 | `SetCellStyle(Func<...>)`       | Apply dynamic style                   |
 | `SetCellType(CellType type)`    | Set cell type                 |
+| `SetPictureOnCell(...)`         | Insert picture                       |
 | `GetValue()`                    | Read cell value (returns object)    |
 | `GetValue<T>()`                 | Read cell value (converted to specified type) |
 | `GetFormula()`                  | Read formula string                   |
