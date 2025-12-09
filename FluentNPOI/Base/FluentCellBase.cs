@@ -40,10 +40,19 @@ namespace FluentNPOI.Base
             {
                 cell.CellStyle = _cellStylesCached[cellNameMap.CellStyleKey];
             }
-            // 如果都沒有，使用全局樣式
-            else if (_cellStylesCached.ContainsKey("global"))
+            // 如果都沒有，先檢查 sheet 級別的全局樣式，再使用工作簿級別的全局樣式
+            // If none specified, check sheet-level global style first, then workbook-level global style
+            else
             {
-                cell.CellStyle = _cellStylesCached["global"];
+                string sheetGlobalKey = $"global_{_sheet.SheetName}";
+                if (_cellStylesCached.ContainsKey(sheetGlobalKey))
+                {
+                    cell.CellStyle = _cellStylesCached[sheetGlobalKey];
+                }
+                else if (_cellStylesCached.ContainsKey("global"))
+                {
+                    cell.CellStyle = _cellStylesCached["global"];
+                }
             }
         }
 
@@ -243,7 +252,7 @@ namespace FluentNPOI.Base
                 {
                     if (value is DateTime dt)
                         return (T)(object)dt;
-                    
+
                     // 如果值是 double（Excel 日期存儲為數字），嘗試轉換
                     if (value is double d && cell != null)
                     {
@@ -263,13 +272,13 @@ namespace FluentNPOI.Base
                             // 如果轉換失敗，返回默認值
                         }
                     }
-                    
+
                     // 嘗試字符串轉換
                     if (value is string str && DateTime.TryParse(str, out var parsedDate))
                     {
                         return (T)(object)parsedDate;
                     }
-                    
+
                     return default(T);
                 }
 
@@ -404,15 +413,15 @@ namespace FluentNPOI.Base
         }
 
         protected ICell SetCellPositionInternal(ExcelCol col, int row)
-		{
-			if (_sheet == null) throw new System.InvalidOperationException("No active sheet. Call UseSheet(...) first.");
+        {
+            if (_sheet == null) throw new System.InvalidOperationException("No active sheet. Call UseSheet(...) first.");
 
-			var normalizedRow = NormalizeRow(row);
+            var normalizedRow = NormalizeRow(row);
 
-			var rowObj = _sheet.GetRow(normalizedRow) ?? _sheet.CreateRow(normalizedRow);
-			var cell = rowObj.GetCell((int)col) ?? rowObj.CreateCell((int)col);
-			return cell;
-		}
+            var rowObj = _sheet.GetRow(normalizedRow) ?? _sheet.CreateRow(normalizedRow);
+            var cell = rowObj.GetCell((int)col) ?? rowObj.CreateCell((int)col);
+            return cell;
+        }
     }
 }
 

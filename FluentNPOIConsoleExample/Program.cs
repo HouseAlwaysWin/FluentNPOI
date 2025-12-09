@@ -35,6 +35,7 @@ namespace FluentNPOIConsoleExample
                 // Style write examples
                 CreateCopyStyleExample(fluent, testData);
                 CreateCellStyleRangeExample(fluent);
+                CreateSheetGlobalStyleExample(fluent, testData);
 
                 // Cell write examples
                 CreateSetCellValueExample(fluent);
@@ -382,6 +383,136 @@ namespace FluentNPOIConsoleExample
                         style.SetCellFillForegroundColor("#FF00FF");
                         style.SetBorderAllStyle(BorderStyle.Thin);
                     }), ExcelCol.A, ExcelCol.D, 16, 18);
+        }
+
+        /// <summary>
+        /// Example 6: Per-sheet global styles - Demonstrates sheet-level global styles
+        /// </summary>
+        static void CreateSheetGlobalStyleExample(FluentWorkbook fluent, List<ExampleData> testData)
+        {
+            var limitedData = testData.Take(5).ToList();
+
+            // Sheet 1: 使用綠色作為 Sheet 級別的全域樣式
+            // Sheet 1: Use green as sheet-level global style
+            fluent.UseSheet("SheetGlobalStyle_Green", true)
+                .SetColumnWidth(ExcelCol.A, ExcelCol.D, 20)
+                .SetupSheetGlobalCachedCellStyles((wb, style) =>
+                {
+                    style.FillPattern = FillPattern.SolidForeground;
+                    style.SetCellFillForegroundColor(IndexedColors.LightGreen);
+                    style.SetBorderAllStyle(BorderStyle.Thin);
+                    style.SetAligment(HorizontalAlignment.Center);
+                })
+                .SetTable(limitedData, ExcelCol.A, 2)
+                .BeginTitleSet("ID")
+                .BeginBodySet("ID").End()  // 使用 Sheet 級別的綠色全域樣式
+
+                .BeginTitleSet("名稱")
+                .BeginBodySet("Name").End()  // 使用 Sheet 級別的綠色全域樣式
+
+                .BeginTitleSet("分數")
+                .BeginBodySet("Score").SetCellType(CellType.Numeric).End()
+
+                .BeginTitleSet("是否活躍")
+                .BeginBodySet("IsActive").SetCellType(CellType.Boolean).End()
+                .BuildRows();
+
+            // Add title
+            fluent.UseSheet("SheetGlobalStyle_Green")
+                .SetCellPosition(ExcelCol.A, 1)
+                .SetValue("Sheet 全域樣式：綠色 (所有未指定樣式的儲存格都是綠色)")
+                .SetCellStyle("HeaderBlue");
+            fluent.UseSheet("SheetGlobalStyle_Green")
+                .SetExcelCellMerge(ExcelCol.A, ExcelCol.D, 1);
+
+            // Sheet 2: 使用黃色作為 Sheet 級別的全域樣式
+            // Sheet 2: Use yellow as sheet-level global style
+            fluent.UseSheet("SheetGlobalStyle_Yellow", true)
+                .SetColumnWidth(ExcelCol.A, ExcelCol.D, 20)
+                .SetupSheetGlobalCachedCellStyles((wb, style) =>
+                {
+                    style.FillPattern = FillPattern.SolidForeground;
+                    style.SetCellFillForegroundColor(IndexedColors.LightYellow);
+                    style.SetBorderAllStyle(BorderStyle.Thin);
+                    style.SetAligment(HorizontalAlignment.Center);
+                })
+                .SetTable(limitedData, ExcelCol.A, 2)
+                .BeginTitleSet("ID")
+                .BeginBodySet("ID").End()  // 使用 Sheet 級別的黃色全域樣式
+
+                .BeginTitleSet("名稱")
+                .BeginBodySet("Name").End()  // 使用 Sheet 級別的黃色全域樣式
+
+                .BeginTitleSet("金額")
+                .BeginBodySet("Amount").SetCellType(CellType.Numeric).End()
+
+                .BeginTitleSet("備註")
+                .BeginBodySet("Notes").End()
+                .BuildRows();
+
+            // Add title
+            fluent.UseSheet("SheetGlobalStyle_Yellow")
+                .SetCellPosition(ExcelCol.A, 1)
+                .SetValue("Sheet 全域樣式：黃色 (所有未指定樣式的儲存格都是黃色)")
+                .SetCellStyle("HeaderBlue");
+            fluent.UseSheet("SheetGlobalStyle_Yellow")
+                .SetExcelCellMerge(ExcelCol.A, ExcelCol.D, 1);
+
+            // Sheet 3: 混合使用 Sheet 全域樣式和特定樣式
+            // Sheet 3: Mix sheet global style with specific styles
+            fluent.UseSheet("SheetGlobalStyle_Mixed", true)
+                .SetColumnWidth(ExcelCol.A, ExcelCol.D, 20)
+                .SetupSheetGlobalCachedCellStyles((wb, style) =>
+                {
+                    style.FillPattern = FillPattern.SolidForeground;
+                    style.SetCellFillForegroundColor(IndexedColors.Aqua);
+                    style.SetBorderAllStyle(BorderStyle.Thin);
+                    style.SetAligment(HorizontalAlignment.Center);
+                })
+                .SetTable(limitedData, ExcelCol.A, 2)
+                .BeginTitleSet("ID")
+                .BeginBodySet("ID").SetCellStyle("HighlightYellow").End()  // 覆蓋 Sheet 全域樣式，使用特定樣式
+
+                .BeginTitleSet("名稱")
+                .BeginBodySet("Name").End()  // 使用 Sheet 級別的水藍色全域樣式
+
+                .BeginTitleSet("生日")
+                .BeginBodySet("DateOfBirth").SetCellStyle("DateOfBirth").End()  // 覆蓋 Sheet 全域樣式
+
+                .BeginTitleSet("是否活躍")
+                .BeginBodySet("IsActive")
+                .SetCellType(CellType.Boolean)
+                .SetCellStyle((styleParams) =>
+                {
+                    // 動態樣式會覆蓋 Sheet 全域樣式
+                    if (styleParams.GetRowItem<ExampleData>().IsActive)
+                    {
+                        return new CellStyleConfig("ActiveGreen", style =>
+                        {
+                            style.FillPattern = FillPattern.SolidForeground;
+                            style.SetCellFillForegroundColor(IndexedColors.Green);
+                            style.SetBorderAllStyle(BorderStyle.Thin);
+                        });
+                    }
+                    return new CellStyleConfig("InactiveRed", style =>
+                    {
+                        style.FillPattern = FillPattern.SolidForeground;
+                        style.SetCellFillForegroundColor(IndexedColors.Red);
+                        style.SetBorderAllStyle(BorderStyle.Thin);
+                    });
+                })
+                .End()
+                .BuildRows();
+
+            // Add title
+            fluent.UseSheet("SheetGlobalStyle_Mixed")
+                .SetCellPosition(ExcelCol.A, 1)
+                .SetValue("混合樣式：Sheet 全域(水藍) + 特定樣式覆蓋")
+                .SetCellStyle("HeaderBlue");
+            fluent.UseSheet("SheetGlobalStyle_Mixed")
+                .SetExcelCellMerge(ExcelCol.A, ExcelCol.D, 1);
+
+            Console.WriteLine("✓ Sheet-level global style examples created");
         }
 
         #endregion

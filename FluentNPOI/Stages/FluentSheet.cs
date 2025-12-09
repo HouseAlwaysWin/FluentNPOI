@@ -379,6 +379,29 @@ namespace FluentNPOI.Stages
         }
 
         /// <summary>
+        /// 設定 Sheet 級別的全域樣式
+        /// Setup sheet-level global style
+        /// </summary>
+        /// <param name="styles">樣式設定函數</param>
+        /// <returns></returns>
+        public FluentSheet SetupSheetGlobalCachedCellStyles(Action<IWorkbook, ICellStyle> styles)
+        {
+            ICellStyle newCellStyle = _workbook.CreateCellStyle();
+            styles(_workbook, newCellStyle);
+            string sheetGlobalKey = $"global_{_sheet.SheetName}";
+
+            // Remove existing sheet global style if present
+            if (_cellStylesCached.ContainsKey(sheetGlobalKey))
+            {
+                _cellStylesCached.Remove(sheetGlobalKey);
+            }
+
+            _cellStylesCached.Add(sheetGlobalKey, newCellStyle);
+            return this;
+        }
+
+
+        /// <summary>
         /// 獲取指定列的最後一行（從指定起始行開始向下查找）
         /// </summary>
         /// <param name="col">要檢查的列</param>
