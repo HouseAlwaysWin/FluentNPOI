@@ -12,22 +12,45 @@ namespace FluentNPOI.Stages
     /// </summary>
     public class FluentSheet : FluentSheetBase
     {
+        /// <summary>
+        /// 初始化 FluentSheet 实例
+        /// </summary>
+        /// <param name="workbook">工作簿对象</param>
+        /// <param name="sheet">工作表对象</param>
+        /// <param name="cellStylesCached">样式缓存字典</param>
         public FluentSheet(IWorkbook workbook, ISheet sheet, Dictionary<string, ICellStyle> cellStylesCached)
             : base(workbook, sheet, cellStylesCached)
         {
         }
 
+        /// <summary>
+        /// 获取 NPOI 工作表对象
+        /// </summary>
+        /// <returns>ISheet 对象</returns>
         public ISheet GetSheet()
         {
             return _sheet;
         }
 
+        /// <summary>
+        /// 设置列宽
+        /// </summary>
+        /// <param name="col">列位置</param>
+        /// <param name="width">列宽（字符数）</param>
+        /// <returns>FluentSheet 实例，支持链式调用</returns>
         public FluentSheet SetColumnWidth(ExcelCol col, int width)
         {
             _sheet.SetColumnWidth((int)col, width * 256);
             return new FluentSheet(_workbook, _sheet, _cellStylesCached);
         }
 
+        /// <summary>
+        /// 批量设置列宽
+        /// </summary>
+        /// <param name="startCol">起始列</param>
+        /// <param name="endCol">结束列</param>
+        /// <param name="width">列宽（字符数）</param>
+        /// <returns>FluentSheet 实例，支持链式调用</returns>
         public FluentSheet SetColumnWidth(ExcelCol startCol, ExcelCol endCol, int width)
         {
             for (int i = (int)startCol; i <= (int)endCol; i++)
@@ -37,24 +60,53 @@ namespace FluentNPOI.Stages
             return new FluentSheet(_workbook, _sheet, _cellStylesCached);
         }
 
+        /// <summary>
+        /// 合并单元格（横向合并）
+        /// </summary>
+        /// <param name="startCol">起始列</param>
+        /// <param name="endCol">结束列</param>
+        /// <param name="row">行号（1-based）</param>
+        /// <returns>FluentSheet 实例，支持链式调用</returns>
         public FluentSheet SetExcelCellMerge(ExcelCol startCol, ExcelCol endCol, int row)
         {
             _sheet.SetExcelCellMerge(startCol, endCol, row);
             return new FluentSheet(_workbook, _sheet, _cellStylesCached);
         }
 
+        /// <summary>
+        /// 合并单元格（区域合并）
+        /// </summary>
+        /// <param name="startCol">起始列</param>
+        /// <param name="endCol">结束列</param>
+        /// <param name="firstRow">起始行（1-based）</param>
+        /// <param name="lastRow">结束行（1-based）</param>
+        /// <returns>FluentSheet 实例，支持链式调用</returns>
         public FluentSheet SetExcelCellMerge(ExcelCol startCol, ExcelCol endCol, int firstRow, int lastRow)
         {
             _sheet.SetExcelCellMerge(startCol, endCol, firstRow, lastRow);
             return new FluentSheet(_workbook, _sheet, _cellStylesCached);
         }
 
+        /// <summary>
+        /// 设置单元格位置并返回 FluentCell 实例
+        /// </summary>
+        /// <param name="col">列位置</param>
+        /// <param name="row">行号（1-based）</param>
+        /// <returns>FluentCell 实例</returns>
         public FluentCell SetCellPosition(ExcelCol col, int row)
         {
             var cell = SetCellPositionInternal(col, row);
             return new FluentCell(_workbook, _sheet, cell, _cellStylesCached);
         }
 
+        /// <summary>
+        /// 设置表格数据
+        /// </summary>
+        /// <typeparam name="T">数据项类型</typeparam>
+        /// <param name="table">数据集合</param>
+        /// <param name="startCol">起始列</param>
+        /// <param name="startRow">起始行（1-based）</param>
+        /// <returns>FluentTable 实例</returns>
         public FluentTable<T> SetTable<T>(IEnumerable<T> table, ExcelCol startCol, int startRow)
         {
             return new FluentTable<T>(_workbook, _sheet, table, startCol, startRow, _cellStylesCached, new List<TableCellSet>(), new List<TableCellSet>());
@@ -348,12 +400,12 @@ namespace FluentNPOI.Stages
             return GetCellFormulaValue(cell);
         }
 
-        /// <summary>
-        /// 獲取指定位置的單元格對象（用於更高級的讀取操作）
-        /// </summary>
-        /// <param name="col">列位置</param>
-        /// <param name="row">行位置（1-based）</param>
-        /// <returns>FluentCell 對象，可以鏈式調用讀取方法</returns>
+        // /// <summary>
+        // /// 獲取指定位置的單元格對象（用於更高級的讀取操作）
+        // /// </summary>
+        // /// <param name="col">列位置</param>
+        // /// <param name="row">行位置（1-based）</param>
+        // /// <returns>FluentCell 對象，可以鏈式調用讀取方法</returns>
         // public FluentCell GetCellPosition(ExcelCol col, int row)
         // {
         //     var normalizedRow = NormalizeRow(row);
@@ -366,13 +418,31 @@ namespace FluentNPOI.Stages
         //     return new FluentCell(_workbook, _sheet, cell, col, normalizedRow, _cellStylesCached);
         // }
 
+        /// <summary>
+        /// 批量设置单元格范围样式（使用样式键名）
+        /// </summary>
+        /// <param name="cellStyleKey">样式缓存键名</param>
+        /// <param name="startCol">起始列</param>
+        /// <param name="endCol">结束列</param>
+        /// <param name="startRow">起始行（1-based）</param>
+        /// <param name="endRow">结束行（1-based）</param>
+        /// <returns>FluentSheet 实例，支持链式调用</returns>
         public FluentSheet SetCellStyleRange(string cellStyleKey, ExcelCol startCol, ExcelCol endCol, int startRow, int endRow)
         {
             base.SetCellStyleRange(new CellStyleConfig(cellStyleKey, null), startCol, endCol, startRow, endRow);
             return this;
         }
 
-        public FluentSheet SetCellStyleRange(CellStyleConfig cellStyleConfig, ExcelCol startCol, ExcelCol endCol, int startRow, int endRow)
+        /// <summary>
+        /// 批量设置单元格范围样式（使用样式配置）
+        /// </summary>
+        /// <param name="cellStyleConfig">样式配置对象</param>
+        /// <param name="startCol">起始列</param>
+        /// <param name="endCol">结束列</param>
+        /// <param name="startRow">起始行（1-based）</param>
+        /// <param name="endRow">结束行（1-based）</param>
+        /// <returns>FluentSheet 实例，支持链式调用</returns>
+        public new FluentSheet SetCellStyleRange(CellStyleConfig cellStyleConfig, ExcelCol startCol, ExcelCol endCol, int startRow, int endRow)
         {
             base.SetCellStyleRange(cellStyleConfig, startCol, endCol, startRow, endRow);
             return this;

@@ -16,11 +16,20 @@ namespace FluentNPOI.Stages
     {
         private ISheet _currentSheet;
 
+        /// <summary>
+        /// 初始化 FluentWorkbook 实例
+        /// </summary>
+        /// <param name="workbook">NPOI 工作簿对象</param>
         public FluentWorkbook(IWorkbook workbook)
             : base(workbook, new Dictionary<string, ICellStyle>())
         {
         }
 
+        /// <summary>
+        /// 读取 Excel 文件
+        /// </summary>
+        /// <param name="filePath">Excel 文件路径</param>
+        /// <returns>FluentWorkbook 实例，支持链式调用</returns>
         public FluentWorkbook ReadExcelFile(string filePath)
         {
             if (string.IsNullOrWhiteSpace(filePath)) throw new ArgumentNullException(nameof(filePath));
@@ -53,6 +62,14 @@ namespace FluentNPOI.Stages
             return this;
         }
 
+        /// <summary>
+        /// 从指定工作表的单元格复制样式
+        /// </summary>
+        /// <param name="cellStyleKey">样式缓存键名</param>
+        /// <param name="sheet">源工作表</param>
+        /// <param name="col">列位置</param>
+        /// <param name="rowIndex">行位置（1-based）</param>
+        /// <returns>FluentWorkbook 实例，支持链式调用</returns>
         public FluentWorkbook CopyStyleFromSheetCell(string cellStyleKey, ISheet sheet, ExcelCol col, int rowIndex)
         {
             ICell cell = sheet.GetExcelCell(col, rowIndex);
@@ -65,6 +82,11 @@ namespace FluentNPOI.Stages
             return this;
         }
 
+        /// <summary>
+        /// 设置全局缓存的单元格样式（会清除所有现有样式）
+        /// </summary>
+        /// <param name="styles">样式设置函数</param>
+        /// <returns>FluentWorkbook 实例，支持链式调用</returns>
         public FluentWorkbook SetupGlobalCachedCellStyles(Action<IWorkbook, ICellStyle> styles)
         {
             ICellStyle newCellStyle = _workbook.CreateCellStyle();
@@ -74,6 +96,12 @@ namespace FluentNPOI.Stages
             return this;
         }
 
+        /// <summary>
+        /// 设置并缓存单元格样式
+        /// </summary>
+        /// <param name="cellStyleKey">样式缓存键名</param>
+        /// <param name="styles">样式设置函数</param>
+        /// <returns>FluentWorkbook 实例，支持链式调用</returns>
         public FluentWorkbook SetupCellStyle(string cellStyleKey, Action<IWorkbook, ICellStyle> styles)
         {
             ICellStyle newCellStyle = _workbook.CreateCellStyle();

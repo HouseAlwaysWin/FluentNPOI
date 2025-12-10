@@ -53,7 +53,7 @@ namespace FluentNPOI
 		/// Use hex color to set foreground color
 		/// </summary>
 		/// <param name="style"></param>
-		/// <param name="hexColor"></param>
+		/// <param name="colors"></param>
 		public static void SetCellFillForegroundColor(this ICellStyle style, IndexedColors colors)
 		{
 			style.FillForegroundColor = colors.Index;

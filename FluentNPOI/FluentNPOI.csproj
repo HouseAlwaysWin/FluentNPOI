@@ -2,6 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
+    <NoWarn>$(NoWarn);1591</NoWarn>
     
     <!-- NuGet Package Metadata -->
     <PackageId>FluentNPOI</PackageId>
@@ -27,7 +28,7 @@
 
   <ItemGroup>
     <PackageReference Include="NPOI" Version="2.7.1" />
-    <PackageReference Include="System.Drawing.Common" Version="10.0.0" />
+    <PackageReference Include="System.Drawing.Common" Version="6.0.0" />
   </ItemGroup>
 
   <!-- Include README.md in NuGet package -->
