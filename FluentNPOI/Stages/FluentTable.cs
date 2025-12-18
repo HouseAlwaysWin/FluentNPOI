@@ -174,9 +174,23 @@ namespace FluentNPOI.Stages
                     cell.SetCellValue(map.Title ?? map.Property?.Name ?? map.ColumnName ?? "");
 
                     // 套用標題樣式
-                    if (!string.IsNullOrEmpty(map.TitleStyleKey) && _cellStylesCached.TryGetValue(map.TitleStyleKey, out var titleStyle))
+                    if (map.TitleStyleRef != null)
+                    {
+                        var refRow = _sheet.GetRow(map.TitleStyleRef.Row);
+                        var refCell = refRow?.GetCell((int)map.TitleStyleRef.Column);
+                        if (refCell != null) cell.CellStyle = refCell.CellStyle;
+                    }
+                    else if (!string.IsNullOrEmpty(map.TitleStyleKey) && _cellStylesCached.TryGetValue(map.TitleStyleKey, out var titleStyle))
                     {
                         cell.CellStyle = titleStyle;
+                    }
+                    else if (cell.CellStyle.Index == 0) // Try global style
+                    {
+                        string globalStyleKey = $"global_{_sheet.SheetName}";
+                        if (_cellStylesCached.TryGetValue(globalStyleKey, out var globalStyle))
+                        {
+                            cell.CellStyle = globalStyle;
+                        }
                     }
                 }
             }
@@ -215,9 +229,39 @@ namespace FluentNPOI.Stages
                 }
 
                 // 套用資料樣式
-                if (!string.IsNullOrEmpty(map.StyleKey) && _cellStylesCached.TryGetValue(map.StyleKey, out var dataStyle))
+                string styleKey = map.StyleKey;
+
+                // 如果有動態樣式設定，優先使用
+                if (map.DynamicStyleFunc != null)
+                {
+                    string dynamicKey = map.DynamicStyleFunc(item);
+                    if (!string.IsNullOrEmpty(dynamicKey))
+                    {
+                        styleKey = dynamicKey;
+                    }
+                }
+
+                if (!string.IsNullOrEmpty(styleKey) && _cellStylesCached.TryGetValue(styleKey, out var dataStyle))
                 {
                     cell.CellStyle = dataStyle;
+                }
+
+                // 複製資料樣式
+                if (map.DataStyleRef != null)
+                {
+                    var refRow = _sheet.GetRow(map.DataStyleRef.Row);
+                    var refCell = refRow?.GetCell((int)map.DataStyleRef.Column);
+                    if (refCell != null) cell.CellStyle = refCell.CellStyle;
+                }
+
+                // 如果沒有設定任何樣式，嘗試套用 Sheet 全域樣式
+                if (cell.CellStyle.Index == 0) // Default style index is usually 0
+                {
+                    string globalStyleKey = $"global_{_sheet.SheetName}";
+                    if (_cellStylesCached.TryGetValue(globalStyleKey, out var globalStyle))
+                    {
+                        cell.CellStyle = globalStyle;
+                    }
                 }
             }
 

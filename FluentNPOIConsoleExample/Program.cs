@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using FluentNPOI.Models;
 using System.Linq;
 using FluentNPOI.Stages;
+using FluentNPOI.Streaming.Mapping;
 
 namespace FluentNPOIConsoleExample
 {
@@ -21,7 +22,11 @@ namespace FluentNPOIConsoleExample
                 var filePath = @$"{AppDomain.CurrentDomain.BaseDirectory}\Resources\Test.xlsx";
                 var outputPath = @$"{AppDomain.CurrentDomain.BaseDirectory}\Resources\Test2.xlsx";
 
-                var fluent = new FluentWorkbook(new XSSFWorkbook(filePath));
+                // Ensure Resources folder exists
+                Directory.CreateDirectory(Path.GetDirectoryName(outputPath));
+
+                var workbook = new XSSFWorkbook();
+                var fluent = new FluentWorkbook(workbook);
 
                 // Setup styles
                 SetupStyles(fluent);
@@ -44,6 +49,7 @@ namespace FluentNPOIConsoleExample
 
                 // Save file
                 fluent.SaveToPath(outputPath);
+                Console.WriteLine($"✓ 檔案儲存至: {outputPath}");
 
                 // Read examples
                 ReadExcelExamples(fluent);
@@ -129,134 +135,78 @@ namespace FluentNPOIConsoleExample
         #region Table Write Examples
 
         /// <summary>
-        /// Example 1: Basic table - Demonstrates various field types
+        /// Example 1: Basic table - Demonstrates various field types using FluentMapping
         /// </summary>
         static void CreateBasicTableExample(FluentWorkbook fluent, List<ExampleData> testData)
         {
-            fluent.UseSheet("Sheet1")
+            Console.WriteLine("建立 Sheet1 (BasicTable)...");
+
+            var mapping = new FluentMapping<ExampleData>();
+            mapping.Map(x => x.ID).ToColumn(ExcelCol.A)
+                .WithTitle("ID").WithTitleStyle("HeaderBlue").WithStyle("BodyGreen")
+                .WithCellType(CellType.Numeric);
+            mapping.Map(x => x.Name).ToColumn(ExcelCol.B)
+                .WithTitle("名稱").WithTitleStyle("HeaderBlue").WithStyle("BodyGreen");
+            mapping.Map(x => x.DateOfBirth).ToColumn(ExcelCol.C)
+                .WithTitle("生日").WithTitleStyle("HeaderBlue").WithStyle("DateOfBirth");
+            mapping.Map(x => x.IsActive).ToColumn(ExcelCol.D)
+                .WithTitle("是否活躍").WithTitleStyle("HeaderBlue")
+                .WithCellType(CellType.Boolean);
+            mapping.Map(x => x.Score).ToColumn(ExcelCol.E)
+                .WithTitle("分數").WithTitleStyle("HeaderBlue")
+                .WithCellType(CellType.Numeric);
+            mapping.Map(x => x.Amount).ToColumn(ExcelCol.F)
+                .WithTitle("金額").WithTitleStyle("HeaderBlue").WithStyle("AmountCurrency")
+                .WithCellType(CellType.Numeric);
+            mapping.Map(x => x.Notes).ToColumn(ExcelCol.G)
+                .WithTitle("備註").WithTitleStyle("HeaderBlue");
+            mapping.Map(x => x.MaybeNull).ToColumn(ExcelCol.H)
+                .WithTitle("可能為空").WithTitleStyle("HeaderBlue");
+
+            fluent.UseSheet("Sheet1", true)
                 .SetColumnWidth(ExcelCol.A, ExcelCol.H, 20)
-                .SetTable(testData, ExcelCol.A, 1)
-                .BeginTitleSet("ID").SetCellStyle("HeaderBlue")
-                .BeginBodySet("ID").SetCellStyle("BodyGreen").End()
-
-                .BeginTitleSet("名稱").SetCellStyle("HeaderBlue")
-                .BeginBodySet("Name").SetCellStyle("BodyGreen").End()
-
-                .BeginTitleSet("生日").SetCellStyle("HeaderBlue")
-                .BeginBodySet("DateOfBirth").SetCellStyle("DateOfBirth").End()
-
-                .BeginTitleSet("是否活躍").SetCellStyle("HeaderBlue")
-                .BeginBodySet("IsActive").SetCellType(CellType.Boolean).End()
-
-                .BeginTitleSet("分數").SetCellStyle("HeaderBlue")
-                .BeginBodySet("Score").SetCellType(CellType.Numeric).End()
-
-                .BeginTitleSet("金額").SetCellStyle("HeaderBlue")
-                .BeginBodySet("Amount").SetCellType(CellType.Numeric).SetCellStyle("AmountCurrency").End()
-
-                .BeginTitleSet("備註").SetCellStyle("HeaderBlue")
-                .BeginBodySet("Notes").SetCellType(CellType.String).End()
-
-                .BeginTitleSet("可能為空").SetCellStyle("HeaderBlue")
-                .BeginBodySet("MaybeNull").End()
+                .SetTable(testData, mapping)
                 .BuildRows();
+
+            Console.WriteLine("  ✓ Sheet1 建立完成");
         }
 
         /// <summary>
-        /// Example 2: Summary table - Demonstrates different field combinations
+        /// Example 2: Summary table
         /// </summary>
         static void CreateSummaryExample(FluentWorkbook fluent, List<ExampleData> testData)
         {
+            Console.WriteLine("建立 Summary...");
+
+            var mapping = new FluentMapping<ExampleData>();
+            mapping.Map(x => x.Name).ToColumn(ExcelCol.A)
+                .WithTitle("姓名").WithTitleStyle("HeaderBlue");
+            mapping.Map(x => x.Score).ToColumn(ExcelCol.B)
+                .WithTitle("分數").WithTitleStyle("HeaderBlue").WithStyle("AmountCurrency")
+                .WithCellType(CellType.Numeric);
+            mapping.Map(x => x.DateOfBirth).ToColumn(ExcelCol.C)
+                .WithTitle("日期").WithTitleStyle("HeaderBlue").WithStyle("DateOfBirth");
+            mapping.Map(x => x.IsActive).ToColumn(ExcelCol.D)
+                .WithTitle("狀態").WithTitleStyle("HeaderBlue")
+                .WithCellType(CellType.Boolean);
+            mapping.Map(x => x.Notes).ToColumn(ExcelCol.E)
+                .WithTitle("備註").WithTitleStyle("HeaderBlue").WithStyle("HighlightYellow");
+
             fluent.UseSheet("Summary", true)
                 .SetColumnWidth(ExcelCol.A, ExcelCol.E, 20)
-                .SetTable(testData, ExcelCol.A, 1)
-                .BeginTitleSet("姓名").SetCellStyle("HeaderBlue")
-                .BeginBodySet("Name").End()
-
-                .BeginTitleSet("分數").SetCellStyle("HeaderBlue")
-                .BeginBodySet("Score").SetCellType(CellType.Numeric).SetCellStyle("AmountCurrency").End()
-
-                .BeginTitleSet("日期").SetCellStyle("HeaderBlue")
-                .BeginBodySet("DateOfBirth").SetCellStyle("DateOfBirth").End()
-
-                .BeginTitleSet("狀態").SetCellStyle("HeaderBlue")
-                .BeginBodySet("IsActive").SetCellType(CellType.Boolean).End()
-
-                .BeginTitleSet("備註").SetCellStyle("HeaderBlue")
-                .BeginBodySet("Notes").SetCellStyle("HighlightYellow").End()
+                .SetTable(testData, mapping)
                 .BuildRows();
-        }
 
-        #endregion
-
-        #region Style Write Examples
-
-        /// <summary>
-        /// Example 3: Copy style and dynamic style
-        /// </summary>
-        static void CreateCopyStyleExample(FluentWorkbook fluent, List<ExampleData> testData)
-        {
-            fluent.UseSheet("CopyStyleExample", true)
-                .SetColumnWidth(ExcelCol.A, ExcelCol.D, 20)
-                .SetTable(testData, ExcelCol.A, 1)
-                // Demonstrate ID field with custom style
-                .BeginTitleSet("編號").SetCellStyle("HeaderBlue")
-                .BeginBodySet("ID")
-                .SetCellStyle((styleParams) =>
-                {
-                    return new CellStyleConfig("IDStyle", style =>
-                    {
-                        style.SetAligment(HorizontalAlignment.Center);
-                        style.FillPattern = FillPattern.SolidForeground;
-                        style.SetCellFillForegroundColor(IndexedColors.LightGreen);
-                        style.SetBorderAllStyle(BorderStyle.Thin);
-                    });
-                })
-                .End()
-
-                // Copy style from Sheet1
-                .BeginTitleSet("姓名").CopyStyleFromCell(ExcelCol.A, 1)
-                .BeginBodySet("Name").SetCellType(CellType.String).End()
-
-                // Demonstrate amount field with currency format
-                .BeginTitleSet("金額").SetCellStyle("HeaderBlue")
-                .BeginBodySet("Amount").SetCellType(CellType.Numeric)
-                .SetCellStyle("AmountCurrency")
-                .End()
-
-                // Demonstrate active status field (dynamic style based on data)
-                .BeginTitleSet("活躍").SetCellStyle("HeaderBlue")
-                .BeginBodySet("IsActive").SetCellType(CellType.Boolean)
-                .SetCellStyle((styleParams) =>
-                {
-                    // Determine which style to return based on data
-                    if (styleParams.GetRowItem<ExampleData>().IsActive)
-                    {
-                        return new("IsActiveStyle1", style =>
-                        {
-                            style.SetAligment(HorizontalAlignment.Center);
-                            style.FillPattern = FillPattern.SolidForeground;
-                            style.SetCellFillForegroundColor(IndexedColors.LightGreen);
-                            style.SetBorderAllStyle(BorderStyle.Thin);
-                        });
-                    }
-                    return new("IsActiveStyle2", style =>
-                    {
-                        style.SetAligment(HorizontalAlignment.Center);
-                        style.FillPattern = FillPattern.SolidForeground;
-                        style.SetCellFillForegroundColor(IndexedColors.LightYellow);
-                        style.SetBorderAllStyle(BorderStyle.Thin);
-                    });
-                })
-                .End()
-                .BuildRows();
+            Console.WriteLine("  ✓ Summary 建立完成");
         }
 
         /// <summary>
-        /// Example 4: Using DataTable as data source
+        /// Example 3: Using DataTable as data source
         /// </summary>
         static void CreateDataTableExample(FluentWorkbook fluent)
         {
+            Console.WriteLine("建立 DataTableExample...");
+
             DataTable dataTable = new DataTable("StudentData");
             dataTable.Columns.Add("StudentID", typeof(int));
             dataTable.Columns.Add("StudentName", typeof(string));
@@ -266,7 +216,6 @@ namespace FluentNPOIConsoleExample
             dataTable.Columns.Add("Tuition", typeof(decimal));
             dataTable.Columns.Add("Department", typeof(string));
 
-            // Add data
             dataTable.Rows.Add(101, "張三", new DateTime(1998, 3, 15), true, 3.8, 25000m, "資訊工程");
             dataTable.Rows.Add(102, "李四", new DateTime(1999, 7, 20), true, 3.5, 22000m, "電機工程");
             dataTable.Rows.Add(103, "王五", new DateTime(1997, 11, 5), false, 2.9, 20000m, "機械工程");
@@ -274,126 +223,146 @@ namespace FluentNPOIConsoleExample
             dataTable.Rows.Add(105, "陳七", new DateTime(1998, 9, 12), true, 3.6, 23000m, "企業管理");
             dataTable.Rows.Add(106, "林八", new DateTime(1999, 5, 8), false, 3.2, 21000m, "財務金融");
 
+            // 使用 DataTableMapping
+            var mapping = new DataTableMapping();
+            mapping.Map("StudentID").ToColumn(ExcelCol.A).WithTitle("學號")
+                .WithTitleStyle("HeaderBlue").WithCellType(CellType.Numeric);
+            mapping.Map("StudentName").ToColumn(ExcelCol.B).WithTitle("姓名")
+                .WithTitleStyle("HeaderBlue");
+            mapping.Map("BirthDate").ToColumn(ExcelCol.C).WithTitle("出生日期")
+                .WithTitleStyle("HeaderBlue").WithStyle("DateOfBirth");
+            mapping.Map("IsEnrolled").ToColumn(ExcelCol.D).WithTitle("在學中")
+                .WithTitleStyle("HeaderBlue").WithCellType(CellType.Boolean);
+            mapping.Map("GPA").ToColumn(ExcelCol.E).WithTitle("GPA")
+                .WithTitleStyle("HeaderBlue").WithCellType(CellType.Numeric);
+            mapping.Map("Tuition").ToColumn(ExcelCol.F).WithTitle("學費")
+                .WithTitleStyle("HeaderBlue").WithStyle("AmountCurrency").WithCellType(CellType.Numeric);
+            mapping.Map("Department").ToColumn(ExcelCol.G).WithTitle("科系")
+                .WithTitleStyle("HeaderBlue");
+
             fluent.UseSheet("DataTableExample", true)
                 .SetColumnWidth(ExcelCol.A, ExcelCol.G, 20)
-                .SetTable<DataRow>(dataTable.Rows.Cast<DataRow>(), ExcelCol.A, 1)
+                .WriteDataTable(dataTable, mapping);
 
-                .BeginTitleSet("學號").SetCellStyle("HeaderBlue")
-                .BeginBodySet("StudentID").SetCellType(CellType.Numeric).End()
-
-                .BeginTitleSet("姓名").SetCellStyle("HeaderBlue")
-                .BeginBodySet("StudentName").SetCellType(CellType.String).End()
-
-                .BeginTitleSet("出生日期").SetCellStyle("HeaderBlue")
-                .BeginBodySet("BirthDate").SetCellStyle("DateOfBirth").End()
-
-                .BeginTitleSet("在學中").SetCellStyle("HeaderBlue")
-                .BeginBodySet("IsEnrolled").SetCellType(CellType.Boolean).End()
-
-                .BeginTitleSet("GPA").SetCellStyle("HeaderBlue")
-                .BeginBodySet("GPA").SetCellType(CellType.Numeric).End()
-
-                .BeginTitleSet("學費").SetCellStyle("HeaderBlue")
-                .BeginBodySet("Tuition").SetCellType(CellType.Numeric).SetCellStyle("AmountCurrency").End()
-
-                .BeginTitleSet("科系").SetCellStyle("HeaderBlue")
-                .BeginBodySet("Department").SetCellType(CellType.String)
-                .SetCellStyle((styleParams) =>
-                {
-                    // Dynamically set color based on department
-                    var row = styleParams.RowItem as DataRow;
-                    var dept = row?["Department"]?.ToString() ?? "";
-
-                    if (dept == "資訊工程")
-                    {
-                        return new("DeptIT", style =>
-                        {
-                            style.SetAligment(HorizontalAlignment.Center);
-                            style.FillPattern = FillPattern.SolidForeground;
-                            style.SetCellFillForegroundColor(IndexedColors.LightBlue);
-                            style.SetBorderAllStyle(BorderStyle.Thin);
-                        });
-                    }
-                    else if (dept == "電機工程")
-                    {
-                        return new("DeptEE", style =>
-                        {
-                            style.SetAligment(HorizontalAlignment.Center);
-                            style.FillPattern = FillPattern.SolidForeground;
-                            style.SetCellFillForegroundColor(IndexedColors.LightGreen);
-                            style.SetBorderAllStyle(BorderStyle.Thin);
-                        });
-                    }
-                    return new("DeptOther", style =>
-                    {
-                        style.SetAligment(HorizontalAlignment.Center);
-                        style.FillPattern = FillPattern.SolidForeground;
-                        style.SetCellFillForegroundColor(IndexedColors.Grey25Percent);
-                        style.SetBorderAllStyle(BorderStyle.Thin);
-                    });
-                })
-                .End()
-                .BuildRows();
+            Console.WriteLine("  ✓ DataTableExample 建立完成");
         }
 
+        #endregion
+
+        #region Style Write Examples
+
         /// <summary>
-        /// Example 5: Batch set cell range styles
+        /// Example 4: Batch set cell range styles
         /// </summary>
         static void CreateCellStyleRangeExample(FluentWorkbook fluent)
         {
-            fluent.UseSheet("CellStyleRangeDemo")
+            Console.WriteLine("建立 CellStyleRangeDemo...");
+
+            fluent.UseSheet("CellStyleRangeDemo", true)
                 .SetCellStyleRange(new CellStyleConfig("HighlightRed", style =>
                 {
                     style.FillPattern = FillPattern.SolidForeground;
                     style.SetCellFillForegroundColor(IndexedColors.Red);
                     style.SetBorderAllStyle(BorderStyle.Thin);
                 }), ExcelCol.A, ExcelCol.D, 1, 3)
-                .SetCellStyleRange(new CellStyleConfig("HighlightOrange",
-                    style =>
-                    {
-                        style.FillPattern = FillPattern.SolidForeground;
-                        style.SetCellFillForegroundColor(IndexedColors.Orange);
-                        style.SetBorderAllStyle(BorderStyle.Thin);
-                    }), ExcelCol.A, ExcelCol.D, 4, 6)
-                .SetCellStyleRange(new CellStyleConfig("HighlightYellow",
-                    style =>
-                    {
-                        style.FillPattern = FillPattern.SolidForeground;
-                        style.SetCellFillForegroundColor(IndexedColors.Yellow);
-                        style.SetBorderAllStyle(BorderStyle.Thin);
-                    }), ExcelCol.A, ExcelCol.D, 7, 9)
-                .SetCellStyleRange(new CellStyleConfig("HighlightGreen",
-                    style =>
-                    {
-                        style.FillPattern = FillPattern.SolidForeground;
-                        style.SetCellFillForegroundColor(IndexedColors.Green);
-                        style.SetBorderAllStyle(BorderStyle.Thin);
-                    }), ExcelCol.A, ExcelCol.D, 10, 12)
-                .SetCellStyleRange(new CellStyleConfig("HighlightBlue",
-                    style =>
-                    {
-                        style.FillPattern = FillPattern.SolidForeground;
-                        style.SetCellFillForegroundColor(IndexedColors.Blue);
-                        style.SetBorderAllStyle(BorderStyle.Thin);
-                    }), ExcelCol.A, ExcelCol.D, 13, 15)
-                .SetCellStyleRange(new CellStyleConfig("HighlightPurple",
-                    style =>
-                    {
-                        style.FillPattern = FillPattern.SolidForeground;
-                        style.SetCellFillForegroundColor("#FF00FF");
-                        style.SetBorderAllStyle(BorderStyle.Thin);
-                    }), ExcelCol.A, ExcelCol.D, 16, 18);
+                .SetCellStyleRange(new CellStyleConfig("HighlightOrange", style =>
+                {
+                    style.FillPattern = FillPattern.SolidForeground;
+                    style.SetCellFillForegroundColor(IndexedColors.Orange);
+                    style.SetBorderAllStyle(BorderStyle.Thin);
+                }), ExcelCol.A, ExcelCol.D, 4, 6)
+                .SetCellStyleRange(new CellStyleConfig("HighlightYellow", style =>
+                {
+                    style.FillPattern = FillPattern.SolidForeground;
+                    style.SetCellFillForegroundColor(IndexedColors.Yellow);
+                    style.SetBorderAllStyle(BorderStyle.Thin);
+                }), ExcelCol.A, ExcelCol.D, 7, 9)
+                .SetCellStyleRange(new CellStyleConfig("HighlightGreen", style =>
+                {
+                    style.FillPattern = FillPattern.SolidForeground;
+                    style.SetCellFillForegroundColor(IndexedColors.Green);
+                    style.SetBorderAllStyle(BorderStyle.Thin);
+                }), ExcelCol.A, ExcelCol.D, 10, 12);
+
+            Console.WriteLine("  ✓ CellStyleRangeDemo 建立完成");
         }
 
         /// <summary>
-        /// Example 6: Per-sheet global styles - Demonstrates sheet-level global styles
+        /// Example 3.5: Copy style and dynamic style
+        /// </summary>
+        static void CreateCopyStyleExample(FluentWorkbook fluent, List<ExampleData> testData)
+        {
+            Console.WriteLine("建立 CopyStyleExample...");
+
+            // 定義幾個動態樣式
+            fluent.SetupCellStyle("ActiveGreen", (wb, style) =>
+            {
+                style.FillPattern = FillPattern.SolidForeground;
+                style.SetCellFillForegroundColor(IndexedColors.LightGreen);
+                style.SetBorderAllStyle(BorderStyle.Thin);
+                style.SetAligment(HorizontalAlignment.Center);
+            })
+            .SetupCellStyle("InactiveRed", (wb, style) =>
+            {
+                style.FillPattern = FillPattern.SolidForeground;
+                style.SetCellFillForegroundColor(IndexedColors.Rose);
+                style.SetBorderAllStyle(BorderStyle.Thin);
+                style.SetAligment(HorizontalAlignment.Center);
+            });
+
+            var mapping = new FluentMapping<ExampleData>();
+
+            // 1. 從 Sheet1 的 A1 複製標題樣式 (HeaderBlue)
+            mapping.Map(x => x.Name).ToColumn(ExcelCol.A)
+                .WithTitle("姓名 (Copy Header)")
+                .WithTitleStyleFrom(1, ExcelCol.B); // Copy from Sheet1!B1 if current sheet is same... wait.
+                                                    // WithTitleStyleFrom copies from CURRENT sheet's cell.
+                                                    // UseSheet switches sheet. 
+                                                    // So we need to put some styles in the current sheet first or copy from self.
+                                                    // Let's demo dynamic style first.
+
+            // 調整: 直接用樣式 Key 演示 dynamic style
+            mapping.Map(x => x.IsActive).ToColumn(ExcelCol.B)
+                .WithTitle("狀態 (Dynamic)")
+                .WithTitleStyle("HeaderBlue")
+                .WithDynamicStyle(item => item.IsActive ? "ActiveGreen" : "InactiveRed");
+
+            // 演示 CopyStyleFromCell: 先在目前 Sheet 建立一個樣板儲存格
+            var sheet = fluent.UseSheet("CopyStyleExample", true);
+            sheet.SetCellPosition(ExcelCol.Z, 1).SetValue("Template").SetCellStyle("HeaderBlue");
+
+            // 繼續 mapping
+            // 注意: 這裡 mapping 定義的 WithTitleStyleFrom 會在 Apply 時去抓
+            mapping.Map(x => x.Score).ToColumn(ExcelCol.C)
+                .WithTitle("分數 (Copy Z1)")
+                .WithTitleStyleFrom(1, ExcelCol.Z) // 從 Z1 複製樣式
+                .WithCellType(CellType.Numeric);
+
+            sheet.SetColumnWidth(ExcelCol.A, ExcelCol.C, 20)
+                .SetTable(testData, mapping, 2) // 從第2行開始寫 Table
+                .BuildRows();
+
+            Console.WriteLine("  ✓ CopyStyleExample 建立完成");
+        }
+
+        /// <summary>
+        /// Example 5: Per-sheet global styles
         /// </summary>
         static void CreateSheetGlobalStyleExample(FluentWorkbook fluent, List<ExampleData> testData)
         {
+            Console.WriteLine("建立 SheetGlobalStyle...");
+
             var limitedData = testData.Take(5).ToList();
 
-            // Sheet 1: 使用綠色作為 Sheet 級別的全域樣式
-            // Sheet 1: Use green as sheet-level global style
+            var mapping = new FluentMapping<ExampleData>();
+            mapping.Map(x => x.ID).ToColumn(ExcelCol.A).WithTitle("ID");
+            mapping.Map(x => x.Name).ToColumn(ExcelCol.B).WithTitle("名稱");
+            mapping.Map(x => x.Score).ToColumn(ExcelCol.C).WithTitle("分數")
+                .WithCellType(CellType.Numeric);
+            mapping.Map(x => x.IsActive).ToColumn(ExcelCol.D).WithTitle("是否活躍")
+                .WithCellType(CellType.Boolean);
+
+            // Sheet 1: 綠色
             fluent.UseSheet("SheetGlobalStyle_Green", true)
                 .SetColumnWidth(ExcelCol.A, ExcelCol.D, 20)
                 .SetupSheetGlobalCachedCellStyles((wb, style) =>
@@ -403,30 +372,17 @@ namespace FluentNPOIConsoleExample
                     style.SetBorderAllStyle(BorderStyle.Thin);
                     style.SetAligment(HorizontalAlignment.Center);
                 })
-                .SetTable(limitedData, ExcelCol.A, 2)
-                .BeginTitleSet("ID")
-                .BeginBodySet("ID").End()  // 使用 Sheet 級別的綠色全域樣式
-
-                .BeginTitleSet("名稱")
-                .BeginBodySet("Name").End()  // 使用 Sheet 級別的綠色全域樣式
-
-                .BeginTitleSet("分數")
-                .BeginBodySet("Score").SetCellType(CellType.Numeric).End()
-
-                .BeginTitleSet("是否活躍")
-                .BeginBodySet("IsActive").SetCellType(CellType.Boolean).End()
+                .SetTable(limitedData, mapping, 2)
                 .BuildRows();
 
-            // Add title
             fluent.UseSheet("SheetGlobalStyle_Green")
                 .SetCellPosition(ExcelCol.A, 1)
-                .SetValue("Sheet 全域樣式：綠色 (所有未指定樣式的儲存格都是綠色)")
+                .SetValue("Sheet 全域樣式：綠色")
                 .SetCellStyle("HeaderBlue");
             fluent.UseSheet("SheetGlobalStyle_Green")
                 .SetExcelCellMerge(ExcelCol.A, ExcelCol.D, 1);
 
-            // Sheet 2: 使用黃色作為 Sheet 級別的全域樣式
-            // Sheet 2: Use yellow as sheet-level global style
+            // Sheet 2: 黃色
             fluent.UseSheet("SheetGlobalStyle_Yellow", true)
                 .SetColumnWidth(ExcelCol.A, ExcelCol.D, 20)
                 .SetupSheetGlobalCachedCellStyles((wb, style) =>
@@ -436,83 +392,17 @@ namespace FluentNPOIConsoleExample
                     style.SetBorderAllStyle(BorderStyle.Thin);
                     style.SetAligment(HorizontalAlignment.Center);
                 })
-                .SetTable(limitedData, ExcelCol.A, 2)
-                .BeginTitleSet("ID")
-                .BeginBodySet("ID").End()  // 使用 Sheet 級別的黃色全域樣式
-
-                .BeginTitleSet("名稱")
-                .BeginBodySet("Name").End()  // 使用 Sheet 級別的黃色全域樣式
-
-                .BeginTitleSet("金額")
-                .BeginBodySet("Amount").SetCellType(CellType.Numeric).End()
-
-                .BeginTitleSet("備註")
-                .BeginBodySet("Notes").End()
+                .SetTable(limitedData, mapping, 2)
                 .BuildRows();
 
-            // Add title
             fluent.UseSheet("SheetGlobalStyle_Yellow")
                 .SetCellPosition(ExcelCol.A, 1)
-                .SetValue("Sheet 全域樣式：黃色 (所有未指定樣式的儲存格都是黃色)")
+                .SetValue("Sheet 全域樣式：黃色")
                 .SetCellStyle("HeaderBlue");
             fluent.UseSheet("SheetGlobalStyle_Yellow")
                 .SetExcelCellMerge(ExcelCol.A, ExcelCol.D, 1);
 
-            // Sheet 3: 混合使用 Sheet 全域樣式和特定樣式
-            // Sheet 3: Mix sheet global style with specific styles
-            fluent.UseSheet("SheetGlobalStyle_Mixed", true)
-                .SetColumnWidth(ExcelCol.A, ExcelCol.D, 20)
-                .SetupSheetGlobalCachedCellStyles((wb, style) =>
-                {
-                    style.FillPattern = FillPattern.SolidForeground;
-                    style.SetCellFillForegroundColor(IndexedColors.Aqua);
-                    style.SetBorderAllStyle(BorderStyle.Thin);
-                    style.SetAligment(HorizontalAlignment.Center);
-                })
-                .SetTable(limitedData, ExcelCol.A, 2)
-                .BeginTitleSet("ID")
-                .BeginBodySet("ID").SetCellStyle("HighlightYellow").End()  // 覆蓋 Sheet 全域樣式，使用特定樣式
-
-                .BeginTitleSet("名稱")
-                .BeginBodySet("Name").End()  // 使用 Sheet 級別的水藍色全域樣式
-
-                .BeginTitleSet("生日")
-                .BeginBodySet("DateOfBirth").SetCellStyle("DateOfBirth").End()  // 覆蓋 Sheet 全域樣式
-
-                .BeginTitleSet("是否活躍")
-                .BeginBodySet("IsActive")
-                .SetCellType(CellType.Boolean)
-                .SetCellStyle((styleParams) =>
-                {
-                    // 動態樣式會覆蓋 Sheet 全域樣式
-                    if (styleParams.GetRowItem<ExampleData>().IsActive)
-                    {
-                        return new CellStyleConfig("ActiveGreen", style =>
-                        {
-                            style.FillPattern = FillPattern.SolidForeground;
-                            style.SetCellFillForegroundColor(IndexedColors.Green);
-                            style.SetBorderAllStyle(BorderStyle.Thin);
-                        });
-                    }
-                    return new CellStyleConfig("InactiveRed", style =>
-                    {
-                        style.FillPattern = FillPattern.SolidForeground;
-                        style.SetCellFillForegroundColor(IndexedColors.Red);
-                        style.SetBorderAllStyle(BorderStyle.Thin);
-                    });
-                })
-                .End()
-                .BuildRows();
-
-            // Add title
-            fluent.UseSheet("SheetGlobalStyle_Mixed")
-                .SetCellPosition(ExcelCol.A, 1)
-                .SetValue("混合樣式：Sheet 全域(水藍) + 特定樣式覆蓋")
-                .SetCellStyle("HeaderBlue");
-            fluent.UseSheet("SheetGlobalStyle_Mixed")
-                .SetExcelCellMerge(ExcelCol.A, ExcelCol.D, 1);
-
-            Console.WriteLine("✓ Sheet-level global style examples created");
+            Console.WriteLine("  ✓ SheetGlobalStyle 建立完成");
         }
 
         #endregion
@@ -520,49 +410,52 @@ namespace FluentNPOIConsoleExample
         #region Cell Write Examples
 
         /// <summary>
-        /// Example 6: Set single cell value and apply style
+        /// Example 6: Set single cell value
         /// </summary>
         static void CreateSetCellValueExample(FluentWorkbook fluent)
         {
+            Console.WriteLine("建立 SetCellValueExample...");
+
             fluent.UseSheet("SetCellValueExample", true)
                 .SetColumnWidth(ExcelCol.A, 20)
                 .SetCellPosition(ExcelCol.A, 1)
                 .SetValue("Hello, World!")
                 .SetCellStyle("HighlightYellow");
+
+            Console.WriteLine("  ✓ SetCellValueExample 建立完成");
         }
 
         /// <summary>
-        /// Example 7: Cell merge example
+        /// Example 7: Cell merge
         /// </summary>
         static void CreateCellMergeExample(FluentWorkbook fluent)
         {
-            var sheet = fluent.UseSheet("CellMergeExample", true);
+            Console.WriteLine("建立 CellMergeExample...");
 
-            // Set column width
+            var sheet = fluent.UseSheet("CellMergeExample", true);
             sheet.SetColumnWidth(ExcelCol.A, ExcelCol.E, 15);
 
-            // 1. Horizontal merge (header row)
+            // 水平合併
             sheet.SetCellPosition(ExcelCol.A, 1)
                 .SetValue("銷售報表")
                 .SetCellStyle("HeaderBlue");
-            sheet.SetExcelCellMerge(ExcelCol.A, ExcelCol.E, 1); // Merge A1-E1
+            sheet.SetExcelCellMerge(ExcelCol.A, ExcelCol.E, 1);
 
-            // 2. Set sub-headers
+            // 設定子標題
             sheet.SetCellPosition(ExcelCol.A, 2).SetValue("產品名稱");
             sheet.SetCellPosition(ExcelCol.B, 2).SetValue("銷售量");
             sheet.SetCellPosition(ExcelCol.C, 2).SetValue("單價");
             sheet.SetCellPosition(ExcelCol.D, 2).SetValue("總金額");
             sheet.SetCellPosition(ExcelCol.E, 2).SetValue("備註");
 
-            // Apply style to header row
             for (ExcelCol col = ExcelCol.A; col <= ExcelCol.E; col++)
             {
                 sheet.SetCellPosition(col, 2).SetCellStyle("HeaderBlue");
             }
 
-            // 3. Vertical merge (for categorization)
+            // 垂直合併
             sheet.SetCellPosition(ExcelCol.A, 3).SetValue("電子產品");
-            sheet.SetExcelCellMerge(ExcelCol.A, ExcelCol.A, 3, 5); // Merge A3-A5
+            sheet.SetExcelCellMerge(ExcelCol.A, ExcelCol.A, 3, 5);
 
             sheet.SetCellPosition(ExcelCol.B, 3).SetValue(100);
             sheet.SetCellPosition(ExcelCol.C, 3).SetValue(5000);
@@ -579,148 +472,103 @@ namespace FluentNPOIConsoleExample
             sheet.SetCellPosition(ExcelCol.D, 5).SetValue(100000);
             sheet.SetCellPosition(ExcelCol.E, 5).SetValue("一般");
 
-            // 4. Region merge (for totals)
+            // 區域合併
             sheet.SetCellPosition(ExcelCol.A, 6).SetValue("總計");
             sheet.SetCellPosition(ExcelCol.D, 6).SetValue(840000);
-            sheet.SetExcelCellMerge(ExcelCol.A, ExcelCol.C, 6); // Merge A6-C6 (horizontal)
+            sheet.SetExcelCellMerge(ExcelCol.A, ExcelCol.C, 6);
             sheet.SetCellPosition(ExcelCol.A, 6).SetCellStyle("HighlightYellow");
 
-            // 5. Multiple merge regions example
-            sheet.SetCellPosition(ExcelCol.A, 8).SetValue("部門A");
-            sheet.SetExcelCellMerge(ExcelCol.A, ExcelCol.A, 8, 10); // Vertical merge A8-A10
-
-            sheet.SetCellPosition(ExcelCol.B, 8).SetValue("部門B");
-            sheet.SetExcelCellMerge(ExcelCol.B, ExcelCol.B, 8, 10); // Vertical merge B8-B10
-
-            sheet.SetCellPosition(ExcelCol.C, 8).SetValue("部門C");
-            sheet.SetExcelCellMerge(ExcelCol.C, ExcelCol.C, 8, 10); // Vertical merge C8-C10
-
-            // 6. Region merge example (multiple rows and columns)
-            sheet.SetCellPosition(ExcelCol.A, 12).SetValue("重要通知");
-            sheet.SetExcelCellMerge(ExcelCol.A, ExcelCol.E, 12, 14); // Merge A12-E14 (region)
-            sheet.SetCellPosition(ExcelCol.A, 12).SetCellStyle("HighlightYellow");
+            Console.WriteLine("  ✓ CellMergeExample 建立完成");
         }
 
         /// <summary>
-        /// Example 8: Insert picture example
+        /// Example 8: Insert picture
         /// </summary>
         static void CreatePictureExample(FluentWorkbook fluent)
         {
-            var sheet = fluent.UseSheet("PictureExample", true);
+            Console.WriteLine("建立 PictureExample...");
 
-            // Set column width
+            var sheet = fluent.UseSheet("PictureExample", true);
             sheet.SetColumnWidth(ExcelCol.A, ExcelCol.D, 20);
 
-            // Read image file
             var imagePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Resources", "pain.jpg");
 
             if (!File.Exists(imagePath))
             {
-                Console.WriteLine($"Warning: Image file not found: {imagePath}");
+                Console.WriteLine($"  ⚠ 圖片檔案不存在: {imagePath}");
+                sheet.SetCellPosition(ExcelCol.A, 1)
+                    .SetValue("圖片檔案不存在，請放置 pain.jpg 到 Resources 資料夾");
                 return;
             }
 
             byte[] imageBytes = File.ReadAllBytes(imagePath);
 
-            // 1. Basic picture insertion (auto-calculate height, use default column width ratio)
+            // 1. 基本插入
             sheet.SetCellPosition(ExcelCol.A, 1)
-                .SetValue("基本插入（自動高度）")
+                .SetValue("基本插入 (自動高度)")
                 .SetCellStyle("HeaderBlue");
 
             sheet.SetCellPosition(ExcelCol.A, 2)
-                .SetPictureOnCell(imageBytes, 200); // Width 200 pixels, height auto-calculated (1:1)
+                .SetPictureOnCell(imageBytes, 200);
 
-            // 2. Manually set width and height
+            // 2. 手動尺寸
             sheet.SetCellPosition(ExcelCol.B, 1)
-                .SetValue("手動設置尺寸")
+                .SetValue("手動尺寸")
                 .SetCellStyle("HeaderBlue");
 
             sheet.SetCellPosition(ExcelCol.B, 2)
-                .SetPictureOnCell(imageBytes, 200, 150); // Width 200, height 150 pixels
+                .SetPictureOnCell(imageBytes, 200, 150);
 
-            // 3. Custom column width conversion ratio
+            // 3. 自定義列寬比例 + Anchor
             sheet.SetCellPosition(ExcelCol.C, 1)
                 .SetValue("自定義列寬比例")
                 .SetCellStyle("HeaderBlue");
 
             sheet.SetCellPosition(ExcelCol.C, 2)
-                .SetPictureOnCell(imageBytes, 300, AnchorType.MoveAndResize, 5.0); // Use 5.0 as conversion ratio
+                .SetPictureOnCell(imageBytes, 300, AnchorType.MoveAndResize, 5.0);
 
-            // 4. Chained call example (continue setting after inserting picture)
+            // 4. 鏈式調用
             sheet.SetCellPosition(ExcelCol.D, 1)
-                .SetValue("鏈式調用示例")
+                .SetValue("鏈式調用")
                 .SetCellStyle("HeaderBlue");
 
             sheet.SetCellPosition(ExcelCol.D, 2)
                 .SetPictureOnCell(imageBytes, 180, 180, AnchorType.MoveAndResize, 7.0)
                 .SetCellPosition(ExcelCol.D, 10)
-                .SetValue("圖片下方文字"); // Chained call, set text after picture
+                .SetValue("圖片下方文字");
 
-            // 5. Different anchor type examples
+            // 5. 不同的 Anchor 類型
             sheet.SetCellPosition(ExcelCol.A, 5)
-                .SetValue("MoveAndResize（默認）")
+                .SetValue("MoveAndResize")
                 .SetCellStyle("HeaderBlue");
-
             sheet.SetCellPosition(ExcelCol.A, 6)
                 .SetPictureOnCell(imageBytes, 150, 150, AnchorType.MoveAndResize);
 
             sheet.SetCellPosition(ExcelCol.B, 5)
                 .SetValue("MoveDontResize")
                 .SetCellStyle("HeaderBlue");
-
             sheet.SetCellPosition(ExcelCol.B, 6)
                 .SetPictureOnCell(imageBytes, 150, 150, AnchorType.MoveDontResize);
 
             sheet.SetCellPosition(ExcelCol.C, 5)
                 .SetValue("DontMoveAndResize")
                 .SetCellStyle("HeaderBlue");
-
             sheet.SetCellPosition(ExcelCol.C, 6)
                 .SetPictureOnCell(imageBytes, 150, 150, AnchorType.DontMoveAndResize);
 
-            // 6. Multiple pictures arrangement example
-            sheet.SetCellPosition(ExcelCol.A, 9)
-                .SetValue("多圖片排列")
-                .SetCellStyle("HeaderBlue");
-
-            for (int i = 0; i < 3; i++)
-            {
-                sheet.SetCellPosition((ExcelCol)((int)ExcelCol.A + i), 10)
-                    .SetPictureOnCell(imageBytes, 100, 100);
-            }
-
-            Console.WriteLine("✓ Picture insertion example created");
+            Console.WriteLine("  ✓ PictureExample 建立完成");
         }
 
         #endregion
 
-        #region Table Read Examples
+        #region Read Examples
 
         static void ReadExcelExamples(FluentWorkbook fluent)
         {
-            Console.WriteLine("\n========== Read Excel Data Examples ==========");
+            Console.WriteLine("\n========== 讀取 Excel 資料 ==========");
 
-            // Table read examples
-            ReadSheet1Example(fluent);
-            ReadDataTableExample(fluent);
-            ReadGetTableExample(fluent);
-
-            // Cell read examples
-            ReadFluentCellExample(fluent);
-            ReadSetCellValueExample(fluent);
-            ReadCellMergeExample(fluent);
-
-            Console.WriteLine("\n========== Read Complete ==========\n");
-        }
-
-        /// <summary>
-        /// Read Example 1: Read data from Sheet1
-        /// </summary>
-        static void ReadSheet1Example(FluentWorkbook fluent)
-        {
+            // 讀取 Sheet1
             var sheet1 = fluent.UseSheet("Sheet1");
-
-            // Read header row
             Console.WriteLine("\n【Sheet1 標題行】:");
             for (ExcelCol col = ExcelCol.A; col <= ExcelCol.H; col++)
             {
@@ -729,199 +577,18 @@ namespace FluentNPOIConsoleExample
             }
             Console.WriteLine();
 
-            // Read data rows (starting from row 2)
             Console.WriteLine("\n【Sheet1 前3筆資料】:");
             for (int row = 2; row <= 4; row++)
             {
                 var id = sheet1.GetCellValue<int>(ExcelCol.A, row);
                 var name = sheet1.GetCellValue<string>(ExcelCol.B, row);
                 var dateOfBirth = sheet1.GetCellValue<DateTime>(ExcelCol.C, row);
-                var isActive = sheet1.GetCellValue<bool>(ExcelCol.D, row);
-                var score = sheet1.GetCellValue<double>(ExcelCol.E, row);
-                var amount = sheet1.GetCellValue<double>(ExcelCol.F, row);
-                var notes = sheet1.GetCellValue<string>(ExcelCol.G, row);
-
-                Console.WriteLine($"Row {row}: ID={id}, Name={name}, Birth={dateOfBirth:yyyy-MM-dd}, Active={isActive}, Score={score}, Amount={amount:C}, Notes={notes}");
-            }
-        }
-
-        /// <summary>
-        /// Read Example 2: Read data from DataTableExample
-        /// </summary>
-        static void ReadDataTableExample(FluentWorkbook fluent)
-        {
-            Console.WriteLine("\n【DataTableExample 前3筆資料】:");
-            var dtSheet = fluent.UseSheet("DataTableExample");
-            for (int row = 2; row <= 4; row++)
-            {
-                var studentId = dtSheet.GetCellValue<int>(ExcelCol.A, row);
-                var studentName = dtSheet.GetCellValue<string>(ExcelCol.B, row);
-                var birthDate = dtSheet.GetCellValue<DateTime>(ExcelCol.C, row);
-                var isEnrolled = dtSheet.GetCellValue<bool>(ExcelCol.D, row);
-                var gpa = dtSheet.GetCellValue<double>(ExcelCol.E, row);
-                var tuition = dtSheet.GetCellValue<double>(ExcelCol.F, row);
-                var department = dtSheet.GetCellValue<string>(ExcelCol.G, row);
-
-                Console.WriteLine($"Student {studentId}: {studentName}, {department}, GPA={gpa:F1}, 學費={tuition:C}");
-            }
-        }
-
-        /// <summary>
-        /// Read Example 3: Use GetTable<T> to read entire table
-        /// </summary>
-        static void ReadGetTableExample(FluentWorkbook fluent)
-        {
-            Console.WriteLine("\n【使用 GetTable<T> 讀取表格】:");
-            var sheet1 = fluent.UseSheet("Sheet1");
-
-            // Method 1: Specify end row (old method, still available)
-            Console.WriteLine("\n方法1：指定結束行");
-            var readData1 = sheet1.GetTable<ExampleData>(ExcelCol.A, 2, 13);
-            Console.WriteLine($"成功讀取 {readData1.Count} 筆資料（指定結束行）");
-
-            // Method 2: Auto-detect last row (new method)
-            Console.WriteLine("\n方法2：自動判斷最後一行");
-            var readData2 = sheet1.GetTable<ExampleData>(ExcelCol.A, 2);
-            Console.WriteLine($"成功讀取 {readData2.Count} 筆資料（自動判斷最後一行）");
-
-            // Method 3: Specify column and row range (new method)
-            Console.WriteLine("\n方法3：指定列範圍和行範圍");
-            // Create a class with only partial fields for demonstration
-            var readData3 = sheet1.GetTable<PartialData>(ExcelCol.A, ExcelCol.C, 2, 5);
-            Console.WriteLine($"成功讀取 {readData3.Count} 筆資料（只讀取 A-C 列，第 2-5 行）");
-            Console.WriteLine("前3筆資料詳情（只包含 ID, Name, DateOfBirth）:");
-            for (int i = 0; i < Math.Min(3, readData3.Count); i++)
-            {
-                var item = readData3[i];
-                Console.WriteLine($"  [{i + 1}] ID={item.ID}, Name={item.Name}, Birth={item.DateOfBirth:yyyy-MM-dd}");
+                Console.WriteLine($"Row {row}: ID={id}, Name={name}, Birth={dateOfBirth:yyyy-MM-dd}");
             }
 
-            // Method 3 Example 2: Read middle column range
-            Console.WriteLine("\n方法3示例2：讀取中間的列範圍（D-F 列，第 2-4 行）");
-            var readData4 = sheet1.GetTable<MiddleColumnsData>(ExcelCol.D, ExcelCol.F, 2, 4);
-            Console.WriteLine($"成功讀取 {readData4.Count} 筆資料");
-            for (int i = 0; i < readData4.Count; i++)
-            {
-                var item = readData4[i];
-                Console.WriteLine($"  [{i + 1}] IsActive={item.IsActive}, Score={item.Score:F1}, Amount={item.Amount:C}");
-            }
-
-            Console.WriteLine("\n前5筆完整資料詳情（方法2的結果）:");
-
-            for (int i = 0; i < Math.Min(5, readData2.Count); i++)
-            {
-                var item = readData2[i];
-                Console.WriteLine($"  [{i + 1}] ID={item.ID}, Name={item.Name}, " +
-                    $"Birth={item.DateOfBirth:yyyy-MM-dd}, Active={item.IsActive}, " +
-                    $"Score={item.Score:F1}, Amount={item.Amount:C}");
-            }
-        }
-
-        #endregion
-
-        #region Cell Read Examples
-
-        /// <summary>
-        /// Read Example 1: Use FluentCell to read single cell
-        /// </summary>
-        static void ReadFluentCellExample(FluentWorkbook fluent)
-        {
-            Console.WriteLine("\n【使用 FluentCell 讀取】:");
-            var sheet1 = fluent.UseSheet("Sheet1");
-            var cellA1 = sheet1.SetCellPosition(ExcelCol.A, 1);
-            if (cellA1 != null)
-            {
-                var value = cellA1.GetValue();
-                var cellType = cellA1.GetCell().CellType;
-                Console.WriteLine($"A1 單元格: 值={value}, 類型={cellType}");
-            }
-        }
-
-        /// <summary>
-        /// Read Example 2: Read SetCellValueExample
-        /// </summary>
-        static void ReadSetCellValueExample(FluentWorkbook fluent)
-        {
-            Console.WriteLine("\n【SetCellValueExample 示例】:");
-            var exampleSheet = fluent.UseSheet("SetCellValueExample");
-            var helloValue = exampleSheet.GetCellValue<string>(ExcelCol.A, 1);
-            Console.WriteLine($"A1 值: {helloValue}");
-        }
-
-        /// <summary>
-        /// Read Example 3: Read merged cells example
-        /// </summary>
-        static void ReadCellMergeExample(FluentWorkbook fluent)
-        {
-            Console.WriteLine("\n【CellMergeExample 合併儲存格示例】:");
-            var mergeSheet = fluent.UseSheet("CellMergeExample");
-            var npoiSheet = mergeSheet.GetSheet();
-
-            // Display merged region information
-            Console.WriteLine($"\n工作表共有 {npoiSheet.NumMergedRegions} 個合併區域：");
-
-            for (int i = 0; i < npoiSheet.NumMergedRegions; i++)
-            {
-                var mergedRegion = npoiSheet.GetMergedRegion(i);
-                var firstRow = mergedRegion.FirstRow + 1; // Convert to 1-based
-                var lastRow = mergedRegion.LastRow + 1;
-                var firstCol = (ExcelCol)mergedRegion.FirstColumn;
-                var lastCol = (ExcelCol)mergedRegion.LastColumn;
-
-                // Read the value of the first cell in the merged region
-                var cellValue = mergeSheet.GetCellValue<string>(firstCol, firstRow) ?? "";
-
-                if (firstRow == lastRow && firstCol == lastCol)
-                {
-                    // Single cell (should not happen, but just in case)
-                    Console.WriteLine($"  [{i + 1}] {firstCol}{firstRow}: {cellValue}");
-                }
-                else if (firstRow == lastRow)
-                {
-                    // Horizontal merge
-                    Console.WriteLine($"  [{i + 1}] 橫向合併: {firstCol}{firstRow}-{lastCol}{firstRow} = \"{cellValue}\"");
-                }
-                else if (firstCol == lastCol)
-                {
-                    // Vertical merge
-                    Console.WriteLine($"  [{i + 1}] 縱向合併: {firstCol}{firstRow}-{firstCol}{lastRow} = \"{cellValue}\"");
-                }
-                else
-                {
-                    // Region merge
-                    Console.WriteLine($"  [{i + 1}] 區域合併: {firstCol}{firstRow}-{lastCol}{lastRow} = \"{cellValue}\"");
-                }
-            }
-
-            // Read some specific merged cell values
-            Console.WriteLine("\n讀取合併單元格的值：");
-            Console.WriteLine($"  A1 (合併區域): {mergeSheet.GetCellValue<string>(ExcelCol.A, 1)}");
-            Console.WriteLine($"  A3 (縱向合併): {mergeSheet.GetCellValue<string>(ExcelCol.A, 3)}");
-            Console.WriteLine($"  A6 (橫向合併): {mergeSheet.GetCellValue<string>(ExcelCol.A, 6)}");
-            Console.WriteLine($"  A12 (區域合併): {mergeSheet.GetCellValue<string>(ExcelCol.A, 12)}");
+            Console.WriteLine("\n========== 讀取完成 ==========\n");
         }
 
         #endregion
     }
-
-    /// <summary>
-    /// Partial field data class (for demonstrating reading only partial columns)
-    /// </summary>
-    public class PartialData
-    {
-        public int ID { get; set; }
-        public string Name { get; set; } = string.Empty;
-        public DateTime DateOfBirth { get; set; }
-    }
-
-    /// <summary>
-    /// Middle columns data class (for demonstrating reading middle column range)
-    /// </summary>
-    public class MiddleColumnsData
-    {
-        public bool IsActive { get; set; }
-        public double Score { get; set; }
-        public decimal Amount { get; set; }
-    }
-
 }

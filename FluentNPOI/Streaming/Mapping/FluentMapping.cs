@@ -162,6 +162,25 @@ namespace FluentNPOI.Streaming.Mapping
         public FluentColumnBuilder<T> WithTitleStyle(string styleKey)
         {
             _mapping.TitleStyleKey = styleKey;
+            _mapping.TitleStyleKey = styleKey;
+            return this;
+        }
+
+        /// <summary>
+        /// 從指定儲存格複製標題樣式
+        /// </summary>
+        public FluentColumnBuilder<T> WithTitleStyleFrom(int row, ExcelCol col)
+        {
+            _mapping.TitleStyleRef = new StyleReference { Row = row, Column = col };
+            return this;
+        }
+
+        /// <summary>
+        /// 從指定儲存格複製資料樣式
+        /// </summary>
+        public FluentColumnBuilder<T> WithStyleFrom(int row, ExcelCol col)
+        {
+            _mapping.DataStyleRef = new StyleReference { Row = row, Column = col };
             return this;
         }
 
@@ -171,6 +190,16 @@ namespace FluentNPOI.Streaming.Mapping
         public FluentColumnBuilder<T> WithCellType(NPOI.SS.UserModel.CellType cellType)
         {
             _mapping.CellType = cellType;
+            return this;
+        }
+
+        /// <summary>
+        /// 設定動態樣式 (根據資料決定樣式 Key)
+        /// </summary>
+        /// <param name="styleFunc">接收資料物件，回傳樣式 Key</param>
+        public FluentColumnBuilder<T> WithDynamicStyle(Func<T, string> styleFunc)
+        {
+            _mapping.DynamicStyleFunc = obj => styleFunc((T)obj);
             return this;
         }
 
@@ -199,8 +228,19 @@ namespace FluentNPOI.Streaming.Mapping
         public string StyleKey { get; set; }
         public string TitleStyleKey { get; set; }
         public NPOI.SS.UserModel.CellType? CellType { get; set; }
+        public Func<object, string> DynamicStyleFunc { get; set; }
 
         // 欄位名稱 (for DataTable)
         public string ColumnName { get; set; }
+
+        // 樣式參考
+        public StyleReference TitleStyleRef { get; set; }
+        public StyleReference DataStyleRef { get; set; }
+    }
+
+    public class StyleReference
+    {
+        public int Row { get; set; }
+        public ExcelCol Column { get; set; }
     }
 }
