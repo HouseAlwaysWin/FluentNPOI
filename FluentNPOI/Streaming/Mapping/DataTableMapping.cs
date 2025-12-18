@@ -135,6 +135,15 @@ namespace FluentNPOI.Streaming.Mapping
         }
 
         /// <summary>
+        /// 設定儲存格類型
+        /// </summary>
+        public DataTableColumnBuilder WithCellType(NPOI.SS.UserModel.CellType cellType)
+        {
+            _mapping.CellType = cellType;
+            return this;
+        }
+
+        /// <summary>
         /// 繼續設定下一個欄位
         /// </summary>
         public DataTableColumnBuilder Map(string columnName)

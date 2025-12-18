@@ -261,8 +261,7 @@ namespace FluentNPOIUnitTest
                 var workbook = new XSSFWorkbook();
                 new FluentWorkbook(workbook)
                     .UseSheet("Sheet1")
-                    .SetTable(data, ExcelCol.A, 1)
-                    .WithMapping(mapping)
+                    .SetTable(data, mapping)
                     .BuildRows();
 
                 // Save with FileStream
@@ -314,8 +313,7 @@ namespace FluentNPOIUnitTest
                 var workbook = new XSSFWorkbook();
                 new FluentWorkbook(workbook)
                     .UseSheet("Sheet1")
-                    .SetTable(data, ExcelCol.A, 1)
-                    .WithMapping(mapping)
+                    .SetTable(data, mapping)
                     .BuildRows();
 
                 // Save with FileStream
@@ -367,8 +365,7 @@ namespace FluentNPOIUnitTest
                 var workbook = new XSSFWorkbook();
                 new FluentWorkbook(workbook)
                     .UseSheet("Sheet1")
-                    .SetTable(data, ExcelCol.A, 1)
-                    .WithMapping(mapping)
+                    .SetTable(data, mapping)
                     .BuildRows();
 
                 using (var fs = new FileStream(testFilePath, FileMode.Create, FileAccess.Write))
@@ -412,8 +409,7 @@ namespace FluentNPOIUnitTest
                 var workbook = new XSSFWorkbook();
                 new FluentWorkbook(workbook)
                     .UseSheet("Sheet1")
-                    .SetTable(data, ExcelCol.A, 1)
-                    .WithMapping(mapping)
+                    .SetTable(data, mapping)
                     .BuildRows();
 
                 using (var fs = new FileStream(testFilePath, FileMode.Create, FileAccess.Write))
@@ -431,6 +427,106 @@ namespace FluentNPOIUnitTest
                     var formulaCell = dataRow.GetCell(2);
                     Assert.Equal(NPOI.SS.UserModel.CellType.Formula, formulaCell.CellType);
                     Assert.Equal("A2*2", formulaCell.CellFormula);
+                }
+            }
+            finally
+            {
+                if (File.Exists(testFilePath))
+                    File.Delete(testFilePath);
+            }
+        }
+
+        [Fact]
+        public void FluentSheet_WriteDataTable_AutoMapping_Works()
+        {
+            var testFilePath = Path.Combine(Path.GetTempPath(), $"write_test_datatable_{Guid.NewGuid()}.xlsx");
+            try
+            {
+                // Create DataTable
+                var dt = new System.Data.DataTable();
+                dt.Columns.Add("ID", typeof(int));
+                dt.Columns.Add("Name", typeof(string));
+                dt.Columns.Add("Amount", typeof(decimal));
+                dt.Rows.Add(1, "Alice", 100.5m);
+                dt.Rows.Add(2, "Bob", 200.75m);
+
+                var workbook = new XSSFWorkbook();
+                new FluentWorkbook(workbook)
+                    .UseSheet("Sheet1")
+                    .WriteDataTable(dt);  // Auto mapping
+
+                using (var fs = new FileStream(testFilePath, FileMode.Create, FileAccess.Write))
+                {
+                    workbook.Write(fs);
+                }
+
+                // Verify
+                using (var fs = new FileStream(testFilePath, FileMode.Open, FileAccess.Read))
+                {
+                    var readWorkbook = new XSSFWorkbook(fs);
+                    var sheet = readWorkbook.GetSheetAt(0);
+
+                    // Title row
+                    var titleRow = sheet.GetRow(0);
+                    Assert.Equal("ID", titleRow.GetCell(0).StringCellValue);
+                    Assert.Equal("Name", titleRow.GetCell(1).StringCellValue);
+                    Assert.Equal("Amount", titleRow.GetCell(2).StringCellValue);
+
+                    // Data row 1
+                    var dataRow1 = sheet.GetRow(1);
+                    Assert.Equal(1, (int)dataRow1.GetCell(0).NumericCellValue);
+                    Assert.Equal("Alice", dataRow1.GetCell(1).StringCellValue);
+                    Assert.Equal(100.5, dataRow1.GetCell(2).NumericCellValue);
+                }
+            }
+            finally
+            {
+                if (File.Exists(testFilePath))
+                    File.Delete(testFilePath);
+            }
+        }
+
+        [Fact]
+        public void FluentSheet_WriteDataTable_CustomMapping_Works()
+        {
+            var testFilePath = Path.Combine(Path.GetTempPath(), $"write_test_datatable_custom_{Guid.NewGuid()}.xlsx");
+            try
+            {
+                var dt = new System.Data.DataTable();
+                dt.Columns.Add("ID", typeof(int));
+                dt.Columns.Add("Name", typeof(string));
+                dt.Rows.Add(1, "Alice");
+
+                // Custom mapping - out of order columns
+                var mapping = new DataTableMapping();
+                mapping.Map("Name").ToColumn(ExcelCol.A).WithTitle("姓名");
+                mapping.Map("ID").ToColumn(ExcelCol.C).WithTitle("編號");
+
+                var workbook = new XSSFWorkbook();
+                new FluentWorkbook(workbook)
+                    .UseSheet("Sheet1")
+                    .WriteDataTable(dt, mapping);
+
+                using (var fs = new FileStream(testFilePath, FileMode.Create, FileAccess.Write))
+                {
+                    workbook.Write(fs);
+                }
+
+                // Verify
+                using (var fs = new FileStream(testFilePath, FileMode.Open, FileAccess.Read))
+                {
+                    var readWorkbook = new XSSFWorkbook(fs);
+                    var sheet = readWorkbook.GetSheetAt(0);
+
+                    // Title row - custom order
+                    var titleRow = sheet.GetRow(0);
+                    Assert.Equal("姓名", titleRow.GetCell(0).StringCellValue);
+                    Assert.Equal("編號", titleRow.GetCell(2).StringCellValue);
+
+                    // Data row - custom order
+                    var dataRow = sheet.GetRow(1);
+                    Assert.Equal("Alice", dataRow.GetCell(0).StringCellValue);
+                    Assert.Equal(1, (int)dataRow.GetCell(2).NumericCellValue);
                 }
             }
             finally

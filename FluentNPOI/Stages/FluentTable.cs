@@ -211,7 +211,7 @@ namespace FluentNPOI.Stages
                         value = null;
                     }
 
-                    SetCellValue(cell, value, CellType.Unknown);
+                    SetCellValue(cell, value, map.CellType ?? CellType.Unknown);
                 }
 
                 // 套用資料樣式

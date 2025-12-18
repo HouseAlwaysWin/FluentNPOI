@@ -166,6 +166,15 @@ namespace FluentNPOI.Streaming.Mapping
         }
 
         /// <summary>
+        /// 設定儲存格類型
+        /// </summary>
+        public FluentColumnBuilder<T> WithCellType(NPOI.SS.UserModel.CellType cellType)
+        {
+            _mapping.CellType = cellType;
+            return this;
+        }
+
+        /// <summary>
         /// 繼續設定下一個屬性
         /// </summary>
         public FluentColumnBuilder<T> Map<TProperty>(Expression<Func<T, TProperty>> expression)
@@ -189,6 +198,7 @@ namespace FluentNPOI.Streaming.Mapping
         public Func<int, int, string> FormulaFunc { get; set; }
         public string StyleKey { get; set; }
         public string TitleStyleKey { get; set; }
+        public NPOI.SS.UserModel.CellType? CellType { get; set; }
 
         // 欄位名稱 (for DataTable)
         public string ColumnName { get; set; }

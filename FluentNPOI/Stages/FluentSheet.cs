@@ -101,19 +101,6 @@ namespace FluentNPOI.Stages
         }
 
         /// <summary>
-        /// 设置表格数据
-        /// </summary>
-        /// <typeparam name="T">数据项类型</typeparam>
-        /// <param name="table">数据集合</param>
-        /// <param name="startCol">起始列</param>
-        /// <param name="startRow">起始行（1-based）</param>
-        /// <returns>FluentTable 实例</returns>
-        public FluentTable<T> SetTable<T>(IEnumerable<T> table, ExcelCol startCol, int startRow)
-        {
-            return new FluentTable<T>(_workbook, _sheet, table, startCol, startRow, _cellStylesCached, new List<TableCellSet>(), new List<TableCellSet>());
-        }
-
-        /// <summary>
         /// 使用 FluentMapping 設定表格資料（推薦使用）
         /// </summary>
         /// <typeparam name="T">資料型別</typeparam>
@@ -128,207 +115,79 @@ namespace FluentNPOI.Stages
         }
 
         /// <summary>
-        /// 從 Excel 讀取表格數據並轉換為物件集合（自動判斷最後一行）
+        /// 使用 DataTableMapping 寫入 DataTable 資料
         /// </summary>
-        /// <typeparam name="T">目標類型</typeparam>
-        /// <param name="startCol">起始列</param>
-        /// <param name="startRow">起始行（1-based）</param>
-        /// <returns>物件集合</returns>
-        public List<T> GetTable<T>(ExcelCol startCol, int startRow)
+        /// <param name="dataTable">DataTable 資料</param>
+        /// <param name="mapping">DataTableMapping 設定 (可為 null，將自動產生)</param>
+        /// <param name="startRow">起始行（1-based），預設為 1</param>
+        public FluentSheet WriteDataTable(System.Data.DataTable dataTable, DataTableMapping mapping = null, int startRow = 1)
         {
-            // 自動檢測最後一行（檢查起始列是否有數據）
-            int lastRow = GetLastRowWithData(startCol, startRow);
-            return GetTable<T>(startCol, startRow, lastRow);
-        }
+            var actualMapping = mapping ?? DataTableMapping.FromDataTable(dataTable);
+            var mappings = actualMapping.GetMappings().Where(m => m.ColumnIndex.HasValue).ToList();
 
-        /// <summary>
-        /// 從 Excel 讀取表格數據並轉換為物件集合
-        /// </summary>
-        /// <typeparam name="T">目標類型</typeparam>
-        /// <param name="startCol">起始列</param>
-        /// <param name="startRow">起始行（1-based）</param>
-        /// <param name="endRow">結束行（1-based）</param>
-        /// <returns>物件集合</returns>
-        public List<T> GetTable<T>(ExcelCol startCol, int startRow, int endRow)
-        {
-            var result = new List<T>();
-            var type = typeof(T);
+            bool writeTitle = mappings.Any(m => !string.IsNullOrEmpty(m.Title));
 
-            // 獲取所有公開的屬性和欄位,按照定義順序排序
-            var properties = type.GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance)
-                .OrderBy(p => p.MetadataToken)
-                .ToArray();
-            var fields = type.GetFields(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance)
-                .OrderBy(f => f.MetadataToken)
-                .ToArray();
-
-            // 計算需要讀取的列數
-            int columnCount = properties.Length + fields.Length;
-
-            // 遍歷每一行
-            for (int row = startRow; row <= endRow; row++)
+            // 寫入標題行
+            if (writeTitle)
             {
-                var normalizedRow = NormalizeRow(row);
-                var rowObj = _sheet.GetRow(normalizedRow);
-
-                // 如果行不存在,跳過
-                if (rowObj == null)
-                    continue;
-
-                // 創建新實例 (使用 FormatterServices 以支持沒有無參構造函數的類型)
-                T instance = (T)System.Runtime.Serialization.FormatterServices.GetUninitializedObject(type);
-                int colOffset = 0;
-
-                // 設置所有欄位的值
-                foreach (var field in fields)
+                var titleRow = GetOrCreateRow(startRow - 1);
+                foreach (var map in mappings)
                 {
-                    var colIndex = (int)startCol + colOffset;
-                    var cell = rowObj.GetCell(colIndex);
-
-                    if (cell != null)
-                    {
-                        var value = GetCellValueForType(cell, field.FieldType);
-                        field.SetValue(instance, value);
-                    }
-
-                    colOffset++;
-                }
-
-                // 設置所有屬性的值
-                foreach (var prop in properties)
-                {
-                    if (!prop.CanWrite)
-                        continue;
-
-                    var colIndex = (int)startCol + colOffset;
-                    var cell = rowObj.GetCell(colIndex);
-
-                    if (cell != null)
-                    {
-                        var value = GetCellValueForType(cell, prop.PropertyType);
-                        prop.SetValue(instance, value);
-                    }
-
-                    colOffset++;
-                }
-
-                result.Add(instance);
-            }
-
-            return result;
-        }
-
-        /// <summary>
-        /// 從 Excel 讀取表格數據並轉換為物件集合（指定列範圍和行範圍）
-        /// </summary>
-        /// <typeparam name="T">目標類型</typeparam>
-        /// <param name="startCol">起始列</param>
-        /// <param name="endCol">結束列</param>
-        /// <param name="startRow">起始行（1-based）</param>
-        /// <param name="endRow">結束行（1-based）</param>
-        /// <returns>物件集合</returns>
-        public List<T> GetTable<T>(ExcelCol startCol, ExcelCol endCol, int startRow, int endRow)
-        {
-            var result = new List<T>();
-            var type = typeof(T);
-
-            // 獲取所有公開的屬性和欄位,按照定義順序排序
-            var properties = type.GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance)
-                .OrderBy(p => p.MetadataToken)
-                .ToArray();
-            var fields = type.GetFields(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance)
-                .OrderBy(f => f.MetadataToken)
-                .ToArray();
-
-            // 計算可用的屬性/欄位數量
-            int availableFieldCount = fields.Length;
-            int availablePropertyCount = properties.Count(p => p.CanWrite);
-            int totalAvailableMembers = availableFieldCount + availablePropertyCount;
-
-            // 計算要讀取的列數
-            int columnCount = (int)endCol - (int)startCol + 1;
-
-            // 如果起始列大於結束列，返回空列表
-            if (columnCount <= 0)
-                return result;
-
-            // 如果指定的列數超過可用的成員數，只使用可用的成員數
-            int membersToUse = Math.Min(columnCount, totalAvailableMembers);
-
-            // 遍歷每一行
-            for (int row = startRow; row <= endRow; row++)
-            {
-                var normalizedRow = NormalizeRow(row);
-                var rowObj = _sheet.GetRow(normalizedRow);
-
-                // 如果行不存在,跳過
-                if (rowObj == null)
-                    continue;
-
-                // 創建新實例
-                T instance = (T)System.Runtime.Serialization.FormatterServices.GetUninitializedObject(type);
-                int memberIndex = 0;
-                bool hasData = false;
-
-                // 設置所有欄位的值
-                foreach (var field in fields)
-                {
-                    if (memberIndex >= membersToUse)
-                        break;
-
-                    var colIndex = (int)startCol + memberIndex;
-
-                    // 確保不超過結束列
-                    if (colIndex > (int)endCol)
-                        break;
-
-                    var cell = rowObj.GetCell(colIndex);
-
-                    if (cell != null && !IsCellEmpty(cell))
-                    {
-                        var value = GetCellValueForType(cell, field.FieldType);
-                        field.SetValue(instance, value);
-                        hasData = true;
-                    }
-
-                    memberIndex++;
-                }
-
-                // 設置所有屬性的值
-                foreach (var prop in properties)
-                {
-                    if (!prop.CanWrite)
-                        continue;
-
-                    if (memberIndex >= membersToUse)
-                        break;
-
-                    var colIndex = (int)startCol + memberIndex;
-
-                    // 確保不超過結束列
-                    if (colIndex > (int)endCol)
-                        break;
-
-                    var cell = rowObj.GetCell(colIndex);
-
-                    if (cell != null && !IsCellEmpty(cell))
-                    {
-                        var value = GetCellValueForType(cell, prop.PropertyType);
-                        prop.SetValue(instance, value);
-                        hasData = true;
-                    }
-
-                    memberIndex++;
-                }
-
-                // 只有當至少有一個單元格有數據時才添加到結果
-                if (hasData)
-                {
-                    result.Add(instance);
+                    var cell = GetOrCreateCell(titleRow, (int)map.ColumnIndex.Value);
+                    cell.SetCellValue(map.Title ?? map.ColumnName ?? "");
+                    ApplyStyle(cell, map.TitleStyleKey);
                 }
             }
 
-            return result;
+            // 寫入資料行
+            int dataRowStart = startRow - 1 + (writeTitle ? 1 : 0);
+            for (int rowIdx = 0; rowIdx < dataTable.Rows.Count; rowIdx++)
+            {
+                var dataRow = dataTable.Rows[rowIdx];
+                var excelRow = GetOrCreateRow(dataRowStart + rowIdx);
+
+                foreach (var map in mappings)
+                {
+                    var colIdx = (int)map.ColumnIndex.Value;
+                    var cell = GetOrCreateCell(excelRow, colIdx);
+
+                    if (map.FormulaFunc != null)
+                        cell.SetCellFormula(map.FormulaFunc(dataRowStart + rowIdx + 1, colIdx));
+                    else
+                        SetCellValueInternal(cell, actualMapping.GetValue(map, dataRow));
+
+                    ApplyStyle(cell, map.StyleKey);
+                }
+            }
+
+            return this;
+        }
+
+        private IRow GetOrCreateRow(int rowIndex) => _sheet.GetRow(rowIndex) ?? _sheet.CreateRow(rowIndex);
+
+        private ICell GetOrCreateCell(IRow row, int colIndex) => row.GetCell(colIndex) ?? row.CreateCell(colIndex);
+
+        private void ApplyStyle(ICell cell, string styleKey)
+        {
+            if (!string.IsNullOrEmpty(styleKey) && _cellStylesCached.TryGetValue(styleKey, out var style))
+                cell.CellStyle = style;
+        }
+
+        private void SetCellValueInternal(ICell cell, object value)
+        {
+            if (value == null || value == DBNull.Value) { cell.SetCellValue(""); return; }
+
+            switch (value)
+            {
+                case string s: cell.SetCellValue(s); break;
+                case DateTime dt: cell.SetCellValue(dt); break;
+                case double d: cell.SetCellValue(d); break;
+                case int i: cell.SetCellValue(i); break;
+                case long l: cell.SetCellValue(l); break;
+                case decimal dec: cell.SetCellValue((double)dec); break;
+                case bool b: cell.SetCellValue(b); break;
+                default: cell.SetCellValue(value.ToString()); break;
+            }
         }
 
         /// <summary>
