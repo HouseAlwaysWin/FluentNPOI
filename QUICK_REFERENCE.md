@@ -224,7 +224,7 @@ fluent.UseSheet("Details", true)
     .BuildRows();
 
 // Sheet 3
-fluent.UseSheetAt(0)
+fluent.UseSheet(0)
     .SetCellPosition(ExcelColumns.B, 1)
     .SetValue("Updated");
 

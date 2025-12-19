@@ -49,43 +49,6 @@ namespace FluentNPOI.Stages
             return this;
         }
 
-        public FluentCell SetCellStyle(Func<TableCellStyleParams, CellStyleConfig> cellStyleAction)
-        {
-            if (_cell == null) return this;
-
-            var cellStyleParams = new TableCellStyleParams
-            {
-                Workbook = _workbook,
-                ColNum = (ExcelCol)_cell.ColumnIndex,
-                RowNum = _cell.RowIndex,
-                RowItem = null
-            };
-
-            // ✅ Call function to get style configuration first
-            var config = cellStyleAction(cellStyleParams);
-
-            if (!string.IsNullOrWhiteSpace(config.Key))
-            {
-                // ✅ Check cache first
-                if (!_cellStylesCached.ContainsKey(config.Key))
-                {
-                    // ✅ Create new style only if not exists
-                    ICellStyle newCellStyle = _workbook.CreateCellStyle();
-                    config.StyleSetter(newCellStyle);
-                    _cellStylesCached.Add(config.Key, newCellStyle);
-                }
-                _cell.CellStyle = _cellStylesCached[config.Key];
-            }
-            else
-            {
-                // If no key returned, create temporary style (not cached)
-                ICellStyle tempStyle = _workbook.CreateCellStyle();
-                config.StyleSetter(tempStyle);
-                _cell.CellStyle = tempStyle;
-            }
-
-            return this;
-        }
 
         public FluentCell SetCellType(CellType cellType)
         {

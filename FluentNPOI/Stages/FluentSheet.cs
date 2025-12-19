@@ -11,7 +11,7 @@ namespace FluentNPOI.Stages
     /// <summary>
     /// Sheet operation class
     /// </summary>
-    public class FluentSheet : FluentSheetBase
+    public class FluentSheet : FluentCellBase
     {
         /// <summary>
         /// Initialize FluentSheet instance
@@ -167,7 +167,7 @@ namespace FluentNPOI.Stages
         {
             // Use startRow from parameter first, otherwise use StartRow from mapping
             int actualStartRow = startRow ?? mapping.StartRow;
-            var fluentTable = new FluentTable<T>(_workbook, _sheet, table, ExcelCol.A, actualStartRow, _cellStylesCached, new List<TableCellSet>(), new List<TableCellSet>());
+            var fluentTable = new FluentTable<T>(_workbook, _sheet, table, ExcelCol.A, actualStartRow, _cellStylesCached);
             return fluentTable.WithMapping(mapping);
         }
 

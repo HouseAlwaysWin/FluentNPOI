@@ -12,7 +12,7 @@ namespace FluentNPOI.Stages
     /// <summary>
     /// Workbook operation class
     /// </summary>
-    public class FluentWorkbook : FluentWorkbookBase
+    public class FluentWorkbook : FluentWorkbookBase, IDisposable
     {
         private ISheet _currentSheet;
 
@@ -35,23 +35,31 @@ namespace FluentNPOI.Stages
             if (string.IsNullOrWhiteSpace(filePath)) throw new ArgumentNullException(nameof(filePath));
             if (!File.Exists(filePath)) throw new FileNotFoundException("Excel file not found.", filePath);
 
-            _currentSheet = null;
-
-            string ext = Path.GetExtension(filePath)?.ToLowerInvariant();
-
-            // Open with Read mode and read into memory immediately, release file lock after reading
+            // Open with Read mode
             using (var fs = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
             {
-                if (ext == ".xls")
-                {
-                    _workbook = new HSSFWorkbook(fs);
-                }
-                else
-                {
-                    // Default use XSSF, supports .xlsx/.xlsm
-                    _workbook = new XSSFWorkbook(fs);
-                }
+                return ReadExcelStream(fs);
             }
+        }
+
+        /// <summary>
+        /// Read Excel from stream
+        /// </summary>
+        /// <param name="stream">Excel file stream</param>
+        /// <returns>FluentWorkbook instance, supports method chaining</returns>
+        public FluentWorkbook ReadExcelStream(Stream stream)
+        {
+            if (stream == null) throw new ArgumentNullException(nameof(stream));
+
+            // Clean up existing workbook if any
+            // NOTE: We only close it if we are loading a NEW one into the same wrapper.
+            // This prevents resource leaks when reusing FluentWorkbook instance (though typically not recommended).
+            _workbook?.Close();
+
+            _currentSheet = null;
+
+            // Use WorkbookFactory to automatically detect format
+            _workbook = WorkbookFactory.Create(stream);
 
             // Select first sheet by default
             if (_workbook.NumberOfSheets > 0)
@@ -123,6 +131,36 @@ namespace FluentNPOI.Stages
         /// <summary>
         /// Use specified sheet
         /// </summary>
+        /// <param name="index">Sheet index (0-based)</param>
+        /// <param name="createIfMissing">If true, creates a new sheet if index is out of range (append to end)</param>
+        /// <returns>FluentSheet instance</returns>
+        public FluentSheet UseSheet(int index, bool createIfMissing = false)
+        {
+            if (index >= 0 && index < _workbook.NumberOfSheets)
+            {
+                _currentSheet = _workbook.GetSheetAt(index);
+            }
+            else if (createIfMissing)
+            {
+                _currentSheet = _workbook.CreateSheet();
+            }
+            else
+            {
+                // If not found and not creating, _currentSheet might be null or keep previous?
+                // Standard behavior: return null sheet wrapper or throw?
+                // FluentSheet constructor allows null sheet, but methods might fail.
+                // Let's try to get it, usually returns null if out of range, but NPOI throws ArgumentException for GetSheetAt if invalid.
+                // So we must check range.
+                // If we are here, index is invalid and createIfMissing is false.
+                _currentSheet = null;
+            }
+
+            return new FluentSheet(_workbook, _currentSheet, _cellStylesCached);
+        }
+
+        /// <summary>
+        /// Use specified sheet
+        /// </summary>
         /// <param name="sheetName">Sheet name</param>
         /// <param name="createIfMissing">Create if missing</param>
         /// <returns></returns>
@@ -147,21 +185,6 @@ namespace FluentNPOI.Stages
             return new FluentSheet(_workbook, _currentSheet, _cellStylesCached);
         }
 
-        /// <summary>
-        /// Use sheet at specified index
-        /// </summary>
-        /// <param name="index">Index</param>
-        /// <param name="createIfMissing">Create if missing</param>
-        /// <returns></returns>
-        public FluentSheet UseSheetAt(int index, bool createIfMissing = false)
-        {
-            _currentSheet = _workbook.GetSheetAt(index);
-            if (_currentSheet == null && createIfMissing)
-            {
-                _currentSheet = _workbook.CreateSheet();
-            }
-            return new FluentSheet(_workbook, _currentSheet, _cellStylesCached);
-        }
 
         /// <summary>
         /// Save to file
@@ -311,6 +334,22 @@ namespace FluentNPOI.Stages
                 _workbook.SetActiveSheet(index);
             }
             return this;
+        }
+
+        /// <summary>
+        /// Close and release workbook resources
+        /// </summary>
+        public void Close()
+        {
+            _workbook?.Close();
+        }
+
+        /// <summary>
+        /// Dispose workbook resources
+        /// </summary>
+        public void Dispose()
+        {
+            Close();
         }
     }
 }

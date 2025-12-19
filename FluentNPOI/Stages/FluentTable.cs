@@ -12,26 +12,22 @@ namespace FluentNPOI.Stages
     /// Table operation class
     /// </summary>
     /// <typeparam name="T">Table data type</typeparam>
-    public class FluentTable<T> : FluentSheetBase
+    public class FluentTable<T> : FluentCellBase
     {
         private IEnumerable<T> _table;
         private ExcelCol _startCol;
         private int _startRow;
-        private List<TableCellSet> _cellBodySets;
-        private List<TableCellSet> _cellTitleSets;
         private IReadOnlyList<ColumnMapping> _columnMappings;
 
         public FluentTable(IWorkbook workbook, ISheet sheet, IEnumerable<T> table,
             ExcelCol startCol, int startRow,
-            Dictionary<string, ICellStyle> cellStylesCached, List<TableCellSet> cellTitleSets, List<TableCellSet> cellBodySets)
+            Dictionary<string, ICellStyle> cellStylesCached)
             : base(workbook, sheet, cellStylesCached)
         {
             _table = table;
             // ExcelCol is already a valid column enum, no need to normalize
             _startCol = startCol;
             _startRow = NormalizeRow(startRow);
-            _cellTitleSets = cellTitleSets;
-            _cellBodySets = cellBodySets;
         }
 
         /// <summary>
@@ -50,173 +46,76 @@ namespace FluentNPOI.Stages
             return items[index];
         }
 
-        private void SetCellAction(List<TableCellSet> cellSets, IRow rowObj, int colIndex, int targetRowIndex, object item)
-        {
-            foreach (var cellset in cellSets)
-            {
-                var cell = rowObj.GetCell(colIndex) ?? rowObj.CreateCell(colIndex);
-
-                // Prioritize Value from TableCellNameMap, if not present, get from item
-                Func<TableCellParams, object> setValueAction = cellset.SetValueAction;
-                Func<TableCellParams, object> setFormulaValueAction = cellset.SetFormulaValueAction;
-
-                TableCellParams cellParams = new TableCellParams
-                {
-                    ColNum = (ExcelCol)colIndex,
-                    RowNum = targetRowIndex,
-                    RowItem = item
-                };
-                object value = cellset.CellValue ?? GetTableCellValue(cellset.CellName, item);
-                cellParams.CellValue = value;
-
-                // Prepare generic parameters (for generic delegate use)
-                var cellParamsT = new TableCellParams<T>
-                {
-                    ColNum = (ExcelCol)colIndex,
-                    RowNum = targetRowIndex,
-                    RowItem = item is T tItem ? tItem : default,
-                    CellValue = value
-                };
-
-                TableCellStyleParams cellStyleParams =
-                new TableCellStyleParams
-                {
-                    Workbook = _workbook,
-                    ColNum = (ExcelCol)colIndex,
-                    RowNum = targetRowIndex,
-                    RowItem = item
-                };
-                SetCellStyle(cell, cellset, cellStyleParams);
-
-                if (cellset.CellType == CellType.Formula)
-                {
-                    if (cellset.SetFormulaValueActionGeneric != null)
-                    {
-                        if (cellset.SetFormulaValueActionGeneric is Func<TableCellParams<T>, object> gFormula)
-                        {
-                            value = gFormula(cellParamsT);
-                        }
-                        else
-                        {
-                            value = cellset.SetFormulaValueActionGeneric.DynamicInvoke(cellParamsT);
-                        }
-                    }
-                    else if (setFormulaValueAction != null)
-                    {
-                        value = setFormulaValueAction(cellParams);
-                    }
-                    SetFormulaValue(cell, value);
-                }
-                else
-                {
-                    if (cellset.SetValueActionGeneric != null)
-                    {
-                        if (cellset.SetValueActionGeneric is Func<TableCellParams<T>, object> gValue)
-                        {
-                            value = gValue(cellParamsT);
-                        }
-                        else
-                        {
-                            value = cellset.SetValueActionGeneric.DynamicInvoke(cellParamsT);
-                        }
-                    }
-                    else if (setValueAction != null)
-                    {
-                        value = setValueAction(cellParams);
-                    }
-                    SetCellValue(cell, value, cellset.CellType);
-                }
-
-                colIndex++;
-            }
-        }
-
-        private FluentTable<T> SetRow(int rowOffset = 0)
-        {
-            if (_cellBodySets == null || _cellBodySets.Count == 0) return this;
-
-            var targetRowIndex = _startRow + rowOffset;
-
-            var item = GetItemAt(rowOffset);
-
-            int colIndex = (int)_startCol;
-            if (_cellTitleSets != null && _cellTitleSets.Count > 0)
-            {
-                var titleRowObj = _sheet.GetRow(_startRow) ?? _sheet.CreateRow(_startRow);
-                SetCellAction(_cellTitleSets, titleRowObj, colIndex, _startRow, item);
-                targetRowIndex++;
-            }
-
-            var rowObj = _sheet.GetRow(targetRowIndex) ?? _sheet.CreateRow(targetRowIndex);
-            SetCellAction(_cellBodySets, rowObj, colIndex, targetRowIndex, item);
-
-            return this;
-        }
-
-        /// <summary>
-        /// Write a row using FluentMapping
-        /// </summary>
-        private FluentTable<T> SetRowWithMapping(int rowOffset, bool writeTitle)
+        private FluentTable<T> SetRowWithMapping(int rowOffset, bool writeTitle, T item)
         {
             if (_columnMappings == null || _columnMappings.Count == 0) return this;
-
-            var item = GetItemAt(rowOffset);
-            var targetRowIndex = _startRow + rowOffset + (writeTitle ? 1 : 0);
 
             // Write title row (only for the first time)
             if (writeTitle && rowOffset == 0)
             {
-                foreach (var map in _columnMappings.Where(m => m.ColumnIndex.HasValue))
-                {
-                    // Calculate title row position for this column (add per-column offset)
-                    var titleRowIndex = _startRow + map.RowOffset;
-                    var titleRow = _sheet.GetRow(titleRowIndex) ?? _sheet.CreateRow(titleRowIndex);
-                    var colIdx = (int)map.ColumnIndex.Value;
-                    var cell = titleRow.GetCell(colIdx) ?? titleRow.CreateCell(colIdx);
-                    cell.SetCellValue(map.Title ?? map.Property?.Name ?? map.ColumnName ?? "");
+                WriteTitleRow();
+            }
 
-                    // Apply title style
-                    if (map.TitleStyleRef != null)
+            var targetRowIndex = _startRow + rowOffset + (writeTitle ? 1 : 0);
+            WriteDataRow(targetRowIndex, item);
+
+            return this;
+        }
+
+        private void WriteTitleRow()
+        {
+            foreach (var map in _columnMappings.Where(m => m.ColumnIndex.HasValue))
+            {
+                // Calculate title row position for this column (add per-column offset)
+                var titleRowIndex = _startRow + map.RowOffset;
+                var titleRow = _sheet.GetRow(titleRowIndex) ?? _sheet.CreateRow(titleRowIndex);
+                var colIdx = (int)map.ColumnIndex.Value;
+                var cell = titleRow.GetCell(colIdx) ?? titleRow.CreateCell(colIdx);
+                cell.SetCellValue(map.Title ?? map.Property?.Name ?? map.ColumnName ?? "");
+
+                // Apply title style
+                if (map.TitleStyleRef != null)
+                {
+                    string refKey = $"{_sheet.SheetName}_{map.TitleStyleRef.Column}{map.TitleStyleRef.Row}";
+                    if (_cellStylesCached.TryGetValue(refKey, out var cachedStyle))
                     {
-                        string refKey = $"{_sheet.SheetName}_{map.TitleStyleRef.Column}{map.TitleStyleRef.Row}";
-                        if (_cellStylesCached.TryGetValue(refKey, out var cachedStyle))
-                        {
-                            cell.CellStyle = cachedStyle;
-                        }
-                        else
-                        {
-                            var refRow = _sheet.GetRow(map.TitleStyleRef.Row);
-                            var refCell = refRow?.GetCell((int)map.TitleStyleRef.Column);
-                            if (refCell != null && refCell.CellStyle != null)
-                            {
-                                ICellStyle newCellStyle = _workbook.CreateCellStyle();
-                                newCellStyle.CloneStyleFrom(refCell.CellStyle);
-                                _cellStylesCached[refKey] = newCellStyle;
-                                cell.CellStyle = newCellStyle;
-                            }
-                        }
+                        cell.CellStyle = cachedStyle;
                     }
-                    else if (!string.IsNullOrEmpty(map.TitleStyleKey) && _cellStylesCached.TryGetValue(map.TitleStyleKey, out var titleStyle))
+                    else
                     {
-                        cell.CellStyle = titleStyle;
-                    }
-                    else if (cell.CellStyle.Index == 0) // Try global style
-                    {
-                        // Prioritize Sheet global style, if not present, use Workbook global style
-                        string sheetGlobalKey = $"global_{_sheet.SheetName}";
-                        if (_cellStylesCached.TryGetValue(sheetGlobalKey, out var sheetGlobalStyle))
+                        var refRow = _sheet.GetRow(map.TitleStyleRef.Row);
+                        var refCell = refRow?.GetCell((int)map.TitleStyleRef.Column);
+                        if (refCell != null && refCell.CellStyle != null)
                         {
-                            cell.CellStyle = sheetGlobalStyle;
-                        }
-                        else if (_cellStylesCached.TryGetValue("global", out var workbookGlobalStyle))
-                        {
-                            cell.CellStyle = workbookGlobalStyle;
+                            ICellStyle newCellStyle = _workbook.CreateCellStyle();
+                            newCellStyle.CloneStyleFrom(refCell.CellStyle);
+                            _cellStylesCached[refKey] = newCellStyle;
+                            cell.CellStyle = newCellStyle;
                         }
                     }
                 }
+                else if (!string.IsNullOrEmpty(map.TitleStyleKey) && _cellStylesCached.TryGetValue(map.TitleStyleKey, out var titleStyle))
+                {
+                    cell.CellStyle = titleStyle;
+                }
+                else if (cell.CellStyle.Index == 0) // Try global style
+                {
+                    // Prioritize Sheet global style, if not present, use Workbook global style
+                    string sheetGlobalKey = $"global_{_sheet.SheetName}";
+                    if (_cellStylesCached.TryGetValue(sheetGlobalKey, out var sheetGlobalStyle))
+                    {
+                        cell.CellStyle = sheetGlobalStyle;
+                    }
+                    else if (_cellStylesCached.TryGetValue("global", out var workbookGlobalStyle))
+                    {
+                        cell.CellStyle = workbookGlobalStyle;
+                    }
+                }
             }
+        }
 
-            // Write data row
+        private void WriteDataRow(int targetRowIndex, T item)
+        {
             foreach (var map in _columnMappings.Where(m => m.ColumnIndex.HasValue))
             {
                 // Calculate data row position for this column (add per-column offset)
@@ -228,7 +127,7 @@ namespace FluentNPOI.Stages
                 // Formula first
                 if (map.FormulaFunc != null)
                 {
-                    var formula = map.FormulaFunc(targetRowIndex + 1, (ExcelCol)colIdx); // Excel 是 1-based
+                    var formula = map.FormulaFunc(targetRowIndex + 1, (ExcelCol)colIdx); // Excel is 1-based
                     cell.SetCellFormula(formula);
                 }
                 else
@@ -318,29 +217,26 @@ namespace FluentNPOI.Stages
                     }
                 }
             }
-
-            return this;
         }
 
 
         public FluentTable<T> BuildRows()
         {
+            // Iterate directly to support Streaming (IEnumerable)
+            int i = 0;
+
             // If FluentMapping exists, write using mapping
             if (_columnMappings != null)
             {
                 bool writeTitle = _columnMappings.Any(m => !string.IsNullOrEmpty(m.Title));
-                for (int i = 0; i < _table.Count(); i++)
+
+                foreach (var item in _table)
                 {
-                    SetRowWithMapping(i, writeTitle);
+                    SetRowWithMapping(i, writeTitle, item);
+                    i++;
                 }
-                return this;
             }
 
-            // Otherwise use original method
-            for (int i = 0; i < _table.Count(); i++)
-            {
-                SetRow(i);
-            }
             return this;
         }
 
