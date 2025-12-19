@@ -49,6 +49,12 @@ namespace FluentNPOIConsoleExample
                 CreateCellMergeExample(fluent);
                 CreatePictureExample(fluent);
 
+                // Smart Pipeline example
+                CreateSmartPipelineExample(testData);
+
+                // DOM Edit example
+                CreateDomEditExample();
+
                 // Save file
                 fluent.SaveToPath(outputPath);
                 Console.WriteLine($"✓ 檔案儲存至: {outputPath}");
@@ -688,6 +694,93 @@ namespace FluentNPOIConsoleExample
             }
 
             Console.WriteLine("  ✓ PictureExample 建立完成");
+        }
+
+        /// <summary>
+        /// Example 10: Smart Pipeline (Streaming & Legacy)
+        /// </summary>
+        static void CreateSmartPipelineExample(List<ExampleData> testData)
+        {
+            Console.WriteLine("建立 SmartPipelineExample...");
+
+            var mapping = new FluentMapping<ExampleData>();
+            mapping.Map(x => x.Name).ToColumn(ExcelCol.A).WithTitle("姓名");
+            mapping.Map(x => x.Score).ToColumn(ExcelCol.B).WithTitle("分數");
+            mapping.Map(x => x.IsActive).ToColumn(ExcelCol.C).WithTitle("狀態");
+
+            // 1. 產生來源檔案 (模擬用)
+            var sourceFile = @$"{AppDomain.CurrentDomain.BaseDirectory}\Resources\Source.xlsx";
+            var wb = new FluentWorkbook(new XSSFWorkbook());
+            wb.UseSheet("Data").SetTable(testData, mapping).BuildRows();
+            wb.SaveToFile(sourceFile);
+
+            // 2. 串流處理：輸出為 .xlsx (SXSSF - 高速)
+            var outFileXlsx = @$"{AppDomain.CurrentDomain.BaseDirectory}\Resources\Pipeline_Out.xlsx";
+
+            FluentWorkbook.Stream<ExampleData>(sourceFile)
+                .Transform(d =>
+                {
+                    d.Name += " (Streamed)";
+                    d.Score += 1.1; // 加分 10%
+                })
+                .WithMapping(mapping)
+                .Configure(sheet =>
+                {
+                    sheet.SetColumnWidth(ExcelCol.A, 40);
+                    sheet.FreezeTitleRow();
+                })
+                .SaveAs(outFileXlsx);
+
+            Console.WriteLine($"  ✓ Pipeline (XLSX) 處理完成: {outFileXlsx}");
+
+            // 3. 相容處理：輸出為 .xls (HSSF - DOM)
+            var outFileXls = @$"{AppDomain.CurrentDomain.BaseDirectory}\Resources\Pipeline_Out.xls";
+
+            FluentWorkbook.Stream<ExampleData>(sourceFile)
+                .Transform(d => d.Name += " (Legacy)")
+                .WithMapping(mapping)
+                .SaveAs(outFileXls);
+
+            Console.WriteLine($"  ✓ Pipeline (XLS) 處理完成: {outFileXls}");
+        }
+
+        /// <summary>
+        /// Example 11: DOM Edit (Modify existing file)
+        /// </summary>
+        static void CreateDomEditExample()
+        {
+            Console.WriteLine("建立 DomEditExample (原地編輯)...");
+
+            var templateFile = @$"{AppDomain.CurrentDomain.BaseDirectory}\Resources\Template.xlsx";
+            var editedFile = @$"{AppDomain.CurrentDomain.BaseDirectory}\Resources\Edited.xlsx";
+
+            // 1. 準備一個範本檔案 (包含一些假資料)
+            var wb = new FluentWorkbook(new XSSFWorkbook());
+            wb.UseSheet("Report")
+              .SetCellPosition(ExcelCol.A, 1).SetValue("Title: Monthly Report")
+              .SetCellPosition(ExcelCol.A, 2).SetValue("Generated: [DATE]")
+              .SetCellPosition(ExcelCol.B, 5).SetValue("Data Area");
+
+            wb.SaveToFile(templateFile).Close();
+
+            // 2. 載入並修改 (Load -> Edit -> Save)
+            // 這裡使用 ReadExcelFile，它會將整份檔案載入記憶體 (DOM)
+            // 所以原本的 "Data Area" 會被保留，我們只修改我們觸碰的儲存格
+            var editor = new FluentWorkbook(new XSSFWorkbook());
+            editor.ReadExcelFile(templateFile);
+
+            editor.UseSheet("Report")
+                  // 修改標題
+                  .SetCellPosition(ExcelCol.A, 1).SetValue("Title: Final Report 2024")
+                  // 填入日期
+                  .SetCellPosition(ExcelCol.A, 2).SetValue($"Generated: {DateTime.Now:yyyy-MM-dd}")
+                  // 新增一些數據
+                  .SetCellPosition(ExcelCol.A, 10).SetValue("Approved by Manager");
+
+            editor.SaveToFile(editedFile);
+            editor.Close();
+
+            Console.WriteLine($"  ✓ DOM 編輯完成: {editedFile}");
         }
 
         #endregion

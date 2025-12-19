@@ -47,6 +47,11 @@ namespace FluentNPOI.Stages
         /// </summary>
         /// <param name="stream">Excel file stream</param>
         /// <returns>FluentWorkbook instance, supports method chaining</returns>
+        /// <summary>
+        /// Read Excel from stream
+        /// </summary>
+        /// <param name="stream">Excel file stream</param>
+        /// <returns>FluentWorkbook instance, supports method chaining</returns>
         public FluentWorkbook ReadExcelStream(Stream stream)
         {
             if (stream == null) throw new ArgumentNullException(nameof(stream));
@@ -68,6 +73,34 @@ namespace FluentNPOI.Stages
             }
 
             return this;
+        }
+
+        /// <summary>
+        /// Create a Streaming Pipeline Builder (Read-Modify-Write)
+        /// </summary>
+        /// <typeparam name="T">Data Model Type</typeparam>
+        /// <param name="filePath">Input file path</param>
+        /// <returns>StreamingBuilder</returns>
+        /// <example>
+        /// <code>
+        /// FluentWorkbook.Stream&lt;MyData&gt;("data.xlsx")
+        ///     .SaveAs("output.xlsx");
+        /// </code>
+        /// </example>
+        public static StreamingBuilder<T> Stream<T>(string filePath) where T : new()
+        {
+            return new StreamingBuilder<T>(filePath);
+        }
+
+        /// <summary>
+        /// Create a Streaming Pipeline Builder (Read-Modify-Write)
+        /// </summary>
+        /// <typeparam name="T">Data Model Type</typeparam>
+        /// <param name="stream">Input stream</param>
+        /// <returns>StreamingBuilder</returns>
+        public static StreamingBuilder<T> Stream<T>(System.IO.Stream stream) where T : new()
+        {
+            return new StreamingBuilder<T>(stream);
         }
 
         /// <summary>

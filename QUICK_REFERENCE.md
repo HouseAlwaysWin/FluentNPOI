@@ -14,9 +14,27 @@ fluent.UseSheet("Sheet1")
     .SetValue("Hello");
 
 // 儲存 / Save
-fluent.SaveToPath("output.xlsx");
+fluent.SaveAs("output.xlsx"); // 使用 SXSSF (高速/低記憶體)
+    // .SaveAs("output.xls");  // 自動切換為 HSSF (相容模式)
 ```
 
+> [!WARNING]
+> **模式差異與資料遺失警告 / Mode Differences & Data Loss Warning**
+>
+> `FluentWorkbook.Stream` 為了極致效能，會建立**全新的檔案**進行寫入。
+> `FluentWorkbook.Stream` creates a **NEW file** for performance.
+>
+> | 特性 / Feature | 串流模式 (Stream) | DOM 模式 (ReadExcelFile) |
+> | :--- | :--- | :--- |
+> | **用途 / Usage** | 純資料處理 (ETL) | 修改現有檔案 (Modify) |
+> | **記憶體 / Memory** | 🟢 極低 (Low) | 🟡 高 (High - Load All) |
+> | **圖表 / Charts** | 🔴 **遺失 (Lost)** | 🟢 **保留 (Kept)** |
+> | **巨集 / Macros** | 🔴 **遺失 (Lost)** | 🟢 **保留 (Kept)** |
+> | **圖片 / Images** | 🔴 **遺失 (Lost)** | 🟢 **保留 (Kept)** |
+>
+> 若需保留原始檔案的圖表與巨集，請改用 `new FluentWorkbook(BookFactory.Create("file.xlsx"))`。
+
+---
 ### 📖 基本讀取 / Basic Read
 
 ```csharp

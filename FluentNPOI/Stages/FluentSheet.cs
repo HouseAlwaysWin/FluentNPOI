@@ -139,8 +139,34 @@ namespace FluentNPOI.Stages
         /// <returns>FluentSheet instance, supports method chaining</returns>
         public FluentSheet SetExcelCellMerge(ExcelCol startCol, ExcelCol endCol, int firstRow, int lastRow)
         {
-            _sheet.SetExcelCellMerge(startCol, endCol, firstRow, lastRow);
-            return new FluentSheet(_workbook, _sheet, _cellStylesCached);
+            var region = new NPOI.SS.Util.CellRangeAddress(firstRow - 1, lastRow - 1, (int)startCol, (int)endCol);
+            _sheet.AddMergedRegion(region);
+            return this;
+        }
+
+        /// <summary>
+        /// Freeze Pane (Split window)
+        /// </summary>
+        /// <param name="colSplit">Horizontal split position (column count)</param>
+        /// <param name="rowSplit">Vertical split position (row count)</param>
+        /// <param name="leftmostColumn">Top row visible in bottom pane</param>
+        /// <param name="topRow">Left column visible in right pane</param>
+        /// <returns>FluentSheet instance</returns>
+        public FluentSheet CreateFreezePane(int colSplit, int rowSplit, int leftmostColumn = 0, int topRow = 0)
+        {
+            _sheet.CreateFreezePane(colSplit, rowSplit, leftmostColumn, topRow);
+            return this;
+        }
+
+        /// <summary>
+        /// Freeze Title Row (Fix first row)
+        /// </summary>
+        /// <param name="rowCount">Number of rows to freeze (default 1)</param>
+        /// <returns>FluentSheet instance</returns>
+        public FluentSheet FreezeTitleRow(int rowCount = 1)
+        {
+            _sheet.CreateFreezePane(0, rowCount);
+            return this;
         }
 
         /// <summary>
