@@ -55,6 +55,9 @@ namespace FluentNPOIConsoleExample
                 // DOM Edit example
                 CreateDomEditExample();
 
+                // HTML Export example
+                CreateHtmlExportExample(fluent);
+
                 // Save file
                 fluent.SaveToPath(outputPath);
                 Console.WriteLine($"✓ 檔案儲存至: {outputPath}");
@@ -781,6 +784,78 @@ namespace FluentNPOIConsoleExample
             editor.Close();
 
             Console.WriteLine($"  ✓ DOM 編輯完成: {editedFile}");
+        }
+
+        /// <summary>
+        /// Example 12: Export to HTML
+        /// </summary>
+        static void CreateHtmlExportExample(FluentWorkbook fluent)
+        {
+            Console.WriteLine("建立 HtmlExportExample...");
+
+            var htmlPath = @$"{AppDomain.CurrentDomain.BaseDirectory}\Resources\ExportedRequest.html";
+
+            // 1. 建立一個展示用 Sheet，包含合併、顏色與字體
+            Console.WriteLine("  > 正在建立 'HtmlDemo' Sheet 以展示樣式支援...");
+
+            // 定義樣式
+            fluent.SetupCellStyle("MergedTitle", (w, s) =>
+            {
+                s.SetAlignment(HorizontalAlignment.Center);
+                s.SetFontInfo(w, fontFamily: "Arial", fontHeight: 16, isBold: true);
+                s.FillPattern = FillPattern.SolidForeground;
+                s.SetCellFillForegroundColor(IndexedColors.LightCornflowerBlue);
+                s.SetBorderAllStyle(BorderStyle.Thick); // Add Thick Border
+            });
+
+            fluent.SetupCellStyle("RedBg", (w, s) =>
+            {
+                s.FillPattern = FillPattern.SolidForeground;
+                s.SetCellFillForegroundColor(IndexedColors.Red);
+                s.SetFontInfo(w, color: IndexedColors.White);
+                s.SetAlignment(HorizontalAlignment.Center);
+            });
+
+            fluent.SetupCellStyle("GreenText", (w, s) =>
+            {
+                s.SetFontInfo(w, color: IndexedColors.Green, isItalic: true, isBold: true);
+                s.SetBorderAllStyle(BorderStyle.Dotted); // Add Dotted Border
+            });
+
+            fluent.SetupCellStyle("NumberFmt", (w, s) =>
+            {
+                s.SetDataFormat(w, "#,##0.00");
+            });
+
+            // 建立 Sheet 內容
+            var sheet = fluent.UseSheet("HtmlDemo", true);
+
+            // A1: 合併標題
+            sheet.SetCellPosition(ExcelCol.A, 1).SetValue("HTML Export Feature Demo")
+                 .SetCellStyle("MergedTitle");
+
+            sheet.SetExcelCellMerge(ExcelCol.A, ExcelCol.C, 1, 1);
+
+            // A2: 紅色背景
+            sheet.SetCellPosition(ExcelCol.A, 2).SetValue("Red Background")
+                 .SetCellStyle("RedBg");
+
+            // B2: 綠色文字
+            sheet.SetCellPosition(ExcelCol.B, 2).SetValue("Green Italic Text")
+                 .SetCellStyle("GreenText");
+
+            // C2: 普通數值
+            sheet.SetCellPosition(ExcelCol.C, 2).SetValue(1234.56)
+                 .SetCellStyle("NumberFmt");
+
+            // 2. 匯出為 HTML
+            fluent.SaveAsHtml(htmlPath, fullHtml: true);
+
+            // 3. 取得 HTML 字串 (僅表格片段)
+            var htmlFragment = fluent.ToHtmlString(fullHtml: false);
+
+            Console.WriteLine($"  ✓ HTML 匯出完成: {htmlPath}");
+            Console.WriteLine($"  ✓ HTML 片段預覽 (前 100 字): {htmlFragment.Substring(0, Math.Min(100, htmlFragment.Length))}...");
         }
 
         #endregion

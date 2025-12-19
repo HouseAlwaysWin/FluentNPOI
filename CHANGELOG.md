@@ -5,6 +5,30 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.0] - 2025-12-XX
+
+### Major Features
+
+- 🚀 **智慧串流處理 (Smart Pipeline)**
+  - 統一使用 `FluentWorkbook.Stream<T>` API，自動判斷背端引擎
+  - 支援輸出為 `.xlsx` (SXSSF - 高速串流) 與 `.xls` (HSSF - DOM 相容)
+  - 自動偵測輸出副檔名並切換適合的寫入策略，讓一套代碼通吃新舊格式
+- 🏗️ **DOM 原地編輯模式**
+  - 明確支援使用 `ReadExcelFile` 進行 DOM 模式編輯
+  - 驗證可保留原始檔案的圖表、巨集與圖片 (Non-destructive editing)
+- 🧊 **凍結窗格支援**
+  - `FluentSheet`: 新增 `CreateFreezePane` (自訂凍結) 與 `FreezeTitleRow` (快速凍結首列)
+- 🌐 **Excel 轉 HTML**
+  - 新增 `SaveAsHtml` 與 `ToHtmlString` 方法
+  - 支援將 Excel 工作表轉換為 HTML 表格
+  - **完整支援**：CSS 樣式生成 (包含背景色/文字顏色/邊框)、合併儲存格 (`colspan`/`rowspan`) 與數值格式化
+
+### Documentation
+
+- 📚 **文件更新**
+  - `QUICK_REFERENCE.md`: 新增 Smart Pipeline 與 DOM 模式的比較表 (記憶體 vs 資料完整性)
+  - `ConsoleExample`: 新增 `CreateSmartPipelineExample` 與 `CreateDomEditExample` 範例程式
+
 ## [2.0.1] - 2025-12-19
 
 ### Improvements

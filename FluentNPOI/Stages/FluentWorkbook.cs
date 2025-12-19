@@ -272,6 +272,38 @@ namespace FluentNPOI.Stages
         }
 
         /// <summary>
+        /// Save current sheet as HTML file
+        /// </summary>
+        /// <param name="filePath">Output path</param>
+        /// <param name="fullHtml">Generate full HTML (html/body tags)</param>
+        /// <returns>FluentWorkbook instance</returns>
+        public FluentWorkbook SaveAsHtml(string filePath, bool fullHtml = true)
+        {
+            if (_currentSheet == null) throw new InvalidOperationException("No active sheet selected.");
+            var html = FluentNPOI.Html.HtmlConverter.ConvertSheetToHtml(_currentSheet, fullHtml);
+
+            var dir = Path.GetDirectoryName(filePath);
+            if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir))
+            {
+                Directory.CreateDirectory(dir);
+            }
+
+            File.WriteAllText(filePath, html);
+            return this;
+        }
+
+        /// <summary>
+        /// Get current sheet as HTML string
+        /// </summary>
+        /// <param name="fullHtml">Generate full HTML</param>
+        /// <returns>HTML string</returns>
+        public string ToHtmlString(bool fullHtml = true)
+        {
+            if (_currentSheet == null) throw new InvalidOperationException("No active sheet selected.");
+            return FluentNPOI.Html.HtmlConverter.ConvertSheetToHtml(_currentSheet, fullHtml);
+        }
+
+        /// <summary>
         /// Get sheet count
         /// </summary>
         public int SheetCount => _workbook.NumberOfSheets;
