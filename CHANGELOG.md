@@ -5,9 +5,31 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0] - 2025-12-19
+
+### Major Features
+
+- 🎨 **FluentMapping 直接樣式配置**：在 Mapping 定義中直接設定樣式，無需額外回調
+  - 新增 `WithNumberFormat`, `WithBackgroundColor`, `WithFont`, `WithBorder`, `WithAlignment`, `WithWrapText`
+  - 支援自動樣式緩存與管理
+- 🛠️ **強化的 FluentCell API**
+  - 新增 `SetFormula` (支援公式寫入)
+  - 新增 `SetFunction`, `SetFont`, `SetBorder`, `SetAlignment`, `SetBackgroundColor` 便利方法
+  - 新增 `CopyStyleFrom` 從其他儲存格複製樣式
+- 📊 **表格與工作表管理增強**
+  - `FluentSheet`: 新增 `SetRowHeight`, `SetDefaultRowHeight`, `SetDefaultColumnWidth`
+  - `FluentWorkbook`: 新增 `CloneSheet`, `RenameSheet`, `DeleteSheet`, `SetActiveSheet`, `SaveToStream`
+  - `FluentTable`: 支援 `StartRow` (自定義起始列) 與 `RowOffset` (欄位偏移)
+
+### Improvements
+
+- 📝 **文件大改版**：README 全面更新，提供更清晰的 API 參考與範例
+- 🧪 **測試重構**：單元測試拆分為獨立檔案，提升維護性
+
 ## [1.2.1] - 2025-01-XX
 
 ### Fixed
+
 - 🔧 **修正 `FluentCell.SetCellPosition` 方法**
   - 新增 `FluentCell.SetCellPosition` 方法，支持在 `FluentCell` 對象上重新設置單元格位置
   - 支持鏈式調用，可在設置圖片或其他操作後繼續設置其他單元格
@@ -16,6 +38,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.2.0] - 2025-01-XX
 
 ### Added
+
 - 🖼️ **圖片插入功能**：新增 `SetPictureOnCell` 方法，支持在 Excel 單元格中插入圖片
   - 自動檢測圖片格式（PNG, JPEG, GIF, BMP/DIB, EMF, WMF），無需手動指定格式
   - 支持自動計算高度（1:1 比例）或手動指定寬度和高度
@@ -30,7 +53,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - 自動計算圖片在單元格中的位置和大小，確保圖片正確顯示
 
 ### Fixed
+
 - 🔧 **修正 `GetCellValue<T>` 對 `DateTime` 類型的處理**
+
   - 正確識別日期格式單元格（使用 `DateUtil.IsCellDateFormatted`）
   - 支持將 Excel 數字日期轉換為 `DateTime`（使用 `DateUtil.GetJavaDate`）
   - 支持字符串日期解析（使用 `DateTime.TryParse`）
@@ -41,6 +66,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - 移除了不必要的 `NormalizeCol` 調用，因為 `ExcelCol` 已經是枚舉類型，無需標準化
 
 ### Improved
+
 - 📦 **測試代碼重構**：提升代碼可維護性和可讀性
   - 將測試類拆分為獨立文件，每個測試類一個文件
   - 保持命名空間和測試邏輯不變
@@ -48,6 +74,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - 文件結構更清晰，便於擴展新測試
 
 ### Documentation
+
 - 📚 **更新 README.md**
   - 添加圖片插入功能的詳細說明和示例
   - 包含 `pictureAction` 參數的使用說明
@@ -57,6 +84,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.1.0] - 2025-12-04
 
 ### Added
+
 - ✨ **自動判斷最後一行功能**：`GetTable<T>` 方法新增重載，可自動檢測表格的最後一行，無需手動指定結束行
   - 新增 `GetTable<T>(ExcelColumns startCol, int startRow)` 方法
   - 自動從最後一行向上查找，找到第一個有數據的行
@@ -64,12 +92,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - 完全向後兼容，原有的 `GetTable<T>(ExcelColumns startCol, int startRow, int endRow)` 方法仍然可用
 
 ### Changed
+
 - 📚 **文檔更新**：README.md 英文版已與中文版完全同步
   - 補充了所有缺失的功能說明和範例
   - 包含完整的 API 參考文檔
   - 添加了進階範例和最佳實踐
 
 ### Testing
+
 - ✅ 新增 9 個單元測試用例，全面測試自動判斷最後一行功能
   - 基本功能測試
   - 與手動指定結束行的對比測試
@@ -78,14 +108,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - 單行數據測試
   - 空工作表測試
   - 不同數據類型測試
-  - 大數據集測試（100行）
+  - 大數據集測試（100 行）
 
 ### Examples
+
 - 📝 更新了控制台範例，展示自動判斷最後一行的使用方法
 
 ## [Unreleased]
 
 ### Added
+
 - Initial release of NPOIPlus
 - Fluent API for Excel operations
 - Support for writing data to Excel
@@ -101,6 +133,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Features
 
 #### Core Classes
+
 - `FluentWorkbook` - Main entry point for fluent API
 - `FluentSheet` - Sheet-level operations
 - `FluentCell` - Cell-level operations
@@ -109,12 +142,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `FluentTableCell<T>` - Table cell configuration
 
 #### Base Classes
+
 - `FluentWorkbookBase` - Common workbook operations
 - `FluentCellBase` - Cell value and style operations
 - `FluentSheetBase` - Sheet base operations
 - `FluentTableBase<T>` - Table base operations
 
 #### Models
+
 - `ExcelColumns` - Column enumeration (A-ZZ)
 - `CellStyleConfig` - Style configuration with caching support
 - `TableCellSet` - Cell configuration model
@@ -122,17 +157,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `TableCellStyleParams` - Style parameters
 
 #### Helpers
+
 - `FluentMemoryStream` - Memory stream wrapper
 - `FluentNPOIExtensions` - Rich extension methods
 
 #### Key Features
+
 - **Style Management**
+
   - Global style configuration
   - Named style registry
   - Dynamic style with data-based conditions
   - Style caching to prevent Excel limit issues
 
 - **Data Operations**
+
   - Read/Write single cells
   - Batch table data binding
   - Support for multiple data types (string, number, date, boolean)
@@ -146,6 +185,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Read existing Excel files
 
 ### Examples
+
 - Basic read/write operations
 - Table data binding with `List<T>`
 - DataTable support
@@ -154,6 +194,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Multi-sheet operations
 
 ### Documentation
+
 - Comprehensive README (Chinese and English)
 - API reference
 - Code examples
@@ -162,6 +203,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.0.0] - 2024-12-01
 
 ### Added
+
 - Initial stable release
 
 ---
@@ -171,6 +213,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Planned Features (Future Releases)
 
 #### v1.1.0
+
 - [ ] Support for .xls (HSSF) format
 - [ ] Image insertion support
 - [ ] Chart creation support
@@ -178,12 +221,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [ ] Conditional formatting presets
 
 #### v1.2.0
+
 - [ ] Template support
 - [ ] Batch file processing
 - [ ] Performance optimizations
 - [ ] Async/await support
 
 #### v2.0.0
+
 - [ ] Complete API redesign
 - [ ] Plugin system
 - [ ] Custom formula functions
@@ -196,6 +241,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### From Direct NPOI Usage
 
 Before (Direct NPOI):
+
 ```csharp
 var workbook = new XSSFWorkbook();
 var sheet = workbook.CreateSheet("Sheet1");
@@ -214,6 +260,7 @@ using (var fs = new FileStream("output.xlsx", FileMode.Create))
 ```
 
 After (NPOIPlus):
+
 ```csharp
 var fluent = new FluentWorkbook(new XSSFWorkbook());
 
@@ -255,5 +302,3 @@ Thanks to all contributors who helped build NPOIPlus!
 - Report bugs: [GitHub Issues](../../issues)
 - Ask questions: [GitHub Discussions](../../discussions)
 - Email: [martinwang7963@gmail.com]
-
-
