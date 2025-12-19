@@ -38,7 +38,7 @@ namespace FluentNPOI.Base
 
         protected int NormalizeRow(int row)
         {
-            // 將使用者常見的 1-based 列號轉為 0-based，並確保不為負數
+            // Convert 1-based row index (common for users) to 0-based, ensuring it's not negative
             if (row < 1) return 0;
             return row - 1;
         }

@@ -36,7 +36,7 @@ DateTime date = sheet.GetCellValue<DateTime>(ExcelColumns.C, 1);
 // 全局樣式 / Global style
 fluent.SetupGlobalCachedCellStyles((wb, style) =>
 {
-    style.SetAligment(HorizontalAlignment.Center);
+    style.SetAlignment(HorizontalAlignment.Center);
     style.SetBorderAllStyle(BorderStyle.Thin);
 });
 
@@ -182,7 +182,7 @@ sheet.SetExcelCellMerge(ExcelColumns.A, ExcelColumns.C, 1, 3);    // 區域 / Ra
 
 // 取得單元格 / Get Cell
 var cell = sheet.GetExcelCell(ExcelColumns.A, 1);
-var row = sheet.GetExcellRow(1);
+var row = sheet.GetExcelRow(1);
 ```
 
 ---

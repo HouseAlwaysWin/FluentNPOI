@@ -9,7 +9,7 @@ using FluentNPOI.Streaming.Rows;
 namespace FluentNPOI.Streaming.Readers
 {
     /// <summary>
-    /// ExcelDataReader 串流讀取器實作
+    /// ExcelDataReader streaming reader implementation
     /// </summary>
     public class ExcelDataReaderAdapter : IStreamingReader
     {
@@ -21,12 +21,12 @@ namespace FluentNPOI.Streaming.Readers
 
         static ExcelDataReaderAdapter()
         {
-            // 註冊編碼提供者 (ExcelDataReader 需要)
+            // Register encoding provider (required by ExcelDataReader)
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
         }
 
         /// <summary>
-        /// 從檔案路徑建立讀取器
+        /// Create reader from file path
         /// </summary>
         public ExcelDataReaderAdapter(string filePath)
             : this(File.OpenRead(filePath), true)
@@ -34,7 +34,7 @@ namespace FluentNPOI.Streaming.Readers
         }
 
         /// <summary>
-        /// 從 Stream 建立讀取器
+        /// Create reader from Stream
         /// </summary>
         public ExcelDataReaderAdapter(Stream stream, bool ownsStream = false)
         {
@@ -43,13 +43,13 @@ namespace FluentNPOI.Streaming.Readers
             _reader = ExcelReaderFactory.CreateReader(_stream);
             _sheetNames = new List<string>();
 
-            // 取得所有工作表名稱
+            // Get all sheet names
             do
             {
                 _sheetNames.Add(_reader.Name);
             } while (_reader.NextResult());
 
-            // 重置到第一個工作表
+            // Reset to first sheet
             _reader.Reset();
         }
 

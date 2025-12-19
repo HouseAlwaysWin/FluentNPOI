@@ -1,37 +1,37 @@
 namespace FluentNPOI.Streaming.Abstractions
 {
     /// <summary>
-    /// 串流讀取的單行資料介面
+    /// Streaming read single row data interface
     /// </summary>
     public interface IStreamingRow
     {
         /// <summary>
-        /// 行號 (0-based)
+        /// Row index (0-based)
         /// </summary>
         int RowIndex { get; }
 
         /// <summary>
-        /// 欄位數量
+        /// Column count
         /// </summary>
         int ColumnCount { get; }
 
         /// <summary>
-        /// 取得指定欄位的值
+        /// Get value of specified column
         /// </summary>
-        /// <param name="columnIndex">欄位索引 (0-based)</param>
-        /// <returns>欄位值，可能為 null</returns>
+        /// <param name="columnIndex">Column index (0-based)</param>
+        /// <returns>Column value, may be null</returns>
         object GetValue(int columnIndex);
 
         /// <summary>
-        /// 取得指定欄位的值並轉換為指定型別
+        /// Get value of specified column and convert to specified type
         /// </summary>
-        /// <typeparam name="T">目標型別</typeparam>
-        /// <param name="columnIndex">欄位索引 (0-based)</param>
-        /// <returns>轉換後的值</returns>
+        /// <typeparam name="T">Target type</typeparam>
+        /// <param name="columnIndex">Column index (0-based)</param>
+        /// <returns>Converted value</returns>
         T GetValue<T>(int columnIndex);
 
         /// <summary>
-        /// 檢查指定欄位是否為空
+        /// Check if specified column is null
         /// </summary>
         bool IsNull(int columnIndex);
     }

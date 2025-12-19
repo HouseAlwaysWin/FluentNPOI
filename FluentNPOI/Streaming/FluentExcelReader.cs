@@ -7,17 +7,17 @@ using FluentNPOI.Streaming.Readers;
 namespace FluentNPOI.Streaming
 {
     /// <summary>
-    /// FluentNPOI 串流讀取入口
+    /// FluentNPOI streaming reader entry point
     /// </summary>
     public static class FluentExcelReader
     {
         /// <summary>
-        /// 使用 Header 自動對應讀取 Excel
+        /// Read Excel using Header auto-mapping
         /// </summary>
-        /// <typeparam name="T">目標型別</typeparam>
-        /// <param name="filePath">檔案路徑</param>
-        /// <param name="sheetName">工作表名稱 (選填)</param>
-        /// <returns>物件列舉</returns>
+        /// <typeparam name="T">Target type</typeparam>
+        /// <param name="filePath">File path</param>
+        /// <param name="sheetName">Sheet name (optional)</param>
+        /// <returns>Object enumeration</returns>
         public static IEnumerable<T> Read<T>(string filePath, string sheetName = null) where T : new()
         {
             using (var reader = new ExcelDataReaderAdapter(filePath))
@@ -25,7 +25,7 @@ namespace FluentNPOI.Streaming
                 if (!string.IsNullOrEmpty(sheetName))
                     reader.SelectSheet(sheetName);
 
-                // 讀取 Header 建立自動 Mapping
+                // Read Header to create auto Mapping
                 var headers = reader.ReadHeader();
                 var mapper = CreateAutoMapper<T>(headers);
 
@@ -37,13 +37,13 @@ namespace FluentNPOI.Streaming
         }
 
         /// <summary>
-        /// 使用 FluentMapping 讀取 Excel
+        /// Read Excel using FluentMapping
         /// </summary>
-        /// <typeparam name="T">目標型別</typeparam>
-        /// <param name="filePath">檔案路徑</param>
-        /// <param name="mapping">Mapping 設定</param>
-        /// <param name="sheetName">工作表名稱 (選填)</param>
-        /// <returns>物件列舉</returns>
+        /// <typeparam name="T">Target type</typeparam>
+        /// <param name="filePath">File path</param>
+        /// <param name="mapping">Mapping configuration</param>
+        /// <param name="sheetName">Sheet name (optional)</param>
+        /// <returns>Object enumeration</returns>
         public static IEnumerable<T> Read<T>(string filePath, FluentMapping<T> mapping, string sheetName = null) where T : new()
         {
             using (var reader = new ExcelDataReaderAdapter(filePath))
@@ -62,7 +62,7 @@ namespace FluentNPOI.Streaming
         }
 
         /// <summary>
-        /// 建立管線以進行更細緻的控制
+        /// Create pipeline for more granular control
         /// </summary>
         public static StreamingPipeline<T> CreatePipeline<T>(string filePath, FluentMapping<T> mapping) where T : new()
         {
@@ -81,12 +81,12 @@ namespace FluentNPOI.Streaming
                 if (string.IsNullOrEmpty(headerName))
                     continue;
 
-                // 找到名稱匹配的屬性
+                // Find property with matching name
                 foreach (var prop in properties)
                 {
                     if (string.Equals(prop.Name, headerName, System.StringComparison.OrdinalIgnoreCase))
                     {
-                        // 使用反射設定 mapping (簡化版)
+                        // Use reflection to set mapping (simplified version)
                         mapping.AddInternalMapping(prop, (FluentNPOI.Models.ExcelCol)i);
                         break;
                     }

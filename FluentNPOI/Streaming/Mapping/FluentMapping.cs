@@ -8,22 +8,22 @@ using FluentNPOI.Streaming.Abstractions;
 namespace FluentNPOI.Streaming.Mapping
 {
     /// <summary>
-    /// Fluent Mapping 配置，用於定義 Excel 欄位與屬性的對應
+    /// Fluent Mapping configuration, used to define mapping between Excel columns and properties
     /// </summary>
-    /// <typeparam name="T">目標型別</typeparam>
+    /// <typeparam name="T">Target type</typeparam>
     public class FluentMapping<T> : IRowMapper<T> where T : new()
     {
         private readonly List<ColumnMapping> _mappings = new List<ColumnMapping>();
 
         /// <summary>
-        /// 預設起始列（1-based），預設為 1
+        /// Default start row (1-based), default is 1
         /// </summary>
         public int StartRow { get; private set; } = 1;
 
         /// <summary>
-        /// 設定表格預設起始列（1-based）
+        /// Set table default start row (1-based)
         /// </summary>
-        /// <param name="row">起始列（1-based，第 1 列 = 1）</param>
+        /// <param name="row">Start row (1-based, 1st row = 1)</param>
         public FluentMapping<T> WithStartRow(int row)
         {
             StartRow = row < 1 ? 1 : row;
@@ -31,7 +31,7 @@ namespace FluentNPOI.Streaming.Mapping
         }
 
         /// <summary>
-        /// 開始設定屬性對應
+        /// Start setting property mapping
         /// </summary>
         public FluentColumnBuilder<T> Map<TProperty>(Expression<Func<T, TProperty>> expression)
         {
@@ -42,12 +42,12 @@ namespace FluentNPOI.Streaming.Mapping
         }
 
         /// <summary>
-        /// 取得所有 Mapping 設定
+        /// Get all Mapping configurations
         /// </summary>
         public IReadOnlyList<ColumnMapping> GetMappings() => _mappings;
 
         /// <summary>
-        /// 內部使用：直接新增 Mapping (用於自動對應)
+        /// Internal use: Add Mapping directly (for auto mapping)
         /// </summary>
         internal void AddInternalMapping(PropertyInfo property, ExcelCol column)
         {
@@ -60,7 +60,7 @@ namespace FluentNPOI.Streaming.Mapping
         }
 
         /// <summary>
-        /// 將串流行轉換為 DTO
+        /// Convert streaming row to DTO
         /// </summary>
         public T Map(IStreamingRow row)
         {
@@ -98,7 +98,7 @@ namespace FluentNPOI.Streaming.Mapping
                 }
                 catch
                 {
-                    // 轉換失敗，跳過
+                    // Conversion failed, skip
                 }
             }
 
@@ -116,7 +116,7 @@ namespace FluentNPOI.Streaming.Mapping
     }
 
     /// <summary>
-    /// Fluent 欄位設定建構器
+    /// Fluent column setting builder
     /// </summary>
     public class FluentColumnBuilder<T> where T : new()
     {
@@ -130,7 +130,7 @@ namespace FluentNPOI.Streaming.Mapping
         }
 
         /// <summary>
-        /// 設定對應的 Excel 欄位
+        /// Set corresponding Excel column
         /// </summary>
         public FluentColumnBuilder<T> ToColumn(ExcelCol column)
         {
@@ -139,7 +139,7 @@ namespace FluentNPOI.Streaming.Mapping
         }
 
         /// <summary>
-        /// 設定静態標題 (用於寫入時)
+        /// Set static title (used when writing)
         /// </summary>
         public FluentColumnBuilder<T> WithTitle(string title)
         {
@@ -148,9 +148,9 @@ namespace FluentNPOI.Streaming.Mapping
         }
 
         /// <summary>
-        /// 設定動態標題（完整版）(用於寫入時)
+        /// Set dynamic title (full version) (used when writing)
         /// </summary>
-        /// <param name="titleFunc">標題函數，參數為 (row, col)，回傳標題字串</param>
+        /// <param name="titleFunc">Title function, parameters are (row, col), returns title string</param>
         public FluentColumnBuilder<T> WithTitle(Func<int, ExcelCol, string> titleFunc)
         {
             _mapping.TitleFunc = titleFunc;
@@ -158,7 +158,7 @@ namespace FluentNPOI.Streaming.Mapping
         }
 
         /// <summary>
-        /// 設定格式 (用於寫入時)
+        /// Set format (used when writing)
         /// </summary>
         public FluentColumnBuilder<T> WithFormat(string format)
         {
@@ -167,9 +167,9 @@ namespace FluentNPOI.Streaming.Mapping
         }
 
         /// <summary>
-        /// 設定靜態值（所有列都使用相同值）(用於寫入時)
+        /// Set static value (all rows use same value) (used when writing)
         /// </summary>
-        /// <param name="value">靜態值</param>
+        /// <param name="value">Static value</param>
         public FluentColumnBuilder<T> WithValue(object value)
         {
             _mapping.ValueFunc = (obj, row, col) => value;
@@ -177,9 +177,9 @@ namespace FluentNPOI.Streaming.Mapping
         }
 
         /// <summary>
-        /// 設定自訂值計算（簡單版，僅需資料物件）(用於寫入時)
+        /// Set custom value calculation (simple version, only needs data object) (used when writing)
         /// </summary>
-        /// <param name="valueFunc">值計算函數，僅接收資料物件參數</param>
+        /// <param name="valueFunc">Value calculation function, only receives data object parameter</param>
         public FluentColumnBuilder<T> WithValue(Func<T, object> valueFunc)
         {
             _mapping.ValueFunc = (obj, row, col) => valueFunc((T)obj);
@@ -187,9 +187,9 @@ namespace FluentNPOI.Streaming.Mapping
         }
 
         /// <summary>
-        /// 設定自訂值計算（完整版）(用於寫入時)
+        /// Set custom value calculation (full version) (used when writing)
         /// </summary>
-        /// <param name="valueFunc">值計算函數，參數為 (item, row, col)，row 為 Excel 1-based 行號，col 為 ExcelCol 欄位</param>
+        /// <param name="valueFunc">Value calculation function, parameters are (item, row, col), row is Excel 1-based row number, col is ExcelCol column</param>
         public FluentColumnBuilder<T> WithValue(Func<T, int, ExcelCol, object> valueFunc)
         {
             _mapping.ValueFunc = (obj, row, col) => valueFunc((T)obj, row, col);
@@ -197,9 +197,9 @@ namespace FluentNPOI.Streaming.Mapping
         }
 
         /// <summary>
-        /// 設定静態公式（簡單版）(用於寫入時)
+        /// Set static formula (simple version) (used when writing)
         /// </summary>
-        /// <param name="formula">公式字串（不含 =）</param>
+        /// <param name="formula">Formula string (without =)</param>
         public FluentColumnBuilder<T> WithFormula(string formula)
         {
             _mapping.FormulaFunc = (row, col) => formula;
@@ -207,9 +207,9 @@ namespace FluentNPOI.Streaming.Mapping
         }
 
         /// <summary>
-        /// 設定動態公式（完整版）(用於寫入時)
+        /// Set dynamic formula (full version) (used when writing)
         /// </summary>
-        /// <param name="formulaFunc">公式函數，參數為 (row, col)，回傳公式字串 (不含 =)</param>
+        /// <param name="formulaFunc">Formula function, parameters are (row, col), returns formula string (without =)</param>
         public FluentColumnBuilder<T> WithFormula(Func<int, ExcelCol, string> formulaFunc)
         {
             _mapping.FormulaFunc = formulaFunc;
@@ -217,7 +217,7 @@ namespace FluentNPOI.Streaming.Mapping
         }
 
         /// <summary>
-        /// 設定資料儲存格樣式 (使用樣式 Key)
+        /// Set data cell style (use style Key)
         /// </summary>
         public FluentColumnBuilder<T> WithStyle(string styleKey)
         {
@@ -226,7 +226,7 @@ namespace FluentNPOI.Streaming.Mapping
         }
 
         /// <summary>
-        /// 設定標題儲存格樣式 (使用樣式 Key)
+        /// Set title cell style (use style Key)
         /// </summary>
         public FluentColumnBuilder<T> WithTitleStyle(string styleKey)
         {
@@ -236,10 +236,10 @@ namespace FluentNPOI.Streaming.Mapping
         }
 
         /// <summary>
-        /// 從指定儲存格複製標題樣式
+        /// Copy title style from specified cell
         /// </summary>
-        /// <param name="row">來源列（1-based，第 1 列 = 1）</param>
-        /// <param name="col">來源欄</param>
+        /// <param name="row">Source row (1-based, 1st row = 1)</param>
+        /// <param name="col">Source column</param>
         public FluentColumnBuilder<T> WithTitleStyleFrom(int row, ExcelCol col)
         {
             _mapping.TitleStyleRef = StyleReference.FromUserInput(row, col);
@@ -247,10 +247,10 @@ namespace FluentNPOI.Streaming.Mapping
         }
 
         /// <summary>
-        /// 從指定儲存格複製資料樣式
+        /// Copy data style from specified cell
         /// </summary>
-        /// <param name="row">來源列（1-based，第 1 列 = 1）</param>
-        /// <param name="col">來源欄</param>
+        /// <param name="row">Source row (1-based, 1st row = 1)</param>
+        /// <param name="col">Source column</param>
         public FluentColumnBuilder<T> WithStyleFrom(int row, ExcelCol col)
         {
             _mapping.DataStyleRef = StyleReference.FromUserInput(row, col);
@@ -258,7 +258,7 @@ namespace FluentNPOI.Streaming.Mapping
         }
 
         /// <summary>
-        /// 設定儲存格類型
+        /// Set cell type
         /// </summary>
         public FluentColumnBuilder<T> WithCellType(NPOI.SS.UserModel.CellType cellType)
         {
@@ -267,9 +267,9 @@ namespace FluentNPOI.Streaming.Mapping
         }
 
         /// <summary>
-        /// 設定動態樣式 (根據資料決定樣式 Key)
+        /// Set dynamic style (determine style Key based on data)
         /// </summary>
-        /// <param name="styleFunc">接收資料物件，回傳樣式 Key</param>
+        /// <param name="styleFunc">Receives data object, returns style Key</param>
         public FluentColumnBuilder<T> WithDynamicStyle(Func<T, string> styleFunc)
         {
             _mapping.DynamicStyleFunc = obj => styleFunc((T)obj);
@@ -277,9 +277,9 @@ namespace FluentNPOI.Streaming.Mapping
         }
 
         /// <summary>
-        /// 設定欄位列偏移（此欄位相對於表格起始列往下偏移）
+        /// Set column row offset (offset downwards from table start row)
         /// </summary>
-        /// <param name="offset">偏移量（正數表示往下偏移，預設 0）</param>
+        /// <param name="offset">Offset amount (positive number means downward offset, default 0)</param>
         public FluentColumnBuilder<T> WithRowOffset(int offset)
         {
             _mapping.RowOffset = offset;
@@ -287,7 +287,7 @@ namespace FluentNPOI.Streaming.Mapping
         }
 
         /// <summary>
-        /// 設定其他樣式配置 (將會合併到自動生成的樣式中)
+        /// Set other style configurations (will be merged into automatically generated style)
         /// </summary>
         public FluentColumnBuilder<T> WithStyleConfig(Action<NPOI.SS.UserModel.IWorkbook, NPOI.SS.UserModel.ICellStyle> config)
         {
@@ -297,7 +297,7 @@ namespace FluentNPOI.Streaming.Mapping
         }
 
         /// <summary>
-        /// 設定數值格式
+        /// Set number format
         /// </summary>
         public FluentColumnBuilder<T> WithNumberFormat(string format)
         {
@@ -309,7 +309,7 @@ namespace FluentNPOI.Streaming.Mapping
         }
 
         /// <summary>
-        /// 設定背景顏色
+        /// Set background color
         /// </summary>
         public FluentColumnBuilder<T> WithBackgroundColor(NPOI.SS.UserModel.IndexedColors color)
         {
@@ -321,7 +321,7 @@ namespace FluentNPOI.Streaming.Mapping
         }
 
         /// <summary>
-        /// 設定字體
+        /// Set font
         /// </summary>
         public FluentColumnBuilder<T> WithFont(string fontName = null, double? fontSize = null, bool isBold = false)
         {
@@ -336,7 +336,7 @@ namespace FluentNPOI.Streaming.Mapping
         }
 
         /// <summary>
-        /// 設定邊框
+        /// Set border
         /// </summary>
         public FluentColumnBuilder<T> WithBorder(NPOI.SS.UserModel.BorderStyle borderStyle)
         {
@@ -350,7 +350,7 @@ namespace FluentNPOI.Streaming.Mapping
         }
 
         /// <summary>
-        /// 設定對齊方式
+        /// Set alignment
         /// </summary>
         public FluentColumnBuilder<T> WithAlignment(NPOI.SS.UserModel.HorizontalAlignment horizontal = NPOI.SS.UserModel.HorizontalAlignment.General, NPOI.SS.UserModel.VerticalAlignment vertical = NPOI.SS.UserModel.VerticalAlignment.Center)
         {
@@ -362,7 +362,7 @@ namespace FluentNPOI.Streaming.Mapping
         }
 
         /// <summary>
-        /// 設定自動換行
+        /// Set wrap text
         /// </summary>
         public FluentColumnBuilder<T> WithWrapText(bool wrap = true)
         {
@@ -381,7 +381,7 @@ namespace FluentNPOI.Streaming.Mapping
         }
 
         /// <summary>
-        /// 繼續設定下一個屬性
+        /// Continue to set next property
         /// </summary>
         public FluentColumnBuilder<T> Map<TProperty>(Expression<Func<T, TProperty>> expression)
         {
@@ -390,7 +390,7 @@ namespace FluentNPOI.Streaming.Mapping
     }
 
     /// <summary>
-    /// 欄位對應設定
+    /// Column mapping configuration
     /// </summary>
     public class ColumnMapping
     {
@@ -400,7 +400,7 @@ namespace FluentNPOI.Streaming.Mapping
         public Func<int, ExcelCol, string> TitleFunc { get; set; }
         public string Format { get; set; }
 
-        // 寫入時使用
+        // Used when writing
         public Func<object, int, ExcelCol, object> ValueFunc { get; set; }
         public Func<int, ExcelCol, string> FormulaFunc { get; set; }
         public string StyleKey { get; set; }
@@ -409,24 +409,24 @@ namespace FluentNPOI.Streaming.Mapping
         public Func<object, string> DynamicStyleFunc { get; set; }
 
         /// <summary>
-        /// 靜態樣式配置（用於動態生成樣式）
+        /// Static style configuration (used for dynamic style generation)
         /// </summary>
         public Action<NPOI.SS.UserModel.IWorkbook, NPOI.SS.UserModel.ICellStyle> StyleConfig { get; set; }
 
         /// <summary>
-        /// 自動生成的樣式 Key (內部使用)
+        /// Automatically generated style Key (internal use)
         /// </summary>
         public string GeneratedStyleKey { get; set; }
 
-        // 欄位名稱 (for DataTable)
+        // Column name (for DataTable)
         public string ColumnName { get; set; }
 
-        // 樣式參考
+        // Style reference
         public StyleReference TitleStyleRef { get; set; }
         public StyleReference DataStyleRef { get; set; }
 
         /// <summary>
-        /// 欄位列偏移（預設 0，正數表示往下偏移）
+        /// Column row offset (default 0, positive number means downward offset)
         /// </summary>
         public int RowOffset { get; set; } = 0;
     }
@@ -437,15 +437,15 @@ namespace FluentNPOI.Streaming.Mapping
         public ExcelCol Column { get; set; }
 
         /// <summary>
-        /// 從使用者輸入建立 StyleReference（自動將 1-based row 轉換為 0-based）
+        /// Create StyleReference from user input (automatically convert 1-based row to 0-based)
         /// </summary>
-        /// <param name="row">使用者輸入的列號（1-based，第 1 列 = 1）</param>
-        /// <param name="col">欄位</param>
+        /// <param name="row">User input row number (1-based, 1st row = 1)</param>
+        /// <param name="col">Column</param>
         public static StyleReference FromUserInput(int row, ExcelCol col)
         {
             return new StyleReference
             {
-                Row = row < 1 ? 0 : row - 1,  // 將 1-based 轉換為 0-based
+                Row = row < 1 ? 0 : row - 1,  // Convert 1-based to 0-based
                 Column = col
             };
         }

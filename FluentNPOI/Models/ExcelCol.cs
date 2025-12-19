@@ -5,7 +5,7 @@ using System.Text;
 namespace FluentNPOI.Models
 {
     /// <summary>
-    /// Excel 列號
+    /// Excel Column Number
     /// </summary>
     public enum ExcelCol
     {

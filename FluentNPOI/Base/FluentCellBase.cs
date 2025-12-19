@@ -6,7 +6,7 @@ using System.Collections.Generic;
 namespace FluentNPOI.Base
 {
     /// <summary>
-    /// 基礎單元格操作類
+    /// Base cell operation class
     /// </summary>
     public abstract class FluentCellBase : FluentWorkbookBase
     {
@@ -21,26 +21,26 @@ namespace FluentNPOI.Base
 
 
         /// <summary>
-        /// 設置單元格的樣式
+        /// Set cell style
         /// </summary>
-        /// <param name="cell">單元格</param>
-        /// <param name="cellNameMap">單元格名稱對應表</param>
-        /// <param name="cellStyleParams">單元格樣式參數</param>
+        /// <param name="cell">Cell</param>
+        /// <param name="cellNameMap">Cell name mapping</param>
+        /// <param name="cellStyleParams">Cell style parameters</param>
         protected void SetCellStyle(ICell cell, TableCellSet cellNameMap, TableCellStyleParams cellStyleParams)
         {
-            // 如果有動態樣式設置函數，優先使用
+            // If there is a dynamic style setting function, use it first
             if (cellNameMap.SetCellStyleAction != null)
             {
-                // ✅ 先調用函數獲取樣式配置
+                // ✅ Call function to get style configuration first
                 CellStyleConfig config = cellNameMap.SetCellStyleAction(cellStyleParams);
                 ApplyCellStyleFromConfig(cell, config);
             }
-            // 如果有固定的樣式 key，使用緩存的樣式
+            // If there is a fixed style key, use cached style
             else if (!string.IsNullOrWhiteSpace(cellNameMap.CellStyleKey) && _cellStylesCached.ContainsKey(cellNameMap.CellStyleKey))
             {
                 cell.CellStyle = _cellStylesCached[cellNameMap.CellStyleKey];
             }
-            // 如果都沒有，先檢查 sheet 級別的全局樣式，再使用工作簿級別的全局樣式
+            // If neither, check sheet-level global style first, then workbook-level global style
             // If none specified, check sheet-level global style first, then workbook-level global style
             else
             {
@@ -57,10 +57,10 @@ namespace FluentNPOI.Base
         }
 
         /// <summary>
-        /// 設置單元格的值
+        /// Set cell value
         /// </summary>
-        /// <param name="cell">單元格</param>
-        /// <param name="value">值</param>
+        /// <param name="cell">Cell</param>
+        /// <param name="value">Value</param>
         protected void SetCellValue(ICell cell, object value)
         {
             if (value is bool b)
@@ -103,11 +103,11 @@ namespace FluentNPOI.Base
         }
 
         /// <summary>
-        /// 設置單元格的值
+        /// Set cell value
         /// </summary>
-        /// <param name="cell">單元格</param>
-        /// <param name="value">值</param>
-        /// <param name="cellType">單元格類型</param>
+        /// <param name="cell">Cell</param>
+        /// <param name="value">Value</param>
+        /// <param name="cellType">Cell Type</param>
         protected void SetCellValue(ICell cell, object value, CellType cellType)
         {
             if (cell == null)
@@ -119,10 +119,10 @@ namespace FluentNPOI.Base
                 return;
             }
 
-            // 1) 先依據 value 的實際型別寫入
+            // 1) Write based on actual type of value first
             SetCellValue(cell, value);
 
-            // 2) 若指定了 CellType（且非 Unknown），以 CellType 覆寫
+            // 2) If CellType is specified (and not Unknown), override with CellType
             if (cellType == CellType.Unknown) return;
             if (cellType == CellType.Formula)
             {
@@ -144,7 +144,7 @@ namespace FluentNPOI.Base
                     {
                         if (double.TryParse(text, out var dv)) { cell.SetCellValue(dv); return; }
                         if (DateTime.TryParse(text, out var dtv)) { cell.SetCellValue(dtv); return; }
-                        // 若無法轉換為數值/日期則保留前一步的寫入結果
+                        // If unable to convert to numeric/date, keep previous write result
                         return;
                     }
                 case CellType.String:
@@ -159,7 +159,7 @@ namespace FluentNPOI.Base
                     }
                 case CellType.Error:
                     {
-                        // NPOI 錯誤型別無從 object 直接設定，退為字串呈現
+                        // NPOI error type cannot be set directly from object, fallback to string display
                         cell.SetCellValue(text);
                         return;
                     }
@@ -169,10 +169,10 @@ namespace FluentNPOI.Base
         }
 
         /// <summary>
-        /// 設置公式值
+        /// Set formula value
         /// </summary>
-        /// <param name="cell">單元格</param>
-        /// <param name="value">值</param>
+        /// <param name="cell">Cell</param>
+        /// <param name="value">Value</param>
         protected void SetFormulaValue(ICell cell, object value)
         {
             if (cell == null) return;
@@ -181,17 +181,17 @@ namespace FluentNPOI.Base
             var formula = value.ToString();
             if (string.IsNullOrWhiteSpace(formula)) return;
 
-            // NPOI SetCellFormula 需要純公式字串（不含 '='）
+            // NPOI SetCellFormula requires pure formula string (without '=')
             if (formula.StartsWith("=")) formula = formula.Substring(1);
 
             cell.SetCellFormula(formula);
         }
 
         /// <summary>
-        /// 獲取單元格的值，根據單元格類型返回對應的 C# 類型
+        /// Get cell value, return corresponding C# type based on cell type
         /// </summary>
-        /// <param name="cell">要讀取的單元格</param>
-        /// <returns>單元格的值（bool, DateTime, double, string 或 null）</returns>
+        /// <param name="cell">Cell to read</param>
+        /// <returns>Cell value (bool, DateTime, double, string or null)</returns>
         protected object GetCellValue(ICell cell)
         {
             if (cell == null)
@@ -203,7 +203,7 @@ namespace FluentNPOI.Base
                     return cell.BooleanCellValue;
 
                 case CellType.Numeric:
-                    // 檢查是否為日期格式
+                    // Check if date format
                     if (DateUtil.IsCellDateFormatted(cell))
                     {
                         return cell.DateCellValue;
@@ -214,7 +214,7 @@ namespace FluentNPOI.Base
                     return cell.StringCellValue;
 
                 case CellType.Formula:
-                    // 對於公式，返回計算後的值
+                    // For formula, return calculated value
                     return GetCellFormulaResultValue(cell);
 
                 case CellType.Blank:
@@ -229,11 +229,11 @@ namespace FluentNPOI.Base
         }
 
         /// <summary>
-        /// 獲取單元格的值並轉換為指定類型
+        /// Get cell value and convert to specific type
         /// </summary>
-        /// <typeparam name="T">目標類型</typeparam>
-        /// <param name="cell">要讀取的單元格</param>
-        /// <returns>轉換後的值</returns>
+        /// <typeparam name="T">Target Type</typeparam>
+        /// <param name="cell">Cell to read</param>
+        /// <returns>Converted value</returns>
         protected T GetCellValue<T>(ICell cell)
         {
             var value = GetCellValue(cell);
@@ -243,25 +243,25 @@ namespace FluentNPOI.Base
 
             try
             {
-                // 如果類型已經匹配，直接返回
+                // If type matches already, return directly
                 if (value is T result)
                     return result;
 
-                // 特殊處理 DateTime 類型
+                // Special handling for DateTime
                 if (typeof(T) == typeof(DateTime) || typeof(T) == typeof(DateTime?))
                 {
                     if (value is DateTime dt)
                         return (T)(object)dt;
 
-                    // 如果值是 double（Excel 日期存儲為數字），嘗試轉換
+                    // If value is double (Excel stores dates as numbers), try to convert
                     if (value is double d && cell != null)
                     {
-                        // 檢查單元格是否有日期格式
+                        // Check if cell has date format
                         if (DateUtil.IsCellDateFormatted(cell))
                         {
                             return (T)(object)cell.DateCellValue;
                         }
-                        // 嘗試將數字轉換為日期（OLE 日期格式）
+                        // Try to convert number to date (OLE Automation Date)
                         try
                         {
                             var dateTime = DateUtil.GetJavaDate(d);
@@ -269,11 +269,11 @@ namespace FluentNPOI.Base
                         }
                         catch
                         {
-                            // 如果轉換失敗，返回默認值
+                            // If conversion fails, return default
                         }
                     }
 
-                    // 嘗試字符串轉換
+                    // Try string conversion
                     if (value is string str && DateTime.TryParse(str, out var parsedDate))
                     {
                         return (T)(object)parsedDate;
@@ -282,7 +282,7 @@ namespace FluentNPOI.Base
                     return default(T);
                 }
 
-                // 嘗試轉換
+                // Try conversion
                 return (T)Convert.ChangeType(value, typeof(T));
             }
             catch
@@ -292,10 +292,10 @@ namespace FluentNPOI.Base
         }
 
         /// <summary>
-        /// 獲取單元格的公式字符串
+        /// Get cell formula string
         /// </summary>
-        /// <param name="cell">要讀取的單元格</param>
-        /// <returns>公式字符串（不含 '=' 前綴），如果不是公式單元格則返回 null</returns>
+        /// <param name="cell">Cell to read</param>
+        /// <returns>Formula string (without '=' prefix), or null if not a formula cell</returns>
         protected string GetCellFormulaValue(ICell cell)
         {
             if (cell == null)
@@ -310,10 +310,10 @@ namespace FluentNPOI.Base
         }
 
         /// <summary>
-        /// 獲取公式單元格的計算結果值
+        /// Get calculated result value of formula cell
         /// </summary>
-        /// <param name="cell">公式單元格</param>
-        /// <returns>公式計算後的值</returns>
+        /// <param name="cell">Formula cell</param>
+        /// <returns>Calculated value</returns>
         private object GetCellFormulaResultValue(ICell cell)
         {
             if (cell == null || cell.CellType != CellType.Formula)
@@ -348,30 +348,30 @@ namespace FluentNPOI.Base
             }
             catch
             {
-                // 如果無法獲取計算結果，返回 null
+                // If unable to get calculated result, return null
                 return null;
             }
         }
 
 
         /// <summary>
-        /// 從配置中應用單元格樣式（檢查緩存，不存在則創建並緩存）
+        /// Apply cell style from configuration (check cache, create and cache if not exists)
         /// </summary>
-        /// <param name="cell">要應用樣式的單元格</param>
-        /// <param name="config">樣式配置</param>
+        /// <param name="cell">Cell to apply style to</param>
+        /// <param name="config">Style configuration</param>
         private void ApplyCellStyleFromConfig(ICell cell, CellStyleConfig config)
         {
             if (!string.IsNullOrWhiteSpace(config.Key))
             {
-                // ✅ 先檢查緩存
+                // ✅ Check cache first
                 if (!_cellStylesCached.ContainsKey(config.Key))
                 {
-                    // ✅ 只在不存在時才創建新樣式
+                    // ✅ Create new style only if not exists
                     ICellStyle newCellStyle = _workbook.CreateCellStyle();
                     config.StyleSetter(newCellStyle);
                     _cellStylesCached.Add(config.Key, newCellStyle);
                 }
-                // 始終使用緩存的樣式
+                // Always use cached style
                 cell.CellStyle = _cellStylesCached[config.Key];
             }
             else
@@ -381,13 +381,13 @@ namespace FluentNPOI.Base
         }
 
         /// <summary>
-        /// 設置單元格範圍的樣式
+        /// Set style for a range of cells
         /// </summary>
-        /// <param name="cellStyleConfig">樣式配置</param>
-        /// <param name="startCol">起始列</param>
-        /// <param name="endCol">結束列</param>
-        /// <param name="startRow">起始行</param>
-        /// <param name="endRow">結束行</param>   
+        /// <param name="cellStyleConfig">Style configuration</param>
+        /// <param name="startCol">Start column</param>
+        /// <param name="endCol">End column</param>
+        /// <param name="startRow">Start row</param>
+        /// <param name="endRow">End row</param>   
         protected void SetCellStyleRange(
             CellStyleConfig cellStyleConfig,
              ExcelCol startCol, ExcelCol endCol, int startRow, int endRow)

@@ -4,39 +4,39 @@ using System.Collections.Generic;
 namespace FluentNPOI.Streaming.Abstractions
 {
     /// <summary>
-    /// 串流 Excel 讀取器介面
+    /// Streaming Excel reader interface
     /// </summary>
     public interface IStreamingReader : IDisposable
     {
         /// <summary>
-        /// 取得所有工作表名稱
+        /// Get all sheet names
         /// </summary>
         IReadOnlyList<string> SheetNames { get; }
 
         /// <summary>
-        /// 選擇工作表 (依名稱)
+        /// Select sheet (by name)
         /// </summary>
-        /// <param name="sheetName">工作表名稱</param>
-        /// <returns>是否成功</returns>
+        /// <param name="sheetName">Sheet name</param>
+        /// <returns>Is success</returns>
         bool SelectSheet(string sheetName);
 
         /// <summary>
-        /// 選擇工作表 (依索引)
+        /// Select sheet (by index)
         /// </summary>
-        /// <param name="sheetIndex">工作表索引 (0-based)</param>
-        /// <returns>是否成功</returns>
+        /// <param name="sheetIndex">Sheet index (0-based)</param>
+        /// <returns>Is success</returns>
         bool SelectSheet(int sheetIndex);
 
         /// <summary>
-        /// 串流讀取所有行
+        /// Stream read all rows
         /// </summary>
-        /// <returns>行的列舉器</returns>
+        /// <returns>Row enumerator</returns>
         IEnumerable<IStreamingRow> ReadRows();
 
         /// <summary>
-        /// 讀取 Header 行 (第一行)
+        /// Read Header row (first row)
         /// </summary>
-        /// <returns>Header 名稱陣列</returns>
+        /// <returns>Header name array</returns>
         string[] ReadHeader();
     }
 }

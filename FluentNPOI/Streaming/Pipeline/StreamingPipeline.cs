@@ -5,9 +5,9 @@ using FluentNPOI.Streaming.Abstractions;
 namespace FluentNPOI.Streaming.Pipeline
 {
     /// <summary>
-    /// 串流處理管線，提供 Fluent 鏈式 API
+    /// Streaming processing pipeline, providing Fluent chaining API
     /// </summary>
-    /// <typeparam name="T">目標型別</typeparam>
+    /// <typeparam name="T">Target type</typeparam>
     public class StreamingPipeline<T> where T : new()
     {
         private readonly IStreamingReader _reader;
@@ -22,7 +22,7 @@ namespace FluentNPOI.Streaming.Pipeline
         }
 
         /// <summary>
-        /// 跳過指定行數 (例如 Header)
+        /// Skip specified number of rows (e.g. Header)
         /// </summary>
         public StreamingPipeline<T> Skip(int rowCount)
         {
@@ -31,7 +31,7 @@ namespace FluentNPOI.Streaming.Pipeline
         }
 
         /// <summary>
-        /// 跳過 Header (等同 Skip(1))
+        /// Skip Header (equivalent to Skip(1))
         /// </summary>
         public StreamingPipeline<T> SkipHeader()
         {
@@ -39,7 +39,7 @@ namespace FluentNPOI.Streaming.Pipeline
         }
 
         /// <summary>
-        /// 篩選行
+        /// Filter rows
         /// </summary>
         public StreamingPipeline<T> Where(Func<IStreamingRow, bool> predicate)
         {
@@ -48,7 +48,7 @@ namespace FluentNPOI.Streaming.Pipeline
         }
 
         /// <summary>
-        /// 執行管線並回傳結果 (延遲執行)
+        /// Execute pipeline and return result (deferred execution)
         /// </summary>
         public IEnumerable<T> ToEnumerable()
         {
@@ -56,24 +56,24 @@ namespace FluentNPOI.Streaming.Pipeline
 
             foreach (var row in _reader.ReadRows())
             {
-                // 跳過指定行數
+                // Skip specified number of rows
                 if (skipped < _skipRows)
                 {
                     skipped++;
                     continue;
                 }
 
-                // 套用篩選
+                // Apply filter
                 if (_filter != null && !_filter(row))
                     continue;
 
-                // 對應並回傳
+                // Map and return
                 yield return _mapper.Map(row);
             }
         }
 
         /// <summary>
-        /// 執行管線並回傳 List
+        /// Execute pipeline and return List
         /// </summary>
         public List<T> ToList()
         {
@@ -87,12 +87,12 @@ namespace FluentNPOI.Streaming.Pipeline
     }
 
     /// <summary>
-    /// 管線建構器
+    /// Pipeline builder
     /// </summary>
     public static class StreamingPipelineBuilder
     {
         /// <summary>
-        /// 從 Reader 建立管線
+        /// Create pipeline from Reader
         /// </summary>
         public static StreamingPipeline<T> CreatePipeline<T>(
             IStreamingReader reader,

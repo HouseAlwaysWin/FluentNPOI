@@ -8,7 +8,7 @@ using System.Collections.Generic;
 namespace FluentNPOI.Stages
 {
     /// <summary>
-    /// 單元格操作類
+    /// Cell operation class
     /// </summary>
     public class FluentCell : FluentCellBase
     {
@@ -61,15 +61,15 @@ namespace FluentNPOI.Stages
                 RowItem = null
             };
 
-            // ✅ 先調用函數獲取樣式配置
+            // ✅ Call function to get style configuration first
             var config = cellStyleAction(cellStyleParams);
 
             if (!string.IsNullOrWhiteSpace(config.Key))
             {
-                // ✅ 先檢查緩存
+                // ✅ Check cache first
                 if (!_cellStylesCached.ContainsKey(config.Key))
                 {
-                    // ✅ 只在不存在時才創建新樣式
+                    // ✅ Create new style only if not exists
                     ICellStyle newCellStyle = _workbook.CreateCellStyle();
                     config.StyleSetter(newCellStyle);
                     _cellStylesCached.Add(config.Key, newCellStyle);
@@ -78,7 +78,7 @@ namespace FluentNPOI.Stages
             }
             else
             {
-                // 如果沒有返回 key，創建臨時樣式（不緩存）
+                // If no key returned, create temporary style (not cached)
                 ICellStyle tempStyle = _workbook.CreateCellStyle();
                 config.StyleSetter(tempStyle);
                 _cell.CellStyle = tempStyle;
@@ -95,87 +95,87 @@ namespace FluentNPOI.Stages
         }
 
         /// <summary>
-        /// 獲取當前單元格的值
+        /// Get current cell value
         /// </summary>
-        /// <returns>單元格的值（根據類型返回 bool, DateTime, double, string 或 null）</returns>
+        /// <returns>Cell value (return bool, DateTime, double, string or null based on type)</returns>
         public object GetValue()
         {
             return GetCellValue(_cell);
         }
 
         /// <summary>
-        /// 獲取當前單元格的值並轉換為指定類型
+        /// Get current cell value and convert to specified type
         /// </summary>
-        /// <typeparam name="T">目標類型</typeparam>
-        /// <returns>轉換後的值</returns>
+        /// <typeparam name="T">Target type</typeparam>
+        /// <returns>Converted value</returns>
         public T GetValue<T>()
         {
             return GetCellValue<T>(_cell);
         }
 
         /// <summary>
-        /// 獲取當前單元格的公式字符串（如果是公式單元格）
+        /// Get current cell formula string (if it is a formula cell)
         /// </summary>
-        /// <returns>公式字符串（不含 '=' 前綴），如果不是公式則返回 null</returns>
+        /// <returns>Formula string (without '=' prefix), or null if not a formula</returns>
         public string GetFormula()
         {
             return GetCellFormulaValue(_cell);
         }
 
         /// <summary>
-        /// 獲取當前單元格對象
+        /// Get current cell object
         /// </summary>
-        /// <returns>NPOI ICell 對象</returns>
+        /// <returns>NPOI ICell object</returns>
         public ICell GetCell()
         {
             return _cell;
         }
 
         /// <summary>
-        /// 在單元格中設置圖片（自動計算高度，保持原圖比例）
+        /// Set picture in cell (auto calculate height, keep aspect ratio)
         /// </summary>
-        /// <param name="pictureBytes">圖片字節數組</param>
-        /// <param name="imgWidth">圖片寬度（像素）</param>
-        /// <param name="anchorType">錨點類型</param>
-        /// <param name="columnWidthRatio">列寬轉換比例（默認 7.0，表示像素寬度除以該值得到 Excel 列寬字符數）</param>
-        /// <returns>FluentCell 實例，支持鏈式調用</returns>
+        /// <param name="pictureBytes">Picture byte array</param>
+        /// <param name="imgWidth">Image width (pixels)</param>
+        /// <param name="anchorType">Anchor type</param>
+        /// <param name="columnWidthRatio">Column width ratio (default 7.0, means pixel width divided by this value gets Excel column width in characters)</param>
+        /// <returns>FluentCell instance, supports method chaining</returns>
         public FluentCell SetPictureOnCell(byte[] pictureBytes, int imgWidth, AnchorType anchorType = AnchorType.MoveAndResize, double columnWidthRatio = 7.0)
         {
-            // 自動計算高度（需要從圖片中讀取原始尺寸）
-            // 由於無法直接從字節數組獲取圖片尺寸，這裡使用寬度作為高度（1:1比例）
-            // 如果需要更精確的比例，可以考慮使用 System.Drawing.Image 或其他圖像庫
+            // Auto calculate height (need to read original size from image)
+            // Since cannot get image size directly from byte array, use width as height here (1:1 ratio)
+            // If more precise ratio is needed, consider using System.Drawing.Image or other image libraries
             return SetPictureOnCell(pictureBytes, imgWidth, imgWidth, anchorType, columnWidthRatio);
         }
 
         /// <summary>
-        /// 在單元格中設置圖片（手動設置寬度和高度）
+        /// Set picture in cell (manually set width and height)
         /// </summary>
-        /// <param name="pictureBytes">圖片字節數組</param>
-        /// <param name="imgWidth">圖片寬度（像素）</param>
-        /// <param name="imgHeight">圖片高度（像素）</param>
-        /// <param name="anchorType">錨點類型</param>
-        /// <param name="columnWidthRatio">列寬轉換比例（默認 7.0，表示像素寬度除以該值得到 Excel 列寬字符數）</param>
-        /// <param name="pictureAction">圖片操作委托</param>
-        /// <returns>FluentCell 實例，支持鏈式調用</returns>
+        /// <param name="pictureBytes">Picture byte array</param>
+        /// <param name="imgWidth">Image width (pixels)</param>
+        /// <param name="imgHeight">Image height (pixels)</param>
+        /// <param name="anchorType">Anchor type</param>
+        /// <param name="columnWidthRatio">Column width ratio (default 7.0, means pixel width divided by this value gets Excel column width in characters)</param>
+        /// <param name="pictureAction">Picture action delegate</param>
+        /// <returns>FluentCell instance, supports method chaining</returns>
         public FluentCell SetPictureOnCell(byte[] pictureBytes, int imgWidth, int imgHeight, AnchorType anchorType = AnchorType.MoveAndResize,
         double columnWidthRatio = 7.0, Action<IPicture> pictureAction = null)
         {
-            // 參數驗證
+            // Parameter validation
             ValidatePictureParameters(pictureBytes, imgWidth, imgHeight, columnWidthRatio);
 
-            // 設置列寬
+            // Set column width
             double columnWidth = CalculateColumnWidth(imgWidth, columnWidthRatio);
             _sheet.SetColumnWidth((int)_col, (int)Math.Round(columnWidth * 256));
 
-            // 獲取圖片類型並添加到工作簿
+            // Get picture type and add to workbook
             var picType = GetPictureType(pictureBytes);
             int picIndex = _workbook.AddPicture(pictureBytes, picType);
 
-            // 創建繪圖對象和錨點
+            // Create drawing patriarch and anchor
             IDrawing drawing = _sheet.CreateDrawingPatriarch();
             IClientAnchor anchor = CreatePictureAnchor(imgWidth, imgHeight, anchorType);
 
-            // 創建圖片
+            // Create picture
             IPicture pict = drawing.CreatePicture(anchor, picIndex);
 
             pictureAction?.Invoke(pict);
@@ -184,7 +184,7 @@ namespace FluentNPOI.Stages
         }
 
         /// <summary>
-        /// 驗證圖片參數
+        /// Validate picture parameters
         /// </summary>
         private void ValidatePictureParameters(byte[] pictureBytes, int imgWidth, int imgHeight, double columnWidthRatio)
         {
@@ -215,58 +215,58 @@ namespace FluentNPOI.Stages
         }
 
         /// <summary>
-        /// 計算列寬（將像素寬度轉換為 Excel 列寬單位）
+        /// Calculate column width (convert pixel width to Excel column width unit)
         /// </summary>
-        /// <param name="imgWidth">圖片寬度（像素）</param>
-        /// <param name="columnWidthRatio">轉換比例</param>
-        /// <returns>Excel 列寬（字符數）</returns>
+        /// <param name="imgWidth">Image width (pixels)</param>
+        /// <param name="columnWidthRatio">Conversion ratio</param>
+        /// <returns>Excel column width (characters)</returns>
         private double CalculateColumnWidth(int imgWidth, double columnWidthRatio)
         {
-            // Excel 列寬單位：1 個字符寬度 = 256 單位
-            // 將像素寬度除以轉換比例得到字符數
+            // Excel column width unit: 1 character width = 256 units
+            // Divide pixel width by conversion ratio to get character count
             return imgWidth / columnWidthRatio;
         }
 
         /// <summary>
-        /// 創建圖片錨點，設置完整的位置和大小信息
+        /// Create picture anchor, set complete position and size information
         /// </summary>
-        /// <param name="imgWidth">圖片寬度（像素）</param>
-        /// <param name="imgHeight">圖片高度（像素）</param>
-        /// <param name="anchorType">錨點類型</param>
-        /// <returns>配置好的 IClientAnchor 對象</returns>
+        /// <param name="imgWidth">Image width (pixels)</param>
+        /// <param name="imgHeight">Image height (pixels)</param>
+        /// <param name="anchorType">Anchor type</param>
+        /// <returns>Configured IClientAnchor object</returns>
         private IClientAnchor CreatePictureAnchor(int imgWidth, int imgHeight, AnchorType anchorType)
         {
             ICreationHelper creationHelper = _workbook.GetCreationHelper();
             IClientAnchor anchor = creationHelper.CreateClientAnchor();
 
-            // 設置起始位置（_row 已經是 0-based，因為在 SetCellPosition 中已經轉換）
+            // Set start position (_row is already 0-based, because converted in SetCellPosition)
             anchor.Col1 = (short)_col;
             anchor.Row1 = (short)_row;
 
-            // 計算結束位置（Col2 和 Row2）
-            // 根據圖片尺寸和單元格大小計算需要跨越多少列和行
-            // Excel 默認列寬約為 8.43 字符（約 64 像素），行高約為 15 像素
-            // 這裡使用簡化的計算方式
+            // Calculate end position (Col2 and Row2)
+            // Calculate how many columns and rows needed based on image size and cell size
+            // Excel default column width is about 8.43 characters (about 64 pixels), row height is about 15 pixels
+            // Use simplified calculation here
 
-            // 獲取當前列寬（以字符為單位）
-            // GetColumnWidth 返回 int（以 1/256 字符為單位），轉換為字符數
+            // Get current column width (in characters)
+            // GetColumnWidth returns int (in 1/256 characters), convert to character count
             double columnWidthInChars = _sheet.GetColumnWidth((int)_col) / 256.0;
 
-            // 獲取當前行高（以點為單位，1 點 ≈ 1.33 像素）
+            // Get current row height (in points, 1 point ≈ 1.33 pixels)
             IRow row = _sheet.GetRow(_row) ?? _sheet.CreateRow(_row);
-            short rowHeightInPoints = row.Height > 0 ? (short)(row.Height / 20.0) : (short)15; // 默認行高約 15 點
+            short rowHeightInPoints = row.Height > 0 ? (short)(row.Height / 20.0) : (short)15; // Default row height about 15 points
 
-            // 計算需要跨越的列數（考慮列寬）
-            // 假設 1 字符寬度 ≈ 7 像素（可根據實際情況調整）
+            // Calculate columns needed (considering column width)
+            // Assume 1 character width ≈ 7 pixels (adjust as needed)
             double pixelsPerChar = 7.0;
             double columnsNeeded = imgWidth / (columnWidthInChars * pixelsPerChar);
-            short col2 = (short)Math.Min((int)_col + (int)Math.Ceiling(columnsNeeded), 16383); // Excel 最大列數限制
+            short col2 = (short)Math.Min((int)_col + (int)Math.Ceiling(columnsNeeded), 16383); // Excel max column limit
 
-            // 計算需要跨越的行數（考慮行高）
+            // Calculate rows needed (considering row height)
             // 1 點 ≈ 1.33 像素
             double pixelsPerPoint = 1.33;
             double rowsNeeded = imgHeight / (rowHeightInPoints * pixelsPerPoint);
-            short row2 = (short)Math.Min(_row + (int)Math.Ceiling(rowsNeeded), 1048575); // Excel 最大行數限制
+            short row2 = (short)Math.Min(_row + (int)Math.Ceiling(rowsNeeded), 1048575); // Excel max row limit
 
             anchor.Col2 = col2;
             anchor.Row2 = row2;
@@ -311,20 +311,20 @@ namespace FluentNPOI.Stages
                 return PictureType.DIB;
             }
 
-            // EMF: 01 00 00 00 (但需要更多检查，EMF 文件通常以这个开头)
+            // EMF: 01 00 00 00 (Check needs more checks, EMF files usually start with this)
             if (pictureBytes.Length >= 4 &&
                 pictureBytes[0] == 0x01 && pictureBytes[1] == 0x00 && pictureBytes[2] == 0x00 && pictureBytes[3] == 0x00)
             {
-                // 检查是否是有效的 EMF 文件（EMF 文件头通常是 40 字节）
+                // Check if valid EMF file (EMF header is usually 40 bytes)
                 if (pictureBytes.Length >= 40)
                 {
-                    // EMF 文件的第二个 DWORD 应该是文件大小
-                    // 这里做简单检查，如果符合 EMF 特征就返回 EMF
+                    // Second DWORD of EMF file should be file size
+                    // Simple check here, return EMF if matches EMF characteristics
                     return PictureType.EMF;
                 }
             }
 
-            // WMF: 通常以 01 00 09 00 开头（但需要更多检查）
+            // WMF: Usually starts with 01 00 09 00 (but need more checks)
             if (pictureBytes.Length >= 4 &&
                 pictureBytes[0] == 0x01 && pictureBytes[1] == 0x00 && pictureBytes[2] == 0x09 && pictureBytes[3] == 0x00)
             {
@@ -335,38 +335,38 @@ namespace FluentNPOI.Stages
         }
 
         /// <summary>
-        /// 設定當前操作的儲存格位置
+        /// Set current operation cell position
         /// </summary>
-        /// <param name="col">欄位置</param>
-        /// <param name="row">列位置（1-based）</param>
+        /// <param name="col">Column position</param>
+        /// <param name="row">Row position (1-based)</param>
         public FluentCell SetCellPosition(ExcelCol col, int row)
         {
             _cell = SetCellPositionInternal(col, row);
             _col = col;
-            _row = NormalizeRow(row);  // 存儲 0-based 的 row
+            _row = NormalizeRow(row);  // Store 0-based row
             return this;
         }
 
         /// <summary>
-        /// 設定公式（不含 '=' 前綴）
+        /// Set formula (without '=' prefix)
         /// </summary>
-        /// <param name="formula">公式字串（例如 "SUM(A1:A10)"）</param>
+        /// <param name="formula">Formula string (e.g. "SUM(A1:A10)")</param>
         public FluentCell SetFormula(string formula)
         {
             if (_cell == null) return this;
             if (string.IsNullOrWhiteSpace(formula)) return this;
 
-            // 移除 '=' 前綴（如果有的話）
+            // Remove '=' prefix (if exists)
             if (formula.StartsWith("=")) formula = formula.Substring(1);
             _cell.SetCellFormula(formula);
             return this;
         }
 
         /// <summary>
-        /// 從指定儲存格複製樣式
+        /// Copy style from specified cell
         /// </summary>
-        /// <param name="col">來源欄</param>
-        /// <param name="row">來源列（1-based）</param>
+        /// <param name="col">Source column</param>
+        /// <param name="row">Source row (1-based)</param>
         public FluentCell CopyStyleFrom(ExcelCol col, int row)
         {
             if (_cell == null) return this;
@@ -385,9 +385,9 @@ namespace FluentNPOI.Stages
         }
 
         /// <summary>
-        /// 設定背景顏色
+        /// Set background color
         /// </summary>
-        /// <param name="color">索引顏色</param>
+        /// <param name="color">Indexed color</param>
         public FluentCell SetBackgroundColor(IndexedColors color)
         {
             if (_cell == null) return this;
@@ -404,11 +404,11 @@ namespace FluentNPOI.Stages
         }
 
         /// <summary>
-        /// 設定字體
+        /// Set font
         /// </summary>
-        /// <param name="fontName">字體名稱</param>
-        /// <param name="fontSize">字體大小（點）</param>
-        /// <param name="isBold">是否粗體</param>
+        /// <param name="fontName">Font name</param>
+        /// <param name="fontSize">Font size (points)</param>
+        /// <param name="isBold">Is bold</param>
         public FluentCell SetFont(string fontName = null, double? fontSize = null, bool isBold = false)
         {
             if (_cell == null) return this;
@@ -429,9 +429,9 @@ namespace FluentNPOI.Stages
         }
 
         /// <summary>
-        /// 設定四邊邊框
+        /// Set border for all sides
         /// </summary>
-        /// <param name="style">邊框樣式</param>
+        /// <param name="style">Border style</param>
         public FluentCell SetBorder(BorderStyle style)
         {
             if (_cell == null) return this;
@@ -450,10 +450,10 @@ namespace FluentNPOI.Stages
         }
 
         /// <summary>
-        /// 設定對齊方式
+        /// Set alignment
         /// </summary>
-        /// <param name="horizontal">水平對齊</param>
-        /// <param name="vertical">垂直對齊</param>
+        /// <param name="horizontal">Horizontal alignment</param>
+        /// <param name="vertical">Vertical alignment</param>
         public FluentCell SetAlignment(HorizontalAlignment horizontal = HorizontalAlignment.General, VerticalAlignment vertical = VerticalAlignment.Center)
         {
             if (_cell == null) return this;
@@ -470,18 +470,18 @@ namespace FluentNPOI.Stages
         }
 
         /// <summary>
-        /// 取得當前儲存格的位置資訊
+        /// Get current cell position information
         /// </summary>
-        /// <returns>欄位（ExcelCol）和列號（1-based）</returns>
+        /// <returns>Column (ExcelCol) and row number (1-based)</returns>
         public (ExcelCol Column, int Row) GetPosition()
         {
-            return (_col, _row + 1);  // 轉換為 1-based 返回
+            return (_col, _row + 1);  // Convert to 1-based return
         }
 
         /// <summary>
-        /// 設定數值格式
+        /// Set number format
         /// </summary>
-        /// <param name="format">格式字串（例如 "#,##0.00", "yyyy-mm-dd", "0%"）</param>
+        /// <param name="format">Format string (e.g. "#,##0.00", "yyyy-mm-dd", "0%")</param>
         public FluentCell SetNumberFormat(string format)
         {
             if (_cell == null || string.IsNullOrEmpty(format)) return this;
@@ -499,9 +499,9 @@ namespace FluentNPOI.Stages
         }
 
         /// <summary>
-        /// 設定自動換行
+        /// Set wrap text
         /// </summary>
-        /// <param name="wrap">是否啟用自動換行</param>
+        /// <param name="wrap">Enable wrap text</param>
         public FluentCell SetWrapText(bool wrap = true)
         {
             if (_cell == null) return this;
@@ -517,10 +517,10 @@ namespace FluentNPOI.Stages
         }
 
         /// <summary>
-        /// 添加備註（批註）
+        /// Add comment
         /// </summary>
-        /// <param name="text">備註文字</param>
-        /// <param name="author">作者（可選）</param>
+        /// <param name="text">Comment text</param>
+        /// <param name="author">Author (optional)</param>
         public FluentCell SetComment(string text, string author = null)
         {
             if (_cell == null || string.IsNullOrEmpty(text)) return this;
@@ -528,14 +528,14 @@ namespace FluentNPOI.Stages
             ICreationHelper factory = _workbook.GetCreationHelper();
             IDrawing drawing = _sheet.CreateDrawingPatriarch();
 
-            // 創建錨點（備註顯示位置）
+            // Create anchor (comment display position)
             IClientAnchor anchor = factory.CreateClientAnchor();
             anchor.Col1 = _cell.ColumnIndex;
             anchor.Col2 = _cell.ColumnIndex + 2;
             anchor.Row1 = _cell.RowIndex;
             anchor.Row2 = _cell.RowIndex + 3;
 
-            // 創建備註
+            // Create comment
             IComment comment = drawing.CreateCellComment(anchor);
             comment.String = factory.CreateRichTextString(text);
             if (!string.IsNullOrEmpty(author))
@@ -548,9 +548,9 @@ namespace FluentNPOI.Stages
         }
 
         /// <summary>
-        /// 設定儲存格鎖定狀態（需配合保護工作表使用）
+        /// Set cell locked state (must be used with sheet protection)
         /// </summary>
-        /// <param name="locked">是否鎖定</param>
+        /// <param name="locked">Is locked</param>
         public FluentCell SetLocked(bool locked = true)
         {
             if (_cell == null) return this;
@@ -566,9 +566,9 @@ namespace FluentNPOI.Stages
         }
 
         /// <summary>
-        /// 設定儲存格隱藏公式（需配合保護工作表使用）
+        /// Set cell hidden formula (must be used with sheet protection)
         /// </summary>
-        /// <param name="hidden">是否隱藏公式</param>
+        /// <param name="hidden">Is hidden formula</param>
         public FluentCell SetHidden(bool hidden = true)
         {
             if (_cell == null) return this;
@@ -584,9 +584,9 @@ namespace FluentNPOI.Stages
         }
 
         /// <summary>
-        /// 設定文字旋轉角度
+        /// Set text rotation angle
         /// </summary>
-        /// <param name="degrees">旋轉角度（-90 到 90）</param>
+        /// <param name="degrees">Rotation angle (-90 to 90)</param>
         public FluentCell SetRotation(short degrees)
         {
             if (_cell == null) return this;
@@ -602,9 +602,9 @@ namespace FluentNPOI.Stages
         }
 
         /// <summary>
-        /// 設定縮進層級
+        /// Set indentation level
         /// </summary>
-        /// <param name="indent">縮進層級（0-15）</param>
+        /// <param name="indent">Indentation level (0-15)</param>
         public FluentCell SetIndent(short indent)
         {
             if (_cell == null) return this;

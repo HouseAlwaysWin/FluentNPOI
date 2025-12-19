@@ -7,21 +7,21 @@ using FluentNPOI.Models;
 namespace FluentNPOI.Streaming.Mapping
 {
     /// <summary>
-    /// DataTable 專用的 Mapping 設定
+    /// DataTable dedicated Mapping configuration
     /// </summary>
     public class DataTableMapping
     {
         private readonly List<ColumnMapping> _mappings = new List<ColumnMapping>();
 
         /// <summary>
-        /// 預設起始列（1-based），預設為 1
+        /// Default start row (1-based), default is 1
         /// </summary>
         public int StartRow { get; private set; } = 1;
 
         /// <summary>
-        /// 設定表格預設起始列（1-based）
+        /// Set table default start row (1-based)
         /// </summary>
-        /// <param name="row">起始列（1-based，第 1 列 = 1）</param>
+        /// <param name="row">Start row (1-based, 1st row = 1)</param>
         public DataTableMapping WithStartRow(int row)
         {
             StartRow = row < 1 ? 1 : row;
@@ -29,7 +29,7 @@ namespace FluentNPOI.Streaming.Mapping
         }
 
         /// <summary>
-        /// 開始設定欄位對應
+        /// Start setting column mapping
         /// </summary>
         public DataTableColumnBuilder Map(string columnName)
         {
@@ -39,12 +39,12 @@ namespace FluentNPOI.Streaming.Mapping
         }
 
         /// <summary>
-        /// 取得所有 Mapping 設定
+        /// Get all Mapping configurations
         /// </summary>
         public IReadOnlyList<ColumnMapping> GetMappings() => _mappings;
 
         /// <summary>
-        /// 從 DataTable 自動產生 Mapping
+        /// Automatically generate Mapping from DataTable
         /// </summary>
         public static DataTableMapping FromDataTable(DataTable dt)
         {
@@ -63,12 +63,12 @@ namespace FluentNPOI.Streaming.Mapping
         }
 
         /// <summary>
-        /// 從 DataRow 取值
+        /// Get value from DataRow
         /// </summary>
-        /// <param name="map">欄位對應設定</param>
-        /// <param name="row">DataRow 資料</param>
-        /// <param name="rowIndex">Excel 1-based 行號</param>
-        /// <param name="colIndex">ExcelCol 欄位</param>
+        /// <param name="map">Column mapping configuration</param>
+        /// <param name="row">DataRow data</param>
+        /// <param name="rowIndex">Excel 1-based row number</param>
+        /// <param name="colIndex">ExcelCol column</param>
         public object GetValue(ColumnMapping map, DataRow row, int rowIndex, ExcelCol colIndex)
         {
             if (map.ValueFunc != null)
@@ -86,7 +86,7 @@ namespace FluentNPOI.Streaming.Mapping
     }
 
     /// <summary>
-    /// DataTable 欄位設定建構器
+    /// DataTable column setting builder
     /// </summary>
     public class DataTableColumnBuilder
     {
@@ -100,7 +100,7 @@ namespace FluentNPOI.Streaming.Mapping
         }
 
         /// <summary>
-        /// 設定對應的 Excel 欄位
+        /// Set corresponding Excel column
         /// </summary>
         public DataTableColumnBuilder ToColumn(ExcelCol column)
         {
@@ -109,7 +109,7 @@ namespace FluentNPOI.Streaming.Mapping
         }
 
         /// <summary>
-        /// 設定靜態標題
+        /// Set static title
         /// </summary>
         public DataTableColumnBuilder WithTitle(string title)
         {
@@ -118,9 +118,9 @@ namespace FluentNPOI.Streaming.Mapping
         }
 
         /// <summary>
-        /// 設定動態標題（完整版）
+        /// Set dynamic title (full version)
         /// </summary>
-        /// <param name="titleFunc">標題函數，參數為 (row, col)，回傳標題字串</param>
+        /// <param name="titleFunc">Title function, parameters are (row, col), returns title string</param>
         public DataTableColumnBuilder WithTitle(Func<int, ExcelCol, string> titleFunc)
         {
             _mapping.TitleFunc = titleFunc;
@@ -128,9 +128,9 @@ namespace FluentNPOI.Streaming.Mapping
         }
 
         /// <summary>
-        /// 設定靜態值（所有列都使用相同值）
+        /// Set static value (all rows use same value)
         /// </summary>
-        /// <param name="value">靜態值</param>
+        /// <param name="value">Static value</param>
         public DataTableColumnBuilder WithValue(object value)
         {
             _mapping.ValueFunc = (obj, row, col) => value;
@@ -138,9 +138,9 @@ namespace FluentNPOI.Streaming.Mapping
         }
 
         /// <summary>
-        /// 設定自訂值計算（簡單版，僅需 DataRow）
+        /// Set custom value calculation (simple version, only needs DataRow)
         /// </summary>
-        /// <param name="valueFunc">值計算函數，僅接收 DataRow 參數</param>
+        /// <param name="valueFunc">Value calculation function, only receives DataRow parameter</param>
         public DataTableColumnBuilder WithValue(Func<DataRow, object> valueFunc)
         {
             _mapping.ValueFunc = (obj, row, col) => valueFunc((DataRow)obj);
@@ -148,9 +148,9 @@ namespace FluentNPOI.Streaming.Mapping
         }
 
         /// <summary>
-        /// 設定自訂值計算（完整版）
+        /// Set custom value calculation (full version)
         /// </summary>
-        /// <param name="valueFunc">值計算函數，參數為 (row, excelRow, col)，excelRow 為 Excel 1-based 行號，col 為 ExcelCol 欄位</param>
+        /// <param name="valueFunc">Value calculation function, parameters are (row, excelRow, col), excelRow is Excel 1-based row number, col is ExcelCol column</param>
         public DataTableColumnBuilder WithValue(Func<DataRow, int, ExcelCol, object> valueFunc)
         {
             _mapping.ValueFunc = (obj, row, col) => valueFunc((DataRow)obj, row, col);
@@ -158,9 +158,9 @@ namespace FluentNPOI.Streaming.Mapping
         }
 
         /// <summary>
-        /// 設定靜態公式（簡單版）
+        /// Set static formula (simple version)
         /// </summary>
-        /// <param name="formula">公式字串（不含 =）</param>
+        /// <param name="formula">Formula string (without =)</param>
         public DataTableColumnBuilder WithFormula(string formula)
         {
             _mapping.FormulaFunc = (row, col) => formula;
@@ -168,9 +168,9 @@ namespace FluentNPOI.Streaming.Mapping
         }
 
         /// <summary>
-        /// 設定動態公式（完整版）
+        /// Set dynamic formula (full version)
         /// </summary>
-        /// <param name="formulaFunc">公式函數，參數為 (row, col)，回傳公式字串 (不含 =)</param>
+        /// <param name="formulaFunc">Formula function, parameters are (row, col), returns formula string (without =)</param>
         public DataTableColumnBuilder WithFormula(Func<int, ExcelCol, string> formulaFunc)
         {
             _mapping.FormulaFunc = formulaFunc;
@@ -178,7 +178,7 @@ namespace FluentNPOI.Streaming.Mapping
         }
 
         /// <summary>
-        /// 設定資料樣式
+        /// Set data style
         /// </summary>
         public DataTableColumnBuilder WithStyle(string styleKey)
         {
@@ -187,7 +187,7 @@ namespace FluentNPOI.Streaming.Mapping
         }
 
         /// <summary>
-        /// 設定標題樣式
+        /// Set title style
         /// </summary>
         public DataTableColumnBuilder WithTitleStyle(string styleKey)
         {
@@ -196,7 +196,7 @@ namespace FluentNPOI.Streaming.Mapping
         }
 
         /// <summary>
-        /// 設定儲存格類型
+        /// Set cell type
         /// </summary>
         public DataTableColumnBuilder WithCellType(NPOI.SS.UserModel.CellType cellType)
         {
@@ -205,10 +205,10 @@ namespace FluentNPOI.Streaming.Mapping
         }
 
         /// <summary>
-        /// 從指定儲存格複製標題樣式
+        /// Copy title style from specified cell
         /// </summary>
-        /// <param name="row">來源列（1-based，第 1 列 = 1）</param>
-        /// <param name="col">來源欄</param>
+        /// <param name="row">Source row (1-based, 1st row = 1)</param>
+        /// <param name="col">Source column</param>
         public DataTableColumnBuilder WithTitleStyleFrom(int row, ExcelCol col)
         {
             _mapping.TitleStyleRef = StyleReference.FromUserInput(row, col);
@@ -216,10 +216,10 @@ namespace FluentNPOI.Streaming.Mapping
         }
 
         /// <summary>
-        /// 從指定儲存格複製資料樣式
+        /// Copy data style from specified cell
         /// </summary>
-        /// <param name="row">來源列（1-based，第 1 列 = 1）</param>
-        /// <param name="col">來源欄</param>
+        /// <param name="row">Source row (1-based, 1st row = 1)</param>
+        /// <param name="col">Source column</param>
         public DataTableColumnBuilder WithStyleFrom(int row, ExcelCol col)
         {
             _mapping.DataStyleRef = StyleReference.FromUserInput(row, col);
@@ -227,9 +227,9 @@ namespace FluentNPOI.Streaming.Mapping
         }
 
         /// <summary>
-        /// 設定欄位列偏移（此欄位相對於表格起始列往下偏移）
+        /// Set column row offset (offset downwards from table start row)
         /// </summary>
-        /// <param name="offset">偏移量（正數表示往下偏移，預設 0）</param>
+        /// <param name="offset">Offset amount (positive number means downward offset, default 0)</param>
         public DataTableColumnBuilder WithRowOffset(int offset)
         {
             _mapping.RowOffset = offset;
@@ -237,7 +237,7 @@ namespace FluentNPOI.Streaming.Mapping
         }
 
         /// <summary>
-        /// 繼續設定下一個欄位
+        /// Continue to set next column
         /// </summary>
         public DataTableColumnBuilder Map(string columnName)
         {

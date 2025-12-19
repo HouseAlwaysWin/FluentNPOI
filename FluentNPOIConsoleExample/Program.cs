@@ -93,7 +93,7 @@ namespace FluentNPOIConsoleExample
                 // 設定全域基礎樣式
                 .SetupGlobalCachedCellStyles((workbook, style) =>
                 {
-                    style.SetAligment(HorizontalAlignment.Center);
+                    style.SetAlignment(HorizontalAlignment.Center);
                     style.SetBorderAllStyle(BorderStyle.Thin);
                     style.SetFontInfo(workbook, "Calibri", 10);
                 })
@@ -126,7 +126,7 @@ namespace FluentNPOIConsoleExample
                 .SetupCellStyle("AmountCurrency", (workbook, style) =>
                 {
                     style.SetDataFormat(workbook, "#,##0.00");
-                    style.SetAligment(HorizontalAlignment.Right);
+                    style.SetAlignment(HorizontalAlignment.Right);
                 }, inheritFrom: "global")
 
                 .SetupCellStyle("HighlightYellow", (workbook, style) =>
@@ -311,14 +311,14 @@ namespace FluentNPOIConsoleExample
                 style.FillPattern = FillPattern.SolidForeground;
                 style.SetCellFillForegroundColor(IndexedColors.LightGreen);
                 style.SetBorderAllStyle(BorderStyle.Thin);
-                style.SetAligment(HorizontalAlignment.Center);
+                style.SetAlignment(HorizontalAlignment.Center);
             })
             .SetupCellStyle("InactiveRed", (wb, style) =>
             {
                 style.FillPattern = FillPattern.SolidForeground;
                 style.SetCellFillForegroundColor(IndexedColors.Rose);
                 style.SetBorderAllStyle(BorderStyle.Thin);
-                style.SetAligment(HorizontalAlignment.Center);
+                style.SetAlignment(HorizontalAlignment.Center);
             });
 
             var mapping = new FluentMapping<ExampleData>();
@@ -385,7 +385,7 @@ namespace FluentNPOIConsoleExample
                     style.FillPattern = FillPattern.SolidForeground;
                     style.SetCellFillForegroundColor(IndexedColors.LightGreen);
                     style.SetBorderAllStyle(BorderStyle.Thin);
-                    style.SetAligment(HorizontalAlignment.Center);
+                    style.SetAlignment(HorizontalAlignment.Center);
                 })
                 .SetTable(limitedData, mapping, 2)
                 .BuildRows();
@@ -405,7 +405,7 @@ namespace FluentNPOIConsoleExample
                     style.FillPattern = FillPattern.SolidForeground;
                     style.SetCellFillForegroundColor(IndexedColors.LightYellow);
                     style.SetBorderAllStyle(BorderStyle.Thin);
-                    style.SetAligment(HorizontalAlignment.Center);
+                    style.SetAlignment(HorizontalAlignment.Center);
                 })
                 .SetTable(limitedData, mapping, 2)
                 .BuildRows();
@@ -454,7 +454,7 @@ namespace FluentNPOIConsoleExample
                     style.FillPattern = FillPattern.SolidForeground;
                     style.SetCellFillForegroundColor(IndexedColors.Aqua);
                     style.SetBorderAllStyle(BorderStyle.Thin);
-                    style.SetAligment(HorizontalAlignment.Center);
+                    style.SetAlignment(HorizontalAlignment.Center);
                     style.SetFontInfo(wb, fontFamily: "新細明體");
                 })
                 .SetTable(limitedData, mixedMapping, 2)

@@ -9,9 +9,9 @@ using System.Linq;
 namespace FluentNPOI.Stages
 {
     /// <summary>
-    /// 表格操作類
+    /// Table operation class
     /// </summary>
-    /// <typeparam name="T">表格數據類型</typeparam>
+    /// <typeparam name="T">Table data type</typeparam>
     public class FluentTable<T> : FluentSheetBase
     {
         private IEnumerable<T> _table;
@@ -27,7 +27,7 @@ namespace FluentNPOI.Stages
             : base(workbook, sheet, cellStylesCached)
         {
             _table = table;
-            // ExcelCol 已經是有效的列枚舉，不需要規範化
+            // ExcelCol is already a valid column enum, no need to normalize
             _startCol = startCol;
             _startRow = NormalizeRow(startRow);
             _cellTitleSets = cellTitleSets;
@@ -35,7 +35,7 @@ namespace FluentNPOI.Stages
         }
 
         /// <summary>
-        /// 使用 FluentMapping 設定欄位對應（可取代 BeginTitleSet/BeginBodySet）
+        /// Use FluentMapping to set column mapping (can replace BeginTitleSet/BeginBodySet)
         /// </summary>
         public FluentTable<T> WithMapping<TMapping>(FluentMapping<TMapping> mapping) where TMapping : new()
         {
@@ -56,7 +56,7 @@ namespace FluentNPOI.Stages
             {
                 var cell = rowObj.GetCell(colIndex) ?? rowObj.CreateCell(colIndex);
 
-                // 優先使用 TableCellNameMap 中的 Value，如果沒有則從 item 中獲取
+                // Prioritize Value from TableCellNameMap, if not present, get from item
                 Func<TableCellParams, object> setValueAction = cellset.SetValueAction;
                 Func<TableCellParams, object> setFormulaValueAction = cellset.SetFormulaValueAction;
 
@@ -69,7 +69,7 @@ namespace FluentNPOI.Stages
                 object value = cellset.CellValue ?? GetTableCellValue(cellset.CellName, item);
                 cellParams.CellValue = value;
 
-                // 準備泛型參數（供泛型委派使用）
+                // Prepare generic parameters (for generic delegate use)
                 var cellParamsT = new TableCellParams<T>
                 {
                     ColNum = (ExcelCol)colIndex,
@@ -154,7 +154,7 @@ namespace FluentNPOI.Stages
         }
 
         /// <summary>
-        /// 使用 FluentMapping 寫入一行
+        /// Write a row using FluentMapping
         /// </summary>
         private FluentTable<T> SetRowWithMapping(int rowOffset, bool writeTitle)
         {
@@ -163,19 +163,19 @@ namespace FluentNPOI.Stages
             var item = GetItemAt(rowOffset);
             var targetRowIndex = _startRow + rowOffset + (writeTitle ? 1 : 0);
 
-            // 寫入標題行（只在第一次）
+            // Write title row (only for the first time)
             if (writeTitle && rowOffset == 0)
             {
                 foreach (var map in _columnMappings.Where(m => m.ColumnIndex.HasValue))
                 {
-                    // 計算此欄的標題列位置（加上 per-column offset）
+                    // Calculate title row position for this column (add per-column offset)
                     var titleRowIndex = _startRow + map.RowOffset;
                     var titleRow = _sheet.GetRow(titleRowIndex) ?? _sheet.CreateRow(titleRowIndex);
                     var colIdx = (int)map.ColumnIndex.Value;
                     var cell = titleRow.GetCell(colIdx) ?? titleRow.CreateCell(colIdx);
                     cell.SetCellValue(map.Title ?? map.Property?.Name ?? map.ColumnName ?? "");
 
-                    // 套用標題樣式
+                    // Apply title style
                     if (map.TitleStyleRef != null)
                     {
                         string refKey = $"{_sheet.SheetName}_{map.TitleStyleRef.Column}{map.TitleStyleRef.Row}";
@@ -202,7 +202,7 @@ namespace FluentNPOI.Stages
                     }
                     else if (cell.CellStyle.Index == 0) // Try global style
                     {
-                        // 優先使用 Sheet 全域樣式，若無則使用 Workbook 全域樣式
+                        // Prioritize Sheet global style, if not present, use Workbook global style
                         string sheetGlobalKey = $"global_{_sheet.SheetName}";
                         if (_cellStylesCached.TryGetValue(sheetGlobalKey, out var sheetGlobalStyle))
                         {
@@ -216,16 +216,16 @@ namespace FluentNPOI.Stages
                 }
             }
 
-            // 寫入資料行
+            // Write data row
             foreach (var map in _columnMappings.Where(m => m.ColumnIndex.HasValue))
             {
-                // 計算此欄的資料列位置（加上 per-column offset）
+                // Calculate data row position for this column (add per-column offset)
                 var colTargetRowIndex = targetRowIndex + map.RowOffset;
                 var dataRow = _sheet.GetRow(colTargetRowIndex) ?? _sheet.CreateRow(colTargetRowIndex);
                 var colIdx = (int)map.ColumnIndex.Value;
                 var cell = dataRow.GetCell(colIdx) ?? dataRow.CreateCell(colIdx);
 
-                // 公式優先
+                // Formula first
                 if (map.FormulaFunc != null)
                 {
                     var formula = map.FormulaFunc(targetRowIndex + 1, (ExcelCol)colIdx); // Excel 是 1-based
@@ -233,7 +233,7 @@ namespace FluentNPOI.Stages
                 }
                 else
                 {
-                    // 計算值 (優先使用 ValueFunc，否則從屬性取值)
+                    // Calculate value (Prioritize ValueFunc, otherwise get from property)
                     object value;
                     if (map.ValueFunc != null)
                     {
@@ -251,22 +251,22 @@ namespace FluentNPOI.Stages
                     SetCellValue(cell, value, map.CellType ?? CellType.Unknown);
                 }
 
-                // 註冊自動生成的樣式
+                // Register automatically generated style
                 if (!string.IsNullOrEmpty(map.GeneratedStyleKey) && map.StyleConfig != null)
                 {
                     RegisterStyle(map.GeneratedStyleKey, map.StyleConfig);
                 }
 
-                // 套用資料樣式
+                // Apply data style
                 string styleKey = map.StyleKey;
 
-                // 若沒有指定 StyleKey，嘗試使用 GeneratedStyleKey
+                // If StyleKey is not specified, try to use GeneratedStyleKey
                 if (string.IsNullOrEmpty(styleKey))
                 {
                     styleKey = map.GeneratedStyleKey;
                 }
 
-                // 如果有動態樣式設定，優先使用
+                // If there is dynamic style setting, use it first
                 if (map.DynamicStyleFunc != null)
                 {
                     string dynamicKey = map.DynamicStyleFunc(item);
@@ -281,7 +281,7 @@ namespace FluentNPOI.Stages
                     cell.CellStyle = dataStyle;
                 }
 
-                // 複製資料樣式
+                // Copy data style
                 if (map.DataStyleRef != null)
                 {
                     string refKey = $"{_sheet.SheetName}_{map.DataStyleRef.Column}{map.DataStyleRef.Row}";
@@ -303,8 +303,8 @@ namespace FluentNPOI.Stages
                     }
                 }
 
-                // 如果沒有設定任何樣式，嘗試套用全域樣式
-                // 優先使用 Sheet 全域樣式，若無則使用 Workbook 全域樣式
+                // If no style is set, try to apply global style
+                // Prioritize Sheet global style, if not present, use Workbook global style
                 if (cell.CellStyle.Index == 0) // Default style index is usually 0
                 {
                     string sheetGlobalKey = $"global_{_sheet.SheetName}";
@@ -325,7 +325,7 @@ namespace FluentNPOI.Stages
 
         public FluentTable<T> BuildRows()
         {
-            // 如果有 FluentMapping，使用 mapping 方式寫入
+            // If FluentMapping exists, write using mapping
             if (_columnMappings != null)
             {
                 bool writeTitle = _columnMappings.Any(m => !string.IsNullOrEmpty(m.Title));
@@ -336,7 +336,7 @@ namespace FluentNPOI.Stages
                 return this;
             }
 
-            // 否則使用原有方式
+            // Otherwise use original method
             for (int i = 0; i < _table.Count(); i++)
             {
                 SetRow(i);
@@ -345,19 +345,19 @@ namespace FluentNPOI.Stages
         }
 
         /// <summary>
-        /// 取得資料行數（不含標題）
+        /// Get data row count (excluding title)
         /// </summary>
         public int RowCount => _table.Count();
 
         /// <summary>
-        /// 取得欄位數
+        /// Get column count
         /// </summary>
         public int ColumnCount => _columnMappings?.Count ?? 0;
 
         /// <summary>
-        /// 自動調整所有欄位寬度
+        /// Auto size all columns
         /// </summary>
-        /// <returns>FluentTable 實例，支援鏈式調用</returns>
+        /// <returns>FluentTable instance, supports method chaining</returns>
         public FluentTable<T> AutoSizeColumns()
         {
             if (_columnMappings == null) return this;
@@ -370,10 +370,10 @@ namespace FluentNPOI.Stages
         }
 
         /// <summary>
-        /// 設定所有欄位相同寬度
+        /// Set same width for all columns
         /// </summary>
-        /// <param name="width">列寬（字符數）</param>
-        /// <returns>FluentTable 實例，支援鏈式調用</returns>
+        /// <param name="width">Width (characters)</param>
+        /// <returns>FluentTable instance, supports method chaining</returns>
         public FluentTable<T> SetColumnWidths(int width)
         {
             if (_columnMappings == null) return this;
@@ -386,10 +386,10 @@ namespace FluentNPOI.Stages
         }
 
         /// <summary>
-        /// 設定標題行高度
+        /// Set title row height
         /// </summary>
-        /// <param name="heightInPoints">行高（點）</param>
-        /// <returns>FluentTable 實例，支援鏈式調用</returns>
+        /// <param name="heightInPoints">Row height (points)</param>
+        /// <returns>FluentTable instance, supports method chaining</returns>
         public FluentTable<T> SetTitleRowHeight(float heightInPoints)
         {
             var row = _sheet.GetRow(_startRow);
@@ -401,13 +401,13 @@ namespace FluentNPOI.Stages
         }
 
         /// <summary>
-        /// 設定資料行高度
+        /// Set data row height
         /// </summary>
-        /// <param name="heightInPoints">行高（點）</param>
-        /// <returns>FluentTable 實例，支援鏈式調用</returns>
+        /// <param name="heightInPoints">Row height (points)</param>
+        /// <returns>FluentTable instance, supports method chaining</returns>
         public FluentTable<T> SetDataRowHeights(float heightInPoints)
         {
-            int dataStartRow = _startRow + 1; // 跳過標題行
+            int dataStartRow = _startRow + 1; // Skip title row
             for (int i = 0; i < _table.Count(); i++)
             {
                 var row = _sheet.GetRow(dataStartRow + i);
@@ -420,20 +420,20 @@ namespace FluentNPOI.Stages
         }
 
         /// <summary>
-        /// 凍結標題行（讓標題行在捲動時固定）
+        /// Freeze title row (keep title row fixed when scrolling)
         /// </summary>
-        /// <returns>FluentTable 實例，支援鏈式調用</returns>
+        /// <returns>FluentTable instance, supports method chaining</returns>
         public FluentTable<T> FreezeTitleRow()
         {
-            // 凍結在標題行下方（_startRow + 1）
+            // Freeze below title row (_startRow + 1)
             _sheet.CreateFreezePane(0, _startRow + 1);
             return this;
         }
 
         /// <summary>
-        /// 設定自動篩選
+        /// Set auto filter
         /// </summary>
-        /// <returns>FluentTable 實例，支援鏈式調用</returns>
+        /// <returns>FluentTable instance, supports method chaining</returns>
         public FluentTable<T> SetAutoFilter()
         {
             if (_columnMappings == null || !_columnMappings.Any()) return this;
@@ -443,7 +443,7 @@ namespace FluentNPOI.Stages
 
             int firstCol = (int)columns.Min(m => m.ColumnIndex.Value);
             int lastCol = (int)columns.Max(m => m.ColumnIndex.Value);
-            int lastRow = _startRow + _table.Count(); // 標題行 + 資料行數
+            int lastRow = _startRow + _table.Count(); // Title row + data row count
 
             var range = new NPOI.SS.Util.CellRangeAddress(_startRow, lastRow, firstCol, lastCol);
             _sheet.SetAutoFilter(range);
@@ -451,9 +451,9 @@ namespace FluentNPOI.Stages
         }
 
         /// <summary>
-        /// 取得表格範圍（用於設定樣式等）
+        /// Get table range (for setting styles, etc.)
         /// </summary>
-        /// <returns>起始列、結束列、起始欄、結束欄（均為 0-based）</returns>
+        /// <returns>Start row, end row, start column, end column (all 0-based)</returns>
         public (int StartRow, int EndRow, int StartCol, int EndCol) GetTableRange()
         {
             if (_columnMappings == null || !_columnMappings.Any())

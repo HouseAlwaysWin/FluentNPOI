@@ -1,16 +1,16 @@
 namespace FluentNPOI.Streaming.Abstractions
 {
     /// <summary>
-    /// 行資料對應到 DTO 的介面
+    /// Interface for mapping row data to DTO
     /// </summary>
-    /// <typeparam name="T">目標 DTO 型別</typeparam>
+    /// <typeparam name="T">Target DTO type</typeparam>
     public interface IRowMapper<T>
     {
         /// <summary>
-        /// 將串流行轉換為 DTO
+        /// Convert streaming row to DTO
         /// </summary>
-        /// <param name="row">串流行資料</param>
-        /// <returns>轉換後的 DTO</returns>
+        /// <param name="row">Streaming row data</param>
+        /// <returns>Converted DTO</returns>
         T Map(IStreamingRow row);
     }
 }

@@ -10,26 +10,26 @@ using FluentNPOI.Models;
 namespace FluentNPOI.Stages
 {
     /// <summary>
-    /// 工作簿操作類
+    /// Workbook operation class
     /// </summary>
     public class FluentWorkbook : FluentWorkbookBase
     {
         private ISheet _currentSheet;
 
         /// <summary>
-        /// 初始化 FluentWorkbook 实例
+        /// Initialize FluentWorkbook instance
         /// </summary>
-        /// <param name="workbook">NPOI 工作簿对象</param>
+        /// <param name="workbook">NPOI Workbook object</param>
         public FluentWorkbook(IWorkbook workbook)
             : base(workbook, new Dictionary<string, ICellStyle>())
         {
         }
 
         /// <summary>
-        /// 读取 Excel 文件
+        /// Read Excel file
         /// </summary>
-        /// <param name="filePath">Excel 文件路径</param>
-        /// <returns>FluentWorkbook 实例，支持链式调用</returns>
+        /// <param name="filePath">Excel file path</param>
+        /// <returns>FluentWorkbook instance, supports method chaining</returns>
         public FluentWorkbook ReadExcelFile(string filePath)
         {
             if (string.IsNullOrWhiteSpace(filePath)) throw new ArgumentNullException(nameof(filePath));
@@ -39,7 +39,7 @@ namespace FluentNPOI.Stages
 
             string ext = Path.GetExtension(filePath)?.ToLowerInvariant();
 
-            // 以讀取模式開啟並立即讀入記憶體，讀完即釋放檔案鎖
+            // Open with Read mode and read into memory immediately, release file lock after reading
             using (var fs = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
             {
                 if (ext == ".xls")
@@ -48,12 +48,12 @@ namespace FluentNPOI.Stages
                 }
                 else
                 {
-                    // 預設使用 XSSF，支援 .xlsx/.xlsm
+                    // Default use XSSF, supports .xlsx/.xlsm
                     _workbook = new XSSFWorkbook(fs);
                 }
             }
 
-            // 預設選取第一個工作表
+            // Select first sheet by default
             if (_workbook.NumberOfSheets > 0)
             {
                 _currentSheet = _workbook.GetSheetAt(0);
@@ -63,13 +63,13 @@ namespace FluentNPOI.Stages
         }
 
         /// <summary>
-        /// 从指定工作表的单元格复制样式
+        /// Copy style from cell in specified sheet
         /// </summary>
-        /// <param name="cellStyleKey">样式缓存键名</param>
-        /// <param name="sheet">源工作表</param>
-        /// <param name="col">列位置</param>
-        /// <param name="rowIndex">行位置（1-based）</param>
-        /// <returns>FluentWorkbook 实例，支持链式调用</returns>
+        /// <param name="cellStyleKey">Style cache key</param>
+        /// <param name="sheet">Source sheet</param>
+        /// <param name="col">Column position</param>
+        /// <param name="rowIndex">Row index (1-based)</param>
+        /// <returns>FluentWorkbook instance, supports method chaining</returns>
         public FluentWorkbook CopyStyleFromSheetCell(string cellStyleKey, ISheet sheet, ExcelCol col, int rowIndex)
         {
             ICell cell = sheet.GetExcelCell(col, rowIndex);
@@ -83,10 +83,10 @@ namespace FluentNPOI.Stages
         }
 
         /// <summary>
-        /// 设置全局缓存的单元格样式（会清除所有现有样式）
+        /// Set global cached cell style (clears all existing styles)
         /// </summary>
-        /// <param name="styles">样式设置函数</param>
-        /// <returns>FluentWorkbook 实例，支持链式调用</returns>
+        /// <param name="styles">Style configuration action</param>
+        /// <returns>FluentWorkbook instance, supports method chaining</returns>
         public FluentWorkbook SetupGlobalCachedCellStyles(Action<IWorkbook, ICellStyle> styles)
         {
             ICellStyle newCellStyle = _workbook.CreateCellStyle();
@@ -97,23 +97,23 @@ namespace FluentNPOI.Stages
         }
 
         /// <summary>
-        /// 设置并缓存单元格样式
+        /// Set and cache cell style
         /// </summary>
-        /// <param name="cellStyleKey">样式缓存键名</param>
-        /// <param name="styles">样式设置函数</param>
-        /// <param name="inheritFrom">可選，繼承的父樣式鍵名。若指定，會先複製父樣式的所有屬性，再套用自訂修改</param>
-        /// <returns>FluentWorkbook 实例，支持链式调用</returns>
+        /// <param name="cellStyleKey">Style cache key</param>
+        /// <param name="styles">Style configuration action</param>
+        /// <param name="inheritFrom">Optional, inherited parent style key. If specified, copies all properties from parent first, then applies custom changes</param>
+        /// <returns>FluentWorkbook instance, supports method chaining</returns>
         public FluentWorkbook SetupCellStyle(string cellStyleKey, Action<IWorkbook, ICellStyle> styles, string inheritFrom = null)
         {
             ICellStyle newCellStyle = _workbook.CreateCellStyle();
 
-            // 如果指定繼承，先從父樣式複製所有屬性
+            // If inheritance is specified, copy all properties from parent style first
             if (!string.IsNullOrEmpty(inheritFrom) && _cellStylesCached.TryGetValue(inheritFrom, out var parentStyle))
             {
                 newCellStyle.CloneStyleFrom(parentStyle);
             }
 
-            // 套用自訂修改（會覆寫父樣式的對應屬性）
+            // Apply custom changes (will override properties from parent style)
             styles(_workbook, newCellStyle);
             _cellStylesCached.Add(cellStyleKey, newCellStyle);
             return this;
@@ -121,10 +121,10 @@ namespace FluentNPOI.Stages
 
 
         /// <summary>
-        /// 使用指定工作表
+        /// Use specified sheet
         /// </summary>
-        /// <param name="sheetName">工作表名稱</param>
-        /// <param name="createIfMissing">如果不存在是否建立</param>
+        /// <param name="sheetName">Sheet name</param>
+        /// <param name="createIfMissing">Create if missing</param>
         /// <returns></returns>
         public FluentSheet UseSheet(string sheetName, bool createIfMissing = true)
         {
@@ -137,7 +137,7 @@ namespace FluentNPOI.Stages
         }
 
         /// <summary>
-        /// 使用指定工作表
+        /// Use specified sheet
         /// </summary>
         /// <param name="sheet"></param>
         /// <returns></returns>
@@ -148,10 +148,10 @@ namespace FluentNPOI.Stages
         }
 
         /// <summary>
-        /// 使用指定索引的工作表
+        /// Use sheet at specified index
         /// </summary>
-        /// <param name="index">索引</param>
-        /// <param name="createIfMissing">如果不存在是否建立</param>
+        /// <param name="index">Index</param>
+        /// <param name="createIfMissing">Create if missing</param>
         /// <returns></returns>
         public FluentSheet UseSheetAt(int index, bool createIfMissing = false)
         {
@@ -164,16 +164,16 @@ namespace FluentNPOI.Stages
         }
 
         /// <summary>
-        /// 儲存至檔案
+        /// Save to file
         /// </summary>
-        /// <param name="filePath">檔案路徑</param>
-        /// <returns>FluentWorkbook 實例，支援鏈式調用</returns>
+        /// <param name="filePath">File path</param>
+        /// <returns>FluentWorkbook instance, supports method chaining</returns>
         public FluentWorkbook SaveToFile(string filePath)
         {
             if (string.IsNullOrWhiteSpace(filePath))
                 throw new ArgumentNullException(nameof(filePath));
 
-            // 確保目錄存在
+            // Ensure directory exists
             string directory = Path.GetDirectoryName(filePath);
             if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
             {
@@ -188,10 +188,10 @@ namespace FluentNPOI.Stages
         }
 
         /// <summary>
-        /// 儲存至串流
+        /// Save to stream
         /// </summary>
-        /// <param name="stream">目標串流</param>
-        /// <returns>FluentWorkbook 實例，支援鏈式調用</returns>
+        /// <param name="stream">Target stream</param>
+        /// <returns>FluentWorkbook instance, supports method chaining</returns>
         public FluentWorkbook SaveToStream(Stream stream)
         {
             if (stream == null)
@@ -202,9 +202,9 @@ namespace FluentNPOI.Stages
         }
 
         /// <summary>
-        /// 取得所有工作表名稱
+        /// Get all sheet names
         /// </summary>
-        /// <returns>工作表名稱列表</returns>
+        /// <returns>List of sheet names</returns>
         public List<string> GetSheetNames()
         {
             var names = new List<string>();
@@ -216,15 +216,15 @@ namespace FluentNPOI.Stages
         }
 
         /// <summary>
-        /// 取得工作表數量
+        /// Get sheet count
         /// </summary>
         public int SheetCount => _workbook.NumberOfSheets;
 
         /// <summary>
-        /// 刪除指定名稱的工作表
+        /// Delete sheet by name
         /// </summary>
-        /// <param name="sheetName">工作表名稱</param>
-        /// <returns>FluentWorkbook 實例，支援鏈式調用</returns>
+        /// <param name="sheetName">Sheet name</param>
+        /// <returns>FluentWorkbook instance, supports method chaining</returns>
         public FluentWorkbook DeleteSheet(string sheetName)
         {
             int index = _workbook.GetSheetIndex(sheetName);
@@ -236,10 +236,10 @@ namespace FluentNPOI.Stages
         }
 
         /// <summary>
-        /// 刪除指定索引的工作表
+        /// Delete sheet by index
         /// </summary>
-        /// <param name="index">工作表索引（0-based）</param>
-        /// <returns>FluentWorkbook 實例，支援鏈式調用</returns>
+        /// <param name="index">Sheet index (0-based)</param>
+        /// <returns>FluentWorkbook instance, supports method chaining</returns>
         public FluentWorkbook DeleteSheetAt(int index)
         {
             if (index >= 0 && index < _workbook.NumberOfSheets)
@@ -250,11 +250,11 @@ namespace FluentNPOI.Stages
         }
 
         /// <summary>
-        /// 複製工作表
+        /// Clone sheet
         /// </summary>
-        /// <param name="sourceSheetName">來源工作表名稱</param>
-        /// <param name="newSheetName">新工作表名稱</param>
-        /// <returns>新工作表的 FluentSheet 實例</returns>
+        /// <param name="sourceSheetName">Source sheet name</param>
+        /// <param name="newSheetName">New sheet name</param>
+        /// <returns>New FluentSheet instance</returns>
         public FluentSheet CloneSheet(string sourceSheetName, string newSheetName)
         {
             int sourceIndex = _workbook.GetSheetIndex(sourceSheetName);
@@ -269,11 +269,11 @@ namespace FluentNPOI.Stages
         }
 
         /// <summary>
-        /// 重新命名工作表
+        /// Rename sheet
         /// </summary>
-        /// <param name="oldName">舊名稱</param>
-        /// <param name="newName">新名稱</param>
-        /// <returns>FluentWorkbook 實例，支援鏈式調用</returns>
+        /// <param name="oldName">Old name</param>
+        /// <param name="newName">New name</param>
+        /// <returns>FluentWorkbook instance, supports method chaining</returns>
         public FluentWorkbook RenameSheet(string oldName, string newName)
         {
             int index = _workbook.GetSheetIndex(oldName);
@@ -285,10 +285,10 @@ namespace FluentNPOI.Stages
         }
 
         /// <summary>
-        /// 設定活動工作表（開啟 Excel 時顯示的工作表）
+        /// Set active sheet (sheet shown when opening Excel)
         /// </summary>
-        /// <param name="index">工作表索引（0-based）</param>
-        /// <returns>FluentWorkbook 實例，支援鏈式調用</returns>
+        /// <param name="index">Sheet index (0-based)</param>
+        /// <returns>FluentWorkbook instance, supports method chaining</returns>
         public FluentWorkbook SetActiveSheet(int index)
         {
             if (index >= 0 && index < _workbook.NumberOfSheets)
@@ -299,10 +299,10 @@ namespace FluentNPOI.Stages
         }
 
         /// <summary>
-        /// 設定活動工作表（開啟 Excel 時顯示的工作表）
+        /// Set active sheet (sheet shown when opening Excel)
         /// </summary>
-        /// <param name="sheetName">工作表名稱</param>
-        /// <returns>FluentWorkbook 實例，支援鏈式調用</returns>
+        /// <param name="sheetName">Sheet name</param>
+        /// <returns>FluentWorkbook instance, supports method chaining</returns>
         public FluentWorkbook SetActiveSheet(string sheetName)
         {
             int index = _workbook.GetSheetIndex(sheetName);

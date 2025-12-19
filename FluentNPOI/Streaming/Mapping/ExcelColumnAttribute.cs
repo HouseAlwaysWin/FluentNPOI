@@ -3,33 +3,33 @@ using System;
 namespace FluentNPOI.Streaming.Mapping
 {
     /// <summary>
-    /// Excel 欄位對應屬性 (選用)
+    /// Excel column mapping attribute (optional)
     /// </summary>
     [AttributeUsage(AttributeTargets.Property, AllowMultiple = false)]
     public class ExcelColumnAttribute : Attribute
     {
         /// <summary>
-        /// 欄位索引 (0-based)
+        /// Column index (0-based)
         /// </summary>
         public int Index { get; set; } = -1;
 
         /// <summary>
-        /// 欄位名稱 (Header 對應)
+        /// Column name (Header mapping)
         /// </summary>
         public string Name { get; set; }
 
         /// <summary>
-        /// 標題 (寫入時使用)
+        /// Title (used when writing)
         /// </summary>
         public string Title { get; set; }
 
         /// <summary>
-        /// 格式
+        /// Format
         /// </summary>
         public string Format { get; set; }
 
         /// <summary>
-        /// 以索引建立
+        /// Create with index
         /// </summary>
         public ExcelColumnAttribute(int index)
         {
@@ -37,7 +37,7 @@ namespace FluentNPOI.Streaming.Mapping
         }
 
         /// <summary>
-        /// 以名稱建立
+        /// Create with name
         /// </summary>
         public ExcelColumnAttribute(string name)
         {
@@ -45,7 +45,7 @@ namespace FluentNPOI.Streaming.Mapping
         }
 
         /// <summary>
-        /// 預設建構子
+        /// Default constructor
         /// </summary>
         public ExcelColumnAttribute()
         {

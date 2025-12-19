@@ -153,7 +153,7 @@ fluent.UseSheet("Sheet1")
 ```csharp
 fluent.SetupCellStyle("HeaderStyle", (wb, style) =>
 {
-    style.SetAligment(HorizontalAlignment.Center);
+    style.SetAlignment(HorizontalAlignment.Center);
     style.FillForegroundColor = IndexedColors.Grey25Percent.Index;
     style.FillPattern = FillPattern.SolidForeground;
 });
@@ -332,7 +332,7 @@ Besides direct `.Set...` methods, you can use the Style Cache for shared styles 
 ```csharp
 fluent.SetupCellStyle("HeaderStyle", (wb, style) =>
 {
-    style.SetAligment(HorizontalAlignment.Center);
+    style.SetAlignment(HorizontalAlignment.Center);
     style.FillForegroundColor = IndexedColors.Grey25Percent.Index;
     style.FillPattern = FillPattern.SolidForeground;
 });
