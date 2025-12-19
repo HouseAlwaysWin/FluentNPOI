@@ -152,7 +152,7 @@ namespace FluentNPOI.Stages
                     var cell = GetOrCreateCell(excelRow, colIdx);
 
                     if (map.FormulaFunc != null)
-                        cell.SetCellFormula(map.FormulaFunc(dataRowStart + rowIdx + 1, colIdx));
+                        cell.SetCellFormula(map.FormulaFunc(dataRowStart + rowIdx + 1, (ExcelCol)colIdx));
                     else
                         SetCellValueInternal(cell, actualMapping.GetValue(map, dataRow, dataRowStart + rowIdx + 1, (ExcelCol)colIdx));
 

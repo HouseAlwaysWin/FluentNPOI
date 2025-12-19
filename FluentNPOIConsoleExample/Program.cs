@@ -92,7 +92,7 @@ namespace FluentNPOIConsoleExample
                 {
                     style.SetAligment(HorizontalAlignment.Center);
                     style.SetBorderAllStyle(BorderStyle.Thin);
-                    style.SetFontInfo(workbook, "新細明體", 10);
+                    style.SetFontInfo(workbook, "Calibri", 10);
                 })
 
                 .SetupCellStyle("BodyString", (workbook, style) =>
@@ -172,6 +172,7 @@ namespace FluentNPOIConsoleExample
                 .WithCellType(CellType.Numeric);
             mapping.Map(x => x.Notes).ToColumn(ExcelCol.G)
                 .WithTitle("備註").WithTitleStyle("HeaderBlue");
+
             mapping.Map(x => x.MaybeNull).ToColumn(ExcelCol.H)
                 .WithTitle("可能為空").WithTitleStyle("HeaderBlue");
 
@@ -252,8 +253,9 @@ namespace FluentNPOIConsoleExample
                 .WithTitleStyle("HeaderBlue").WithStyle("AmountCurrency").WithCellType(CellType.Numeric);
             mapping.Map("Department").ToColumn(ExcelCol.G).WithTitle("科系")
                 .WithTitleStyle("HeaderBlue")
-                .WithValue((row, excelRow, col) => $"{row}{excelRow}{col}{row["Department"]} hello")
-                .WithStyle("BodyString").WithCellType(CellType.String);
+                .WithValue((row, excelRow, col) => $"{row["StudentID"]}{excelRow}{col}{row["Department"]} hello")
+                .WithStyle("BodyString")
+                .WithCellType(CellType.String);
 
             fluent.UseSheet("DataTableExample", true)
                 .SetColumnWidth(ExcelCol.A, ExcelCol.G, 20)

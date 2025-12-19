@@ -111,11 +111,21 @@ namespace FluentNPOI.Streaming.Mapping
         }
 
         /// <summary>
-        /// 設定標題 (用於寫入時)
+        /// 設定静態標題 (用於寫入時)
         /// </summary>
         public FluentColumnBuilder<T> WithTitle(string title)
         {
             _mapping.Title = title;
+            return this;
+        }
+
+        /// <summary>
+        /// 設定動態標題（完整版）(用於寫入時)
+        /// </summary>
+        /// <param name="titleFunc">標題函數，參數為 (row, col)，回傳標題字串</param>
+        public FluentColumnBuilder<T> WithTitle(Func<int, ExcelCol, string> titleFunc)
+        {
+            _mapping.TitleFunc = titleFunc;
             return this;
         }
 
@@ -129,7 +139,27 @@ namespace FluentNPOI.Streaming.Mapping
         }
 
         /// <summary>
-        /// 設定自訂值計算 (用於寫入時)
+        /// 設定靜態值（所有列都使用相同值）(用於寫入時)
+        /// </summary>
+        /// <param name="value">靜態值</param>
+        public FluentColumnBuilder<T> WithValue(object value)
+        {
+            _mapping.ValueFunc = (obj, row, col) => value;
+            return this;
+        }
+
+        /// <summary>
+        /// 設定自訂值計算（簡單版，僅需資料物件）(用於寫入時)
+        /// </summary>
+        /// <param name="valueFunc">值計算函數，僅接收資料物件參數</param>
+        public FluentColumnBuilder<T> WithValue(Func<T, object> valueFunc)
+        {
+            _mapping.ValueFunc = (obj, row, col) => valueFunc((T)obj);
+            return this;
+        }
+
+        /// <summary>
+        /// 設定自訂值計算（完整版）(用於寫入時)
         /// </summary>
         /// <param name="valueFunc">值計算函數，參數為 (item, row, col)，row 為 Excel 1-based 行號，col 為 ExcelCol 欄位</param>
         public FluentColumnBuilder<T> WithValue(Func<T, int, ExcelCol, object> valueFunc)
@@ -139,10 +169,20 @@ namespace FluentNPOI.Streaming.Mapping
         }
 
         /// <summary>
-        /// 設定公式 (用於寫入時)
+        /// 設定静態公式（簡單版）(用於寫入時)
+        /// </summary>
+        /// <param name="formula">公式字串（不含 =）</param>
+        public FluentColumnBuilder<T> WithFormula(string formula)
+        {
+            _mapping.FormulaFunc = (row, col) => formula;
+            return this;
+        }
+
+        /// <summary>
+        /// 設定動態公式（完整版）(用於寫入時)
         /// </summary>
         /// <param name="formulaFunc">公式函數，參數為 (row, col)，回傳公式字串 (不含 =)</param>
-        public FluentColumnBuilder<T> WithFormula(Func<int, int, string> formulaFunc)
+        public FluentColumnBuilder<T> WithFormula(Func<int, ExcelCol, string> formulaFunc)
         {
             _mapping.FormulaFunc = formulaFunc;
             return this;
@@ -221,11 +261,12 @@ namespace FluentNPOI.Streaming.Mapping
         public PropertyInfo Property { get; set; }
         public ExcelCol? ColumnIndex { get; set; }
         public string Title { get; set; }
+        public Func<int, ExcelCol, string> TitleFunc { get; set; }
         public string Format { get; set; }
 
         // 寫入時使用
         public Func<object, int, ExcelCol, object> ValueFunc { get; set; }
-        public Func<int, int, string> FormulaFunc { get; set; }
+        public Func<int, ExcelCol, string> FormulaFunc { get; set; }
         public string StyleKey { get; set; }
         public string TitleStyleKey { get; set; }
         public NPOI.SS.UserModel.CellType? CellType { get; set; }

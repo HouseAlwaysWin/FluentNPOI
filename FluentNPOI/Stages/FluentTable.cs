@@ -200,10 +200,15 @@ namespace FluentNPOI.Stages
                     }
                     else if (cell.CellStyle.Index == 0) // Try global style
                     {
-                        string globalStyleKey = $"global_{_sheet.SheetName}";
-                        if (_cellStylesCached.TryGetValue(globalStyleKey, out var globalStyle))
+                        // 優先使用 Sheet 全域樣式，若無則使用 Workbook 全域樣式
+                        string sheetGlobalKey = $"global_{_sheet.SheetName}";
+                        if (_cellStylesCached.TryGetValue(sheetGlobalKey, out var sheetGlobalStyle))
                         {
-                            cell.CellStyle = globalStyle;
+                            cell.CellStyle = sheetGlobalStyle;
+                        }
+                        else if (_cellStylesCached.TryGetValue("global", out var workbookGlobalStyle))
+                        {
+                            cell.CellStyle = workbookGlobalStyle;
                         }
                     }
                 }
@@ -219,7 +224,7 @@ namespace FluentNPOI.Stages
                 // 公式優先
                 if (map.FormulaFunc != null)
                 {
-                    var formula = map.FormulaFunc(targetRowIndex + 1, colIdx); // Excel 是 1-based
+                    var formula = map.FormulaFunc(targetRowIndex + 1, (ExcelCol)colIdx); // Excel 是 1-based
                     cell.SetCellFormula(formula);
                 }
                 else
@@ -282,13 +287,18 @@ namespace FluentNPOI.Stages
                     }
                 }
 
-                // 如果沒有設定任何樣式，嘗試套用 Sheet 全域樣式
+                // 如果沒有設定任何樣式，嘗試套用全域樣式
+                // 優先使用 Sheet 全域樣式，若無則使用 Workbook 全域樣式
                 if (cell.CellStyle.Index == 0) // Default style index is usually 0
                 {
-                    string globalStyleKey = $"global_{_sheet.SheetName}";
-                    if (_cellStylesCached.TryGetValue(globalStyleKey, out var globalStyle))
+                    string sheetGlobalKey = $"global_{_sheet.SheetName}";
+                    if (_cellStylesCached.TryGetValue(sheetGlobalKey, out var sheetGlobalStyle))
                     {
-                        cell.CellStyle = globalStyle;
+                        cell.CellStyle = sheetGlobalStyle;
+                    }
+                    else if (_cellStylesCached.TryGetValue("global", out var workbookGlobalStyle))
+                    {
+                        cell.CellStyle = workbookGlobalStyle;
                     }
                 }
             }

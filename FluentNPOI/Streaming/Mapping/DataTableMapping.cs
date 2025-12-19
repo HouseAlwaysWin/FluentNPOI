@@ -94,7 +94,7 @@ namespace FluentNPOI.Streaming.Mapping
         }
 
         /// <summary>
-        /// 設定標題
+        /// 設定靜態標題
         /// </summary>
         public DataTableColumnBuilder WithTitle(string title)
         {
@@ -103,7 +103,37 @@ namespace FluentNPOI.Streaming.Mapping
         }
 
         /// <summary>
-        /// 設定自訂值計算
+        /// 設定動態標題（完整版）
+        /// </summary>
+        /// <param name="titleFunc">標題函數，參數為 (row, col)，回傳標題字串</param>
+        public DataTableColumnBuilder WithTitle(Func<int, ExcelCol, string> titleFunc)
+        {
+            _mapping.TitleFunc = titleFunc;
+            return this;
+        }
+
+        /// <summary>
+        /// 設定靜態值（所有列都使用相同值）
+        /// </summary>
+        /// <param name="value">靜態值</param>
+        public DataTableColumnBuilder WithValue(object value)
+        {
+            _mapping.ValueFunc = (obj, row, col) => value;
+            return this;
+        }
+
+        /// <summary>
+        /// 設定自訂值計算（簡單版，僅需 DataRow）
+        /// </summary>
+        /// <param name="valueFunc">值計算函數，僅接收 DataRow 參數</param>
+        public DataTableColumnBuilder WithValue(Func<DataRow, object> valueFunc)
+        {
+            _mapping.ValueFunc = (obj, row, col) => valueFunc((DataRow)obj);
+            return this;
+        }
+
+        /// <summary>
+        /// 設定自訂值計算（完整版）
         /// </summary>
         /// <param name="valueFunc">值計算函數，參數為 (row, excelRow, col)，excelRow 為 Excel 1-based 行號，col 為 ExcelCol 欄位</param>
         public DataTableColumnBuilder WithValue(Func<DataRow, int, ExcelCol, object> valueFunc)
@@ -113,9 +143,20 @@ namespace FluentNPOI.Streaming.Mapping
         }
 
         /// <summary>
-        /// 設定公式
+        /// 設定靜態公式（簡單版）
         /// </summary>
-        public DataTableColumnBuilder WithFormula(Func<int, int, string> formulaFunc)
+        /// <param name="formula">公式字串（不含 =）</param>
+        public DataTableColumnBuilder WithFormula(string formula)
+        {
+            _mapping.FormulaFunc = (row, col) => formula;
+            return this;
+        }
+
+        /// <summary>
+        /// 設定動態公式（完整版）
+        /// </summary>
+        /// <param name="formulaFunc">公式函數，參數為 (row, col)，回傳公式字串 (不含 =)</param>
+        public DataTableColumnBuilder WithFormula(Func<int, ExcelCol, string> formulaFunc)
         {
             _mapping.FormulaFunc = formulaFunc;
             return this;
