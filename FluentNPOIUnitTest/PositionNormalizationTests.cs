@@ -5,7 +5,7 @@ using NPOI.XSSF.UserModel;
 using System;
 using FluentNPOI.Stages;
 
-namespace NPOIPlusUnitTest
+namespace FluentNPOIUnitTest
 {
     public class PositionNormalizationTests
     {

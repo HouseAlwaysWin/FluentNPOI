@@ -88,6 +88,7 @@ namespace FluentNPOIConsoleExample
         static void SetupStyles(FluentWorkbook fluent)
         {
             fluent
+                // 設定全域基礎樣式
                 .SetupGlobalCachedCellStyles((workbook, style) =>
                 {
                     style.SetAligment(HorizontalAlignment.Center);
@@ -95,52 +96,44 @@ namespace FluentNPOIConsoleExample
                     style.SetFontInfo(workbook, "Calibri", 10);
                 })
 
+                // 使用 inheritFrom 繼承 global，只覆寫需要改的屬性
                 .SetupCellStyle("BodyString", (workbook, style) =>
                 {
-                    style.SetBorderAllStyle(BorderStyle.Thin);
-                    style.SetAligment(HorizontalAlignment.Center);
                     style.SetFontInfo(workbook, "新細明體", 10);
-                })
+                }, inheritFrom: "global")
+
                 .SetupCellStyle("DateOfBirth", (workbook, style) =>
                 {
                     style.SetDataFormat(workbook, "yyyy-MM-dd");
-                    style.SetBorderAllStyle(BorderStyle.Thin);
-                    style.SetAligment(HorizontalAlignment.Center);
                     style.FillPattern = FillPattern.SolidForeground;
                     style.SetCellFillForegroundColor(IndexedColors.LightGreen);
-                    style.SetFontInfo(workbook, fontFamily: "新細明體");
-                })
+                }, inheritFrom: "global")
+
                 .SetupCellStyle("HeaderBlue", (workbook, style) =>
                 {
-                    style.SetBorderAllStyle(BorderStyle.Thin);
-                    style.SetAligment(HorizontalAlignment.Center);
                     style.FillPattern = FillPattern.SolidForeground;
                     style.SetCellFillForegroundColor(IndexedColors.LightCornflowerBlue);
-                    style.SetFontInfo(workbook, fontFamily: "新細明體");
-                })
+                }, inheritFrom: "global")
+
                 .SetupCellStyle("BodyGreen", (workbook, style) =>
                 {
-                    style.SetBorderAllStyle(BorderStyle.Thin);
-                    style.SetAligment(HorizontalAlignment.Center);
                     style.FillPattern = FillPattern.SolidForeground;
                     style.SetCellFillForegroundColor(IndexedColors.LightGreen);
-                    style.SetFontInfo(workbook, fontFamily: "新細明體");
-                })
+                }, inheritFrom: "global")
+
                 .SetupCellStyle("AmountCurrency", (workbook, style) =>
                 {
-                    style.SetBorderAllStyle(BorderStyle.Thin);
                     style.SetDataFormat(workbook, "#,##0.00");
                     style.SetAligment(HorizontalAlignment.Right);
-                    style.SetFontInfo(workbook, fontFamily: "新細明體");
-                })
+                }, inheritFrom: "global")
+
                 .SetupCellStyle("HighlightYellow", (workbook, style) =>
                 {
-                    style.SetBorderAllStyle(BorderStyle.Thin);
                     style.FillPattern = FillPattern.SolidForeground;
                     style.SetCellFillForegroundColor(IndexedColors.Yellow);
-                    style.SetFontInfo(workbook, fontFamily: "新細明體");
-                });
+                }, inheritFrom: "global");
         }
+
 
         #endregion
 

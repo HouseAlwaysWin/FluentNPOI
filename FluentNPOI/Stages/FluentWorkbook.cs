@@ -101,14 +101,24 @@ namespace FluentNPOI.Stages
         /// </summary>
         /// <param name="cellStyleKey">样式缓存键名</param>
         /// <param name="styles">样式设置函数</param>
+        /// <param name="inheritFrom">可選，繼承的父樣式鍵名。若指定，會先複製父樣式的所有屬性，再套用自訂修改</param>
         /// <returns>FluentWorkbook 实例，支持链式调用</returns>
-        public FluentWorkbook SetupCellStyle(string cellStyleKey, Action<IWorkbook, ICellStyle> styles)
+        public FluentWorkbook SetupCellStyle(string cellStyleKey, Action<IWorkbook, ICellStyle> styles, string inheritFrom = null)
         {
             ICellStyle newCellStyle = _workbook.CreateCellStyle();
+
+            // 如果指定繼承，先從父樣式複製所有屬性
+            if (!string.IsNullOrEmpty(inheritFrom) && _cellStylesCached.TryGetValue(inheritFrom, out var parentStyle))
+            {
+                newCellStyle.CloneStyleFrom(parentStyle);
+            }
+
+            // 套用自訂修改（會覆寫父樣式的對應屬性）
             styles(_workbook, newCellStyle);
             _cellStylesCached.Add(cellStyleKey, newCellStyle);
             return this;
         }
+
 
         /// <summary>
         /// 使用指定工作表

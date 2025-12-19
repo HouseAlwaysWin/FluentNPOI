@@ -5,7 +5,7 @@ using NPOI.XSSF.UserModel;
 using NPOI.SS.UserModel;
 using FluentNPOI.Stages;
 
-namespace NPOIPlusUnitTest
+namespace FluentNPOIUnitTest
 {
     public class CopyStyleFromSheetCellTests
     {

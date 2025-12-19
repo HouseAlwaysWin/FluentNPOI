@@ -4,7 +4,7 @@ using NPOI.SS.UserModel;
 using System;
 using FluentNPOI.Models;
 
-namespace NPOIPlusUnitTest
+namespace FluentNPOIUnitTest
 {
     public class CellStyleConfigTests
     {
