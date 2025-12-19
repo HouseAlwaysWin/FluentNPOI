@@ -47,6 +47,19 @@ namespace FluentNPOI.Streaming.Mapping
         public IReadOnlyList<ColumnMapping> GetMappings() => _mappings;
 
         /// <summary>
+        /// 內部使用：直接新增 Mapping (用於自動對應)
+        /// </summary>
+        internal void AddInternalMapping(PropertyInfo property, ExcelCol column)
+        {
+            var mapping = new ColumnMapping
+            {
+                Property = property,
+                ColumnIndex = column
+            };
+            _mappings.Add(mapping);
+        }
+
+        /// <summary>
         /// 將串流行轉換為 DTO
         /// </summary>
         public T Map(IStreamingRow row)

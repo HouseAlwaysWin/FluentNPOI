@@ -87,8 +87,7 @@ namespace FluentNPOI.Streaming
                     if (string.Equals(prop.Name, headerName, System.StringComparison.OrdinalIgnoreCase))
                     {
                         // 使用反射設定 mapping (簡化版)
-                        var columnMappings = mapping.GetMappings();
-                        // 這裡需要更完整的實作來動態新增 mapping
+                        mapping.AddInternalMapping(prop, (FluentNPOI.Models.ExcelCol)i);
                         break;
                     }
                 }
