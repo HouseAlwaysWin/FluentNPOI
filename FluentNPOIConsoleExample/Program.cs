@@ -41,6 +41,7 @@ namespace FluentNPOIConsoleExample
                 CreateCopyStyleExample(fluent, testData);
                 CreateCellStyleRangeExample(fluent);
                 CreateSheetGlobalStyleExample(fluent, testData);
+                CreateMappingStylingExample(fluent, testData);
 
                 // Cell write examples
                 CreateSetCellValueExample(fluent);
@@ -467,6 +468,42 @@ namespace FluentNPOIConsoleExample
                 .SetExcelCellMerge(ExcelCol.A, ExcelCol.D, 1);
 
             Console.WriteLine("  ✓ SheetGlobalStyle 建立完成");
+        }
+
+        /// <summary>
+        /// Example 9: Direct styling in mapping (New Feature)
+        /// </summary>
+        static void CreateMappingStylingExample(FluentWorkbook fluent, List<ExampleData> testData)
+        {
+            Console.WriteLine("建立 MappingStylingExample...");
+
+            var mapping = new FluentMapping<ExampleData>();
+
+            mapping.Map(x => x.Name)
+                .ToColumn(ExcelCol.A)
+                .WithTitle("姓名")
+                .WithBackgroundColor(IndexedColors.LightCornflowerBlue) // Direct style!
+                .WithAlignment(HorizontalAlignment.Center);
+
+            mapping.Map(x => x.Score)
+                .ToColumn(ExcelCol.B)
+                .WithTitle("分數")
+                .WithNumberFormat("0.0") // Direct number format!
+                .WithFont(isBold: true);
+
+            mapping.Map(x => x.DateOfBirth)
+                .ToColumn(ExcelCol.C)
+                .WithTitle("日期")
+                .WithNumberFormat("yyyy-mm-dd")
+                .WithBackgroundColor(IndexedColors.LightYellow);
+
+            fluent.UseSheet("MappingStylingExample", true)
+               .SetColumnWidth(ExcelCol.A, ExcelCol.C, 20)
+               .SetTable(testData.Take(5), mapping)
+               .BuildRows()
+               .SetAutoFilter();
+
+            Console.WriteLine("  ✓ MappingStylingExample 建立完成");
         }
 
         #endregion
