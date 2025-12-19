@@ -251,8 +251,20 @@ namespace FluentNPOI.Stages
                     SetCellValue(cell, value, map.CellType ?? CellType.Unknown);
                 }
 
+                // 註冊自動生成的樣式
+                if (!string.IsNullOrEmpty(map.GeneratedStyleKey) && map.StyleConfig != null)
+                {
+                    RegisterStyle(map.GeneratedStyleKey, map.StyleConfig);
+                }
+
                 // 套用資料樣式
                 string styleKey = map.StyleKey;
+
+                // 若沒有指定 StyleKey，嘗試使用 GeneratedStyleKey
+                if (string.IsNullOrEmpty(styleKey))
+                {
+                    styleKey = map.GeneratedStyleKey;
+                }
 
                 // 如果有動態樣式設定，優先使用
                 if (map.DynamicStyleFunc != null)

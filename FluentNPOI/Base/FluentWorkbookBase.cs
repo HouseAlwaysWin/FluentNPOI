@@ -24,6 +24,16 @@ namespace FluentNPOI.Base
             return _workbook;
         }
 
+        protected void RegisterStyle(string name, System.Action<IWorkbook, ICellStyle> config)
+        {
+            if (string.IsNullOrWhiteSpace(name)) return;
+            if (_cellStylesCached.ContainsKey(name)) return;
+
+            var style = _workbook.CreateCellStyle();
+            config?.Invoke(_workbook, style);
+            _cellStylesCached[name] = style;
+        }
+
 
 
         protected int NormalizeRow(int row)

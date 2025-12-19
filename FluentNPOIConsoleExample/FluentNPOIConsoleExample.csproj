@@ -1,24 +1,19 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
-
-	<PropertyGroup>
-		<OutputType>Exe</OutputType>
-		<TargetFramework>net6.0</TargetFramework>
-		<Nullable>enable</Nullable>
-	</PropertyGroup>
-
-	<ItemGroup>
-		<ProjectReference Include="..\FluentNPOI\FluentNPOI.csproj" />
-	</ItemGroup>
-
-
-	<ItemGroup>
-		<None Update="Resources\Test.xlsx">
-			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
-		</None>
-		<None Update="Resources\pain.jpg">
-			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
-		</None>
-
-	</ItemGroup>
-
+﻿<?xml version="1.0" encoding="UTF-8" ?>
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>net8.0</TargetFramework>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\FluentNPOI\FluentNPOI.csproj" />
+    </ItemGroup>
+    <ItemGroup>
+        <None Update="Resources\Test.xlsx">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
+        <None Update="Resources\pain.jpg">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
+    </ItemGroup>
 </Project>

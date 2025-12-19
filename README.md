@@ -119,6 +119,26 @@ fluent.UseSheet("Sheet1")
     .GetValue<string>(); // 立即讀取剛設置的值
 ```
 
+#### 使用 FluentMapping 設定樣式 (新!)
+
+直接在 Mapping 中定義樣式，無需額外註冊：
+
+```csharp
+var mapping = new FluentMapping<Student>();
+
+mapping.Map(x => x.Score)
+    .ToColumn(ExcelCol.B)
+    .WithTitle("分數")
+    .WithNumberFormat("0.00") // 設定數值格式
+    .WithBackgroundColor(IndexedColors.LightGreen) // 設定背景顏色
+    .WithAlignment(HorizontalAlignment.Center) // 設定對齊
+    .WithFont(isBold: true); // 設定字體
+
+fluent.UseSheet("Scores")
+    .SetTable(students, mapping)
+    .BuildRows();
+```
+
 ### 📚 主要功能
 
 #### 1. 樣式管理
@@ -277,8 +297,8 @@ sheet.SetCellPosition(ExcelColumns.D, 1)
 
 // 使用 pictureAction 參數進行自定義操作
 sheet.SetCellPosition(ExcelColumns.E, 1)
-    .SetPictureOnCell(imageBytes, 200, 200, AnchorType.MoveAndResize, 7.0, 
-        picture => 
+    .SetPictureOnCell(imageBytes, 200, 200, AnchorType.MoveAndResize, 7.0,
+        picture =>
         {
             // 可以對 IPicture 對象進行自定義操作
             // 例如：調整圖片大小、設置圖片邊框等
@@ -287,6 +307,7 @@ sheet.SetCellPosition(ExcelColumns.E, 1)
 ```
 
 > **注意：**
+>
 > - 支援的圖片格式：PNG、JPEG、GIF、BMP/DIB、EMF、WMF
 > - 圖片類型會根據文件頭自動識別
 > - `columnWidthRatio` 參數用於將像素寬度轉換為 Excel 列寬（默認值為 7.0）
@@ -687,6 +708,26 @@ fluent.UseSheet("Sheet1")
     .GetValue<string>(); // Read the value immediately after setting
 ```
 
+#### Styling with FluentMapping (New!)
+
+Define styles directly within your mapping, no extra registration needed:
+
+```csharp
+var mapping = new FluentMapping<Student>();
+
+mapping.Map(x => x.Score)
+    .ToColumn(ExcelCol.B)
+    .WithTitle("Score")
+    .WithNumberFormat("0.00") // Set number format
+    .WithBackgroundColor(IndexedColors.LightGreen) // Set background color
+    .WithAlignment(HorizontalAlignment.Center) // Set alignment
+    .WithFont(isBold: true); // Set font
+
+fluent.UseSheet("Scores")
+    .SetTable(students, mapping)
+    .BuildRows();
+```
+
 ### 📚 Main Features
 
 #### 1. Style Management
@@ -845,8 +886,8 @@ sheet.SetCellPosition(ExcelColumns.D, 1)
 
 // Using pictureAction parameter for custom operations
 sheet.SetCellPosition(ExcelColumns.E, 1)
-    .SetPictureOnCell(imageBytes, 200, 200, AnchorType.MoveAndResize, 7.0, 
-        picture => 
+    .SetPictureOnCell(imageBytes, 200, 200, AnchorType.MoveAndResize, 7.0,
+        picture =>
         {
             // Can perform custom operations on IPicture object
             // For example: resize picture, set picture border, etc.
@@ -855,6 +896,7 @@ sheet.SetCellPosition(ExcelColumns.E, 1)
 ```
 
 > **Note:**
+>
 > - Supported image formats: PNG, JPEG, GIF, BMP/DIB, EMF, WMF
 > - Image type is automatically detected based on file header
 > - `columnWidthRatio` parameter converts pixel width to Excel column width (default: 7.0)
@@ -1035,66 +1077,66 @@ fluent.SaveToPath("multi-sheet.xlsx");
 
 #### FluentWorkbook
 
-| Method                                                                          | Description                                    |
-| ----------------------------------------------------------------------------- | ---------------------------------------- |
-| `UseSheet(string name)`                                                       | Use sheet with specified name                     |
-| `UseSheet(string name, bool createIfNotExists)`                               | Use sheet, optionally create if not exists           |
-| `UseSheetAt(int index)`                                                       | Use sheet at specified index                     |
-| `SetupGlobalCachedCellStyles(Action)`                                         | Setup global default styles                         |
-| `SetupCellStyle(string key, Action)`                                          | Register named style                             |
+| Method                                                                        | Description                                        |
+| ----------------------------------------------------------------------------- | -------------------------------------------------- |
+| `UseSheet(string name)`                                                       | Use sheet with specified name                      |
+| `UseSheet(string name, bool createIfNotExists)`                               | Use sheet, optionally create if not exists         |
+| `UseSheetAt(int index)`                                                       | Use sheet at specified index                       |
+| `SetupGlobalCachedCellStyles(Action)`                                         | Setup global default styles                        |
+| `SetupCellStyle(string key, Action)`                                          | Register named style                               |
 | `CopyStyleFromSheetCell(string key, ISheet sheet, ExcelColumns col, int row)` | Copy style from any sheet's cell to workbook level |
-| `GetWorkbook()`                                                               | Get underlying NPOI IWorkbook object             |
-| `ToStream()`                                                                  | Output as memory stream                         |
-| `SaveToPath(string path)`                                                     | Save to file path                           |
+| `GetWorkbook()`                                                               | Get underlying NPOI IWorkbook object               |
+| `ToStream()`                                                                  | Output as memory stream                            |
+| `SaveToPath(string path)`                                                     | Save to file path                                  |
 
 #### FluentSheet
 
-| Method                                             | Description                           |
-| ------------------------------------------------ | ------------------------------ |
-| `SetCellPosition(ExcelColumns col, int row)`     | Set current cell position       |
+| Method                                           | Description                                 |
+| ------------------------------------------------ | ------------------------------------------- |
+| `SetCellPosition(ExcelColumns col, int row)`     | Set current cell position                   |
 | `GetCellPosition(ExcelColumns col, int row)`     | Get FluentCell object at specified position |
-| `GetCellValue<T>(ExcelColumns col, int row)`     | Read value at specified position               |
-| `GetCellFormula(ExcelColumns col, int row)`      | Read formula at specified position             |
-| `SetTable<T>(IEnumerable<T>, ExcelColumns, int)` | Bind data table                     |
-| `SetColumnWidth(ExcelColumns col, int width)`    | Set column width                       |
-| `SetExcelCellMerge(...)`                         | Merge cells                     |
-| `SetPictureOnCell(...)`                          | Insert picture                       |
-| `GetSheet()`                                     | Get underlying NPOI ISheet object      |
+| `GetCellValue<T>(ExcelColumns col, int row)`     | Read value at specified position            |
+| `GetCellFormula(ExcelColumns col, int row)`      | Read formula at specified position          |
+| `SetTable<T>(IEnumerable<T>, ExcelColumns, int)` | Bind data table                             |
+| `SetColumnWidth(ExcelColumns col, int width)`    | Set column width                            |
+| `SetExcelCellMerge(...)`                         | Merge cells                                 |
+| `SetPictureOnCell(...)`                          | Insert picture                              |
+| `GetSheet()`                                     | Get underlying NPOI ISheet object           |
 
 #### FluentCell
 
-| Method                            | Description                           |
-| ------------------------------- | ------------------------------ |
-| `SetValue<T>(T value)`          | Set cell value                   |
-| `SetFormulaValue(object value)` | Set formula                       |
-| `SetCellStyle(string key)`      | Apply named style                   |
-| `SetCellStyle(Func<...>)`       | Apply dynamic style                   |
-| `SetCellType(CellType type)`    | Set cell type                 |
-| `SetPictureOnCell(...)`         | Insert picture                       |
-| `GetValue()`                    | Read cell value (returns object)    |
+| Method                          | Description                                   |
+| ------------------------------- | --------------------------------------------- |
+| `SetValue<T>(T value)`          | Set cell value                                |
+| `SetFormulaValue(object value)` | Set formula                                   |
+| `SetCellStyle(string key)`      | Apply named style                             |
+| `SetCellStyle(Func<...>)`       | Apply dynamic style                           |
+| `SetCellType(CellType type)`    | Set cell type                                 |
+| `SetPictureOnCell(...)`         | Insert picture                                |
+| `GetValue()`                    | Read cell value (returns object)              |
 | `GetValue<T>()`                 | Read cell value (converted to specified type) |
-| `GetFormula()`                  | Read formula string                   |
-| `GetCell()`                     | Get underlying NPOI ICell object       |
+| `GetFormula()`                  | Read formula string                           |
+| `GetCell()`                     | Get underlying NPOI ICell object              |
 
 #### FluentTable
 
-| Method                                | Description                 |
-| ----------------------------------- | -------------------- |
-| `BeginTitleSet(string title)`       | Start setting header         |
-| `BeginBodySet(string propertyName)` | Start setting data field     |
+| Method                              | Description                            |
+| ----------------------------------- | -------------------------------------- |
+| `BeginTitleSet(string title)`       | Start setting header                   |
+| `BeginBodySet(string propertyName)` | Start setting data field               |
 | `BuildRows()`                       | Execute data binding and generate rows |
 
 #### FluentTableHeader / FluentTableCell
 
-| Method                                           | Description                           |
-| ---------------------------------------------- | ------------------------------ |
-| `SetValue(object value)`                       | Set fixed value                     |
-| `SetValue(Func<...>)`                          | Set dynamic value                     |
-| `SetFormulaValue(...)`                         | Set formula                       |
-| `SetCellStyle(string key)`                     | Apply named style                   |
-| `SetCellStyle(Func<...>)`                      | Apply dynamic style                   |
-| `SetCellType(CellType type)`                   | Set cell type                 |
-| `CopyStyleFromCell(ExcelColumns col, int row)` | Copy style from other cell           |
+| Method                                         | Description                                |
+| ---------------------------------------------- | ------------------------------------------ |
+| `SetValue(object value)`                       | Set fixed value                            |
+| `SetValue(Func<...>)`                          | Set dynamic value                          |
+| `SetFormulaValue(...)`                         | Set formula                                |
+| `SetCellStyle(string key)`                     | Apply named style                          |
+| `SetCellStyle(Func<...>)`                      | Apply dynamic style                        |
+| `SetCellType(CellType type)`                   | Set cell type                              |
+| `CopyStyleFromCell(ExcelColumns col, int row)` | Copy style from other cell                 |
 | `End()`                                        | End current setting and return FluentTable |
 
 ### 🔧 Style Caching Mechanism

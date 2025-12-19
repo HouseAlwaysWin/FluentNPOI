@@ -274,6 +274,100 @@ namespace FluentNPOI.Streaming.Mapping
         }
 
         /// <summary>
+        /// 設定其他樣式配置 (將會合併到自動生成的樣式中)
+        /// </summary>
+        public FluentColumnBuilder<T> WithStyleConfig(Action<NPOI.SS.UserModel.IWorkbook, NPOI.SS.UserModel.ICellStyle> config)
+        {
+            EnsureStyleKey();
+            _mapping.StyleConfig += config;
+            return this;
+        }
+
+        /// <summary>
+        /// 設定數值格式
+        /// </summary>
+        public FluentColumnBuilder<T> WithNumberFormat(string format)
+        {
+            return WithStyleConfig((wb, style) =>
+            {
+                var df = wb.CreateDataFormat();
+                style.DataFormat = df.GetFormat(format);
+            });
+        }
+
+        /// <summary>
+        /// 設定背景顏色
+        /// </summary>
+        public FluentColumnBuilder<T> WithBackgroundColor(NPOI.SS.UserModel.IndexedColors color)
+        {
+            return WithStyleConfig((wb, style) =>
+            {
+                style.FillPattern = NPOI.SS.UserModel.FillPattern.SolidForeground;
+                style.FillForegroundColor = color.Index;
+            });
+        }
+
+        /// <summary>
+        /// 設定字體
+        /// </summary>
+        public FluentColumnBuilder<T> WithFont(string fontName = null, double? fontSize = null, bool isBold = false)
+        {
+            return WithStyleConfig((wb, style) =>
+            {
+                var font = wb.CreateFont();
+                if (fontName != null) font.FontName = fontName;
+                if (fontSize.HasValue) font.FontHeightInPoints = fontSize.Value;
+                font.IsBold = isBold;
+                style.SetFont(font);
+            });
+        }
+
+        /// <summary>
+        /// 設定邊框
+        /// </summary>
+        public FluentColumnBuilder<T> WithBorder(NPOI.SS.UserModel.BorderStyle borderStyle)
+        {
+            return WithStyleConfig((wb, style) =>
+            {
+                style.BorderTop = borderStyle;
+                style.BorderBottom = borderStyle;
+                style.BorderLeft = borderStyle;
+                style.BorderRight = borderStyle;
+            });
+        }
+
+        /// <summary>
+        /// 設定對齊方式
+        /// </summary>
+        public FluentColumnBuilder<T> WithAlignment(NPOI.SS.UserModel.HorizontalAlignment horizontal = NPOI.SS.UserModel.HorizontalAlignment.General, NPOI.SS.UserModel.VerticalAlignment vertical = NPOI.SS.UserModel.VerticalAlignment.Center)
+        {
+            return WithStyleConfig((wb, style) =>
+            {
+                style.Alignment = horizontal;
+                style.VerticalAlignment = vertical;
+            });
+        }
+
+        /// <summary>
+        /// 設定自動換行
+        /// </summary>
+        public FluentColumnBuilder<T> WithWrapText(bool wrap = true)
+        {
+            return WithStyleConfig((wb, style) =>
+            {
+                style.WrapText = wrap;
+            });
+        }
+
+        private void EnsureStyleKey()
+        {
+            if (string.IsNullOrEmpty(_mapping.GeneratedStyleKey))
+            {
+                _mapping.GeneratedStyleKey = $"AutoStyle_{Guid.NewGuid()}";
+            }
+        }
+
+        /// <summary>
         /// 繼續設定下一個屬性
         /// </summary>
         public FluentColumnBuilder<T> Map<TProperty>(Expression<Func<T, TProperty>> expression)
@@ -300,6 +394,16 @@ namespace FluentNPOI.Streaming.Mapping
         public string TitleStyleKey { get; set; }
         public NPOI.SS.UserModel.CellType? CellType { get; set; }
         public Func<object, string> DynamicStyleFunc { get; set; }
+
+        /// <summary>
+        /// 靜態樣式配置（用於動態生成樣式）
+        /// </summary>
+        public Action<NPOI.SS.UserModel.IWorkbook, NPOI.SS.UserModel.ICellStyle> StyleConfig { get; set; }
+
+        /// <summary>
+        /// 自動生成的樣式 Key (內部使用)
+        /// </summary>
+        public string GeneratedStyleKey { get; set; }
 
         // 欄位名稱 (for DataTable)
         public string ColumnName { get; set; }

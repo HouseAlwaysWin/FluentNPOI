@@ -223,5 +223,49 @@ namespace FluentNPOIUnitTest
 
             Assert.Null(exception);
         }
+
+        [Fact]
+        public void WithStyleConfig_ShouldApplyStyles()
+        {
+            var workbook = new XSSFWorkbook();
+            var fluentWorkbook = new FluentWorkbook(workbook);
+
+            var mapping = new FluentMapping<TestData>();
+            mapping.Map(x => x.Name)
+                .ToColumn(ExcelCol.A)
+                .WithTitle("Name")
+                .WithBackgroundColor(IndexedColors.Yellow)
+                .WithFont(isBold: true)
+                .WithAlignment(HorizontalAlignment.Center);
+
+            mapping.Map(x => x.Score)
+                .ToColumn(ExcelCol.B)
+                .WithTitle("Score")
+                .WithNumberFormat("0.00");
+
+            var testData = new List<TestData> { new TestData { Name = "Test", Score = 100 } };
+
+            fluentWorkbook.UseSheet("Test")
+                .SetTable(testData, mapping)
+                .BuildRows();
+
+            var sheet = workbook.GetSheet("Test");
+            var row = sheet.GetRow(1); // Data row (0 is title)
+
+            // Verify Col A style
+            var cellA = row.GetCell(0);
+            var styleA = cellA.CellStyle;
+            Assert.Equal(IndexedColors.Yellow.Index, styleA.FillForegroundColor);
+            Assert.Equal(FillPattern.SolidForeground, styleA.FillPattern);
+            Assert.Equal(HorizontalAlignment.Center, styleA.Alignment);
+            var fontA = workbook.GetFontAt(styleA.FontIndex);
+            Assert.True(fontA.IsBold);
+
+            // Verify Col B style
+            var cellB = row.GetCell(1);
+            var styleB = cellB.CellStyle;
+            var formatString = styleB.GetDataFormatString();
+            Assert.Equal("0.00", formatString);
+        }
     }
 }
