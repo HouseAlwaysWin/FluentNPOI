@@ -20,6 +20,8 @@
 - ✅ **樣式管理** - 智能樣式緩存機制，自動處理重複樣式，避免 Excel 樣式上限問題
 - ✅ **完整讀寫** - 支援讀寫 Excel、圖片插入、公式設定、合併儲存格
 - ✅ **工作簿管理** - 支援工作表複製、刪除、重新命名、調整行高列寬
+- ✅ **HTML 匯出** - 將 Excel 轉換為 HTML 表格，保留完整樣式
+- ✅ **PDF 匯出** - 使用 QuestPDF 引擎，支援合併儲存格、邊框、字體樣式
 
 ### 📦 安裝
 
@@ -187,6 +189,21 @@ mapping.Map(x => x.Score)
 | **Sheet**    | `CloneSheet`, `RenameSheet`, `SetRowHeight`, `SetDefaultColumnWidth`                   |
 | **Workbook** | `SaveToPath`, `SaveToStream`, `GetSheetNames`, `DeleteSheet`                           |
 
+#### 5. HTML/PDF 匯出
+
+```csharp
+// 匯出為 HTML
+fluent.UseSheet("Report");
+fluent.SaveAsHtml("report.html");
+string htmlString = fluent.ToHtmlString();
+
+// 匯出為 PDF (需要 QuestPDF)
+fluent.SaveAsPdf("report.pdf");
+byte[] pdfBytes = fluent.ToPdfBytes();
+```
+
+PDF 支援：背景色、文字顏色、粗體/斜體、底線/刪除線、邊框樣式、數值格式化、文字對齊、合併儲存格
+
 ---
 
 ## English
@@ -199,6 +216,8 @@ mapping.Map(x => x.Score)
 - ✅ **Style Management** - Smart caching to handle duplicate styles and avoid Excel limits
 - ✅ **Comprehensive I/O** - Read/Write, Images, Formulas, Merging
 - ✅ **Workbook Management** - Clone, Rename, Delete sheets, adjust Row/Column dimensions
+- ✅ **HTML Export** - Convert Excel to HTML tables with full styling
+- ✅ **PDF Export** - Using QuestPDF engine, supports merged cells, borders, fonts
 
 ### 📦 Installation
 
@@ -365,6 +384,21 @@ mapping.Map(x => x.Score)
 | **Table**    | `SetTable`, `BuildRows`, `SetAutoFilter`, `FreezeTitleRow`, `AutoSizeColumns`          |
 | **Sheet**    | `CloneSheet`, `RenameSheet`, `SetRowHeight`, `SetDefaultColumnWidth`                   |
 | **Workbook** | `SaveToPath`, `SaveToStream`, `GetSheetNames`, `DeleteSheet`                           |
+
+#### 5. HTML/PDF Export
+
+```csharp
+// Export to HTML
+fluent.UseSheet("Report");
+fluent.SaveAsHtml("report.html");
+string htmlString = fluent.ToHtmlString();
+
+// Export to PDF (requires QuestPDF)
+fluent.SaveAsPdf("report.pdf");
+byte[] pdfBytes = fluent.ToPdfBytes();
+```
+
+PDF supports: Background color, text color, bold/italic, underline/strikethrough, borders, number formatting, text alignment, merged cells
 
 ---
 
