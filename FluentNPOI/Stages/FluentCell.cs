@@ -334,9 +334,288 @@ namespace FluentNPOI.Stages
             throw new NotSupportedException($"Unsupported picture format. File header: {BitConverter.ToString(pictureBytes, 0, Math.Min(8, pictureBytes.Length))}");
         }
 
+        /// <summary>
+        /// 設定當前操作的儲存格位置
+        /// </summary>
+        /// <param name="col">欄位置</param>
+        /// <param name="row">列位置（1-based）</param>
         public FluentCell SetCellPosition(ExcelCol col, int row)
         {
             _cell = SetCellPositionInternal(col, row);
+            _col = col;
+            _row = NormalizeRow(row);  // 存儲 0-based 的 row
+            return this;
+        }
+
+        /// <summary>
+        /// 設定公式（不含 '=' 前綴）
+        /// </summary>
+        /// <param name="formula">公式字串（例如 "SUM(A1:A10)"）</param>
+        public FluentCell SetFormula(string formula)
+        {
+            if (_cell == null) return this;
+            if (string.IsNullOrWhiteSpace(formula)) return this;
+
+            // 移除 '=' 前綴（如果有的話）
+            if (formula.StartsWith("=")) formula = formula.Substring(1);
+            _cell.SetCellFormula(formula);
+            return this;
+        }
+
+        /// <summary>
+        /// 從指定儲存格複製樣式
+        /// </summary>
+        /// <param name="col">來源欄</param>
+        /// <param name="row">來源列（1-based）</param>
+        public FluentCell CopyStyleFrom(ExcelCol col, int row)
+        {
+            if (_cell == null) return this;
+
+            var normalizedRow = NormalizeRow(row);
+            var sourceRow = _sheet.GetRow(normalizedRow);
+            var sourceCell = sourceRow?.GetCell((int)col);
+
+            if (sourceCell?.CellStyle != null)
+            {
+                ICellStyle newStyle = _workbook.CreateCellStyle();
+                newStyle.CloneStyleFrom(sourceCell.CellStyle);
+                _cell.CellStyle = newStyle;
+            }
+            return this;
+        }
+
+        /// <summary>
+        /// 設定背景顏色
+        /// </summary>
+        /// <param name="color">索引顏色</param>
+        public FluentCell SetBackgroundColor(IndexedColors color)
+        {
+            if (_cell == null) return this;
+
+            ICellStyle style = _workbook.CreateCellStyle();
+            if (_cell.CellStyle != null)
+            {
+                style.CloneStyleFrom(_cell.CellStyle);
+            }
+            style.FillPattern = FillPattern.SolidForeground;
+            style.FillForegroundColor = color.Index;
+            _cell.CellStyle = style;
+            return this;
+        }
+
+        /// <summary>
+        /// 設定字體
+        /// </summary>
+        /// <param name="fontName">字體名稱</param>
+        /// <param name="fontSize">字體大小（點）</param>
+        /// <param name="isBold">是否粗體</param>
+        public FluentCell SetFont(string fontName = null, double? fontSize = null, bool isBold = false)
+        {
+            if (_cell == null) return this;
+
+            ICellStyle style = _workbook.CreateCellStyle();
+            if (_cell.CellStyle != null)
+            {
+                style.CloneStyleFrom(_cell.CellStyle);
+            }
+
+            IFont font = _workbook.CreateFont();
+            if (fontName != null) font.FontName = fontName;
+            if (fontSize.HasValue) font.FontHeightInPoints = fontSize.Value;
+            font.IsBold = isBold;
+            style.SetFont(font);
+            _cell.CellStyle = style;
+            return this;
+        }
+
+        /// <summary>
+        /// 設定四邊邊框
+        /// </summary>
+        /// <param name="style">邊框樣式</param>
+        public FluentCell SetBorder(BorderStyle style)
+        {
+            if (_cell == null) return this;
+
+            ICellStyle cellStyle = _workbook.CreateCellStyle();
+            if (_cell.CellStyle != null)
+            {
+                cellStyle.CloneStyleFrom(_cell.CellStyle);
+            }
+            cellStyle.BorderTop = style;
+            cellStyle.BorderBottom = style;
+            cellStyle.BorderLeft = style;
+            cellStyle.BorderRight = style;
+            _cell.CellStyle = cellStyle;
+            return this;
+        }
+
+        /// <summary>
+        /// 設定對齊方式
+        /// </summary>
+        /// <param name="horizontal">水平對齊</param>
+        /// <param name="vertical">垂直對齊</param>
+        public FluentCell SetAlignment(HorizontalAlignment horizontal = HorizontalAlignment.General, VerticalAlignment vertical = VerticalAlignment.Center)
+        {
+            if (_cell == null) return this;
+
+            ICellStyle style = _workbook.CreateCellStyle();
+            if (_cell.CellStyle != null)
+            {
+                style.CloneStyleFrom(_cell.CellStyle);
+            }
+            style.Alignment = horizontal;
+            style.VerticalAlignment = vertical;
+            _cell.CellStyle = style;
+            return this;
+        }
+
+        /// <summary>
+        /// 取得當前儲存格的位置資訊
+        /// </summary>
+        /// <returns>欄位（ExcelCol）和列號（1-based）</returns>
+        public (ExcelCol Column, int Row) GetPosition()
+        {
+            return (_col, _row + 1);  // 轉換為 1-based 返回
+        }
+
+        /// <summary>
+        /// 設定數值格式
+        /// </summary>
+        /// <param name="format">格式字串（例如 "#,##0.00", "yyyy-mm-dd", "0%"）</param>
+        public FluentCell SetNumberFormat(string format)
+        {
+            if (_cell == null || string.IsNullOrEmpty(format)) return this;
+
+            ICellStyle style = _workbook.CreateCellStyle();
+            if (_cell.CellStyle != null)
+            {
+                style.CloneStyleFrom(_cell.CellStyle);
+            }
+
+            IDataFormat dataFormat = _workbook.CreateDataFormat();
+            style.DataFormat = dataFormat.GetFormat(format);
+            _cell.CellStyle = style;
+            return this;
+        }
+
+        /// <summary>
+        /// 設定自動換行
+        /// </summary>
+        /// <param name="wrap">是否啟用自動換行</param>
+        public FluentCell SetWrapText(bool wrap = true)
+        {
+            if (_cell == null) return this;
+
+            ICellStyle style = _workbook.CreateCellStyle();
+            if (_cell.CellStyle != null)
+            {
+                style.CloneStyleFrom(_cell.CellStyle);
+            }
+            style.WrapText = wrap;
+            _cell.CellStyle = style;
+            return this;
+        }
+
+        /// <summary>
+        /// 添加備註（批註）
+        /// </summary>
+        /// <param name="text">備註文字</param>
+        /// <param name="author">作者（可選）</param>
+        public FluentCell SetComment(string text, string author = null)
+        {
+            if (_cell == null || string.IsNullOrEmpty(text)) return this;
+
+            ICreationHelper factory = _workbook.GetCreationHelper();
+            IDrawing drawing = _sheet.CreateDrawingPatriarch();
+
+            // 創建錨點（備註顯示位置）
+            IClientAnchor anchor = factory.CreateClientAnchor();
+            anchor.Col1 = _cell.ColumnIndex;
+            anchor.Col2 = _cell.ColumnIndex + 2;
+            anchor.Row1 = _cell.RowIndex;
+            anchor.Row2 = _cell.RowIndex + 3;
+
+            // 創建備註
+            IComment comment = drawing.CreateCellComment(anchor);
+            comment.String = factory.CreateRichTextString(text);
+            if (!string.IsNullOrEmpty(author))
+            {
+                comment.Author = author;
+            }
+            _cell.CellComment = comment;
+
+            return this;
+        }
+
+        /// <summary>
+        /// 設定儲存格鎖定狀態（需配合保護工作表使用）
+        /// </summary>
+        /// <param name="locked">是否鎖定</param>
+        public FluentCell SetLocked(bool locked = true)
+        {
+            if (_cell == null) return this;
+
+            ICellStyle style = _workbook.CreateCellStyle();
+            if (_cell.CellStyle != null)
+            {
+                style.CloneStyleFrom(_cell.CellStyle);
+            }
+            style.IsLocked = locked;
+            _cell.CellStyle = style;
+            return this;
+        }
+
+        /// <summary>
+        /// 設定儲存格隱藏公式（需配合保護工作表使用）
+        /// </summary>
+        /// <param name="hidden">是否隱藏公式</param>
+        public FluentCell SetHidden(bool hidden = true)
+        {
+            if (_cell == null) return this;
+
+            ICellStyle style = _workbook.CreateCellStyle();
+            if (_cell.CellStyle != null)
+            {
+                style.CloneStyleFrom(_cell.CellStyle);
+            }
+            style.IsHidden = hidden;
+            _cell.CellStyle = style;
+            return this;
+        }
+
+        /// <summary>
+        /// 設定文字旋轉角度
+        /// </summary>
+        /// <param name="degrees">旋轉角度（-90 到 90）</param>
+        public FluentCell SetRotation(short degrees)
+        {
+            if (_cell == null) return this;
+
+            ICellStyle style = _workbook.CreateCellStyle();
+            if (_cell.CellStyle != null)
+            {
+                style.CloneStyleFrom(_cell.CellStyle);
+            }
+            style.Rotation = degrees;
+            _cell.CellStyle = style;
+            return this;
+        }
+
+        /// <summary>
+        /// 設定縮進層級
+        /// </summary>
+        /// <param name="indent">縮進層級（0-15）</param>
+        public FluentCell SetIndent(short indent)
+        {
+            if (_cell == null) return this;
+
+            ICellStyle style = _workbook.CreateCellStyle();
+            if (_cell.CellStyle != null)
+            {
+                style.CloneStyleFrom(_cell.CellStyle);
+            }
+            style.Indention = indent;
+            _cell.CellStyle = style;
             return this;
         }
     }

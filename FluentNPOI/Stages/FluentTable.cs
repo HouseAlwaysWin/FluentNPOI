@@ -331,5 +331,131 @@ namespace FluentNPOI.Stages
             }
             return this;
         }
+
+        /// <summary>
+        /// 取得資料行數（不含標題）
+        /// </summary>
+        public int RowCount => _table.Count();
+
+        /// <summary>
+        /// 取得欄位數
+        /// </summary>
+        public int ColumnCount => _columnMappings?.Count ?? 0;
+
+        /// <summary>
+        /// 自動調整所有欄位寬度
+        /// </summary>
+        /// <returns>FluentTable 實例，支援鏈式調用</returns>
+        public FluentTable<T> AutoSizeColumns()
+        {
+            if (_columnMappings == null) return this;
+
+            foreach (var map in _columnMappings.Where(m => m.ColumnIndex.HasValue))
+            {
+                _sheet.AutoSizeColumn((int)map.ColumnIndex.Value);
+            }
+            return this;
+        }
+
+        /// <summary>
+        /// 設定所有欄位相同寬度
+        /// </summary>
+        /// <param name="width">列寬（字符數）</param>
+        /// <returns>FluentTable 實例，支援鏈式調用</returns>
+        public FluentTable<T> SetColumnWidths(int width)
+        {
+            if (_columnMappings == null) return this;
+
+            foreach (var map in _columnMappings.Where(m => m.ColumnIndex.HasValue))
+            {
+                _sheet.SetColumnWidth((int)map.ColumnIndex.Value, width * 256);
+            }
+            return this;
+        }
+
+        /// <summary>
+        /// 設定標題行高度
+        /// </summary>
+        /// <param name="heightInPoints">行高（點）</param>
+        /// <returns>FluentTable 實例，支援鏈式調用</returns>
+        public FluentTable<T> SetTitleRowHeight(float heightInPoints)
+        {
+            var row = _sheet.GetRow(_startRow);
+            if (row != null)
+            {
+                row.HeightInPoints = heightInPoints;
+            }
+            return this;
+        }
+
+        /// <summary>
+        /// 設定資料行高度
+        /// </summary>
+        /// <param name="heightInPoints">行高（點）</param>
+        /// <returns>FluentTable 實例，支援鏈式調用</returns>
+        public FluentTable<T> SetDataRowHeights(float heightInPoints)
+        {
+            int dataStartRow = _startRow + 1; // 跳過標題行
+            for (int i = 0; i < _table.Count(); i++)
+            {
+                var row = _sheet.GetRow(dataStartRow + i);
+                if (row != null)
+                {
+                    row.HeightInPoints = heightInPoints;
+                }
+            }
+            return this;
+        }
+
+        /// <summary>
+        /// 凍結標題行（讓標題行在捲動時固定）
+        /// </summary>
+        /// <returns>FluentTable 實例，支援鏈式調用</returns>
+        public FluentTable<T> FreezeTitleRow()
+        {
+            // 凍結在標題行下方（_startRow + 1）
+            _sheet.CreateFreezePane(0, _startRow + 1);
+            return this;
+        }
+
+        /// <summary>
+        /// 設定自動篩選
+        /// </summary>
+        /// <returns>FluentTable 實例，支援鏈式調用</returns>
+        public FluentTable<T> SetAutoFilter()
+        {
+            if (_columnMappings == null || !_columnMappings.Any()) return this;
+
+            var columns = _columnMappings.Where(m => m.ColumnIndex.HasValue).ToList();
+            if (!columns.Any()) return this;
+
+            int firstCol = (int)columns.Min(m => m.ColumnIndex.Value);
+            int lastCol = (int)columns.Max(m => m.ColumnIndex.Value);
+            int lastRow = _startRow + _table.Count(); // 標題行 + 資料行數
+
+            var range = new NPOI.SS.Util.CellRangeAddress(_startRow, lastRow, firstCol, lastCol);
+            _sheet.SetAutoFilter(range);
+            return this;
+        }
+
+        /// <summary>
+        /// 取得表格範圍（用於設定樣式等）
+        /// </summary>
+        /// <returns>起始列、結束列、起始欄、結束欄（均為 0-based）</returns>
+        public (int StartRow, int EndRow, int StartCol, int EndCol) GetTableRange()
+        {
+            if (_columnMappings == null || !_columnMappings.Any())
+                return (_startRow, _startRow, 0, 0);
+
+            var columns = _columnMappings.Where(m => m.ColumnIndex.HasValue).ToList();
+            if (!columns.Any())
+                return (_startRow, _startRow, 0, 0);
+
+            int firstCol = (int)columns.Min(m => m.ColumnIndex.Value);
+            int lastCol = (int)columns.Max(m => m.ColumnIndex.Value);
+            int lastRow = _startRow + _table.Count();
+
+            return (_startRow, lastRow, firstCol, lastCol);
+        }
     }
 }

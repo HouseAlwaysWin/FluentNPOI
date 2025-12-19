@@ -162,6 +162,156 @@ namespace FluentNPOI.Stages
             }
             return new FluentSheet(_workbook, _currentSheet, _cellStylesCached);
         }
+
+        /// <summary>
+        /// 儲存至檔案
+        /// </summary>
+        /// <param name="filePath">檔案路徑</param>
+        /// <returns>FluentWorkbook 實例，支援鏈式調用</returns>
+        public FluentWorkbook SaveToFile(string filePath)
+        {
+            if (string.IsNullOrWhiteSpace(filePath))
+                throw new ArgumentNullException(nameof(filePath));
+
+            // 確保目錄存在
+            string directory = Path.GetDirectoryName(filePath);
+            if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
+            {
+                Directory.CreateDirectory(directory);
+            }
+
+            using (var fs = new FileStream(filePath, FileMode.Create, FileAccess.Write))
+            {
+                _workbook.Write(fs);
+            }
+            return this;
+        }
+
+        /// <summary>
+        /// 儲存至串流
+        /// </summary>
+        /// <param name="stream">目標串流</param>
+        /// <returns>FluentWorkbook 實例，支援鏈式調用</returns>
+        public FluentWorkbook SaveToStream(Stream stream)
+        {
+            if (stream == null)
+                throw new ArgumentNullException(nameof(stream));
+
+            _workbook.Write(stream);
+            return this;
+        }
+
+        /// <summary>
+        /// 取得所有工作表名稱
+        /// </summary>
+        /// <returns>工作表名稱列表</returns>
+        public List<string> GetSheetNames()
+        {
+            var names = new List<string>();
+            for (int i = 0; i < _workbook.NumberOfSheets; i++)
+            {
+                names.Add(_workbook.GetSheetName(i));
+            }
+            return names;
+        }
+
+        /// <summary>
+        /// 取得工作表數量
+        /// </summary>
+        public int SheetCount => _workbook.NumberOfSheets;
+
+        /// <summary>
+        /// 刪除指定名稱的工作表
+        /// </summary>
+        /// <param name="sheetName">工作表名稱</param>
+        /// <returns>FluentWorkbook 實例，支援鏈式調用</returns>
+        public FluentWorkbook DeleteSheet(string sheetName)
+        {
+            int index = _workbook.GetSheetIndex(sheetName);
+            if (index >= 0)
+            {
+                _workbook.RemoveSheetAt(index);
+            }
+            return this;
+        }
+
+        /// <summary>
+        /// 刪除指定索引的工作表
+        /// </summary>
+        /// <param name="index">工作表索引（0-based）</param>
+        /// <returns>FluentWorkbook 實例，支援鏈式調用</returns>
+        public FluentWorkbook DeleteSheetAt(int index)
+        {
+            if (index >= 0 && index < _workbook.NumberOfSheets)
+            {
+                _workbook.RemoveSheetAt(index);
+            }
+            return this;
+        }
+
+        /// <summary>
+        /// 複製工作表
+        /// </summary>
+        /// <param name="sourceSheetName">來源工作表名稱</param>
+        /// <param name="newSheetName">新工作表名稱</param>
+        /// <returns>新工作表的 FluentSheet 實例</returns>
+        public FluentSheet CloneSheet(string sourceSheetName, string newSheetName)
+        {
+            int sourceIndex = _workbook.GetSheetIndex(sourceSheetName);
+            if (sourceIndex < 0)
+                throw new ArgumentException($"Sheet '{sourceSheetName}' not found.", nameof(sourceSheetName));
+
+            ISheet clonedSheet = _workbook.CloneSheet(sourceIndex);
+            int clonedIndex = _workbook.GetSheetIndex(clonedSheet);
+            _workbook.SetSheetName(clonedIndex, newSheetName);
+            _currentSheet = clonedSheet;
+            return new FluentSheet(_workbook, _currentSheet, _cellStylesCached);
+        }
+
+        /// <summary>
+        /// 重新命名工作表
+        /// </summary>
+        /// <param name="oldName">舊名稱</param>
+        /// <param name="newName">新名稱</param>
+        /// <returns>FluentWorkbook 實例，支援鏈式調用</returns>
+        public FluentWorkbook RenameSheet(string oldName, string newName)
+        {
+            int index = _workbook.GetSheetIndex(oldName);
+            if (index >= 0)
+            {
+                _workbook.SetSheetName(index, newName);
+            }
+            return this;
+        }
+
+        /// <summary>
+        /// 設定活動工作表（開啟 Excel 時顯示的工作表）
+        /// </summary>
+        /// <param name="index">工作表索引（0-based）</param>
+        /// <returns>FluentWorkbook 實例，支援鏈式調用</returns>
+        public FluentWorkbook SetActiveSheet(int index)
+        {
+            if (index >= 0 && index < _workbook.NumberOfSheets)
+            {
+                _workbook.SetActiveSheet(index);
+            }
+            return this;
+        }
+
+        /// <summary>
+        /// 設定活動工作表（開啟 Excel 時顯示的工作表）
+        /// </summary>
+        /// <param name="sheetName">工作表名稱</param>
+        /// <returns>FluentWorkbook 實例，支援鏈式調用</returns>
+        public FluentWorkbook SetActiveSheet(string sheetName)
+        {
+            int index = _workbook.GetSheetIndex(sheetName);
+            if (index >= 0)
+            {
+                _workbook.SetActiveSheet(index);
+            }
+            return this;
+        }
     }
 }
 

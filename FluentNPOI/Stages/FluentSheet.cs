@@ -62,6 +62,61 @@ namespace FluentNPOI.Stages
         }
 
         /// <summary>
+        /// 設定行高
+        /// </summary>
+        /// <param name="row">行號（1-based）</param>
+        /// <param name="heightInPoints">行高（點）</param>
+        /// <returns>FluentSheet 實例，支持鏈式調用</returns>
+        public FluentSheet SetRowHeight(int row, float heightInPoints)
+        {
+            var normalizedRow = NormalizeRow(row);
+            var rowObj = _sheet.GetRow(normalizedRow) ?? _sheet.CreateRow(normalizedRow);
+            rowObj.HeightInPoints = heightInPoints;
+            return new FluentSheet(_workbook, _sheet, _cellStylesCached);
+        }
+
+        /// <summary>
+        /// 批量設定行高
+        /// </summary>
+        /// <param name="startRow">起始行（1-based）</param>
+        /// <param name="endRow">結束行（1-based）</param>
+        /// <param name="heightInPoints">行高（點）</param>
+        /// <returns>FluentSheet 實例，支持鏈式調用</returns>
+        public FluentSheet SetRowHeight(int startRow, int endRow, float heightInPoints)
+        {
+            var normalizedStartRow = NormalizeRow(startRow);
+            var normalizedEndRow = NormalizeRow(endRow);
+            for (int i = normalizedStartRow; i <= normalizedEndRow; i++)
+            {
+                var rowObj = _sheet.GetRow(i) ?? _sheet.CreateRow(i);
+                rowObj.HeightInPoints = heightInPoints;
+            }
+            return new FluentSheet(_workbook, _sheet, _cellStylesCached);
+        }
+
+        /// <summary>
+        /// 設定預設行高
+        /// </summary>
+        /// <param name="heightInPoints">行高（點）</param>
+        /// <returns>FluentSheet 實例，支持鏈式調用</returns>
+        public FluentSheet SetDefaultRowHeight(float heightInPoints)
+        {
+            _sheet.DefaultRowHeightInPoints = heightInPoints;
+            return new FluentSheet(_workbook, _sheet, _cellStylesCached);
+        }
+
+        /// <summary>
+        /// 設定預設列寬
+        /// </summary>
+        /// <param name="width">列寬（字符數）</param>
+        /// <returns>FluentSheet 實例，支持鏈式調用</returns>
+        public FluentSheet SetDefaultColumnWidth(int width)
+        {
+            _sheet.DefaultColumnWidth = width;
+            return new FluentSheet(_workbook, _sheet, _cellStylesCached);
+        }
+
+        /// <summary>
         /// 合并单元格（横向合并）
         /// </summary>
         /// <param name="startCol">起始列</param>
