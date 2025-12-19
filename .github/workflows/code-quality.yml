@@ -2,9 +2,9 @@ name: Code Quality
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [main, develop]
   pull_request:
-    branches: [ main, develop ]
+    branches: [main, develop]
 
 permissions:
   contents: read
@@ -14,62 +14,56 @@ jobs:
   analyze:
     name: Code Analysis
     runs-on: windows-latest
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      with:
-        fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
-    
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: '6.0.x'
-    
-    - name: Restore dependencies
-      run: dotnet restore
-    
-    - name: Build
-      run: dotnet build --configuration Release --no-restore
-    
-    - name: Run Tests with Coverage
-      run: dotnet test --configuration Release --no-build --verbosity normal --collect:"XPlat Code Coverage" --results-directory ./coverage
-    
-    - name: Install ReportGenerator
-      run: dotnet tool install -g dotnet-reportgenerator-globaltool
-    
-    - name: Generate Coverage Report
-      run: reportgenerator -reports:./coverage/**/coverage.cobertura.xml -targetdir:./coveragereport -reporttypes:"Html;Cobertura"
-    
-    - name: Upload Coverage Report
-      uses: actions/upload-artifact@v6
-      with:
-        name: coverage-report
-        path: ./coveragereport
-    
-    - name: Generate Coverage Summary
-      if: always()
-      run: |
-        $coberturaFile = "./coveragereport/Cobertura.xml"
-        if (Test-Path $coberturaFile) {
-          Write-Host "## Code Coverage Summary" | Out-File -FilePath coverage-summary.md -Encoding utf8
-          Write-Host "" | Out-File -FilePath coverage-summary.md -Append -Encoding utf8
-          Write-Host "Coverage report generated successfully!" | Out-File -FilePath coverage-summary.md -Append -Encoding utf8
-          Write-Host "View full report in the coverage-report artifact." | Out-File -FilePath coverage-summary.md -Append -Encoding utf8
-        } else {
-          Write-Host "Coverage report not found. Skipping summary generation."
-        }
-    
-    - name: Add Coverage PR Comment
-      uses: marocchino/sticky-pull-request-comment@v2
-      if: github.event_name == 'pull_request' && always()
-      with:
-        recreate: true
-        path: coverage-summary.md
-        message: |
-          ## 📊 Code Coverage Report
-          
-          Coverage report has been generated. Download the `coverage-report` artifact to view the full HTML report.
-          
-          The report includes detailed coverage information for all test files.
 
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Shallow clones should be disabled for a better relevancy of analysis
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "6.0.x"
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build --configuration Release --no-restore
+
+      - name: Run Tests with Coverage
+        run: dotnet test --configuration Release --no-build --verbosity normal --collect:"XPlat Code Coverage" --results-directory ./coverage
+
+      - name: Install ReportGenerator
+        run: dotnet tool install -g dotnet-reportgenerator-globaltool
+
+      - name: Generate Coverage Report
+        run: reportgenerator -reports:./coverage/**/coverage.cobertura.xml -targetdir:./coveragereport -reporttypes:"Html;Cobertura"
+
+      - name: Upload Coverage Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: ./coveragereport
+
+      - name: Generate Coverage Summary
+        if: always()
+        run: |
+          $coberturaFile = "./coveragereport/Cobertura.xml"
+          if (Test-Path $coberturaFile) {
+            Write-Host "## Code Coverage Summary" | Out-File -FilePath coverage-summary.md -Encoding utf8
+            Write-Host "" | Out-File -FilePath coverage-summary.md -Append -Encoding utf8
+            Write-Host "Coverage report generated successfully!" | Out-File -FilePath coverage-summary.md -Append -Encoding utf8
+            Write-Host "View full report in the coverage-report artifact." | Out-File -FilePath coverage-summary.md -Append -Encoding utf8
+          } else {
+            Write-Host "## Code Coverage Report" | Out-File -FilePath coverage-summary.md -Encoding utf8
+            Write-Host "Coverage report not found or failed to generate." | Out-File -FilePath coverage-summary.md -Append -Encoding utf8
+          }
+
+      - name: Add Coverage PR Comment
+        uses: marocchino/sticky-pull-request-comment@v2
+        if: github.event_name == 'pull_request' && always()
+        with:
+          recreate: true
+          path: coverage-summary.md
