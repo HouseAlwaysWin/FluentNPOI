@@ -124,14 +124,34 @@ namespace FluentNPOI.Pdf
                                 tableCell = tableCell.Background(bgColor.Value);
                         }
 
-                        // Text content
+                        // Text content with alignment
                         var text = GetCellText(cell);
+
+                        // Apply alignment
+                        IContainer alignedCell = tableCell;
+                        if (cellStyle != null)
+                        {
+                            switch (cellStyle.Alignment)
+                            {
+                                case NPOI.SS.UserModel.HorizontalAlignment.Center:
+                                case NPOI.SS.UserModel.HorizontalAlignment.CenterSelection:
+                                    alignedCell = tableCell.AlignCenter();
+                                    break;
+                                case NPOI.SS.UserModel.HorizontalAlignment.Right:
+                                    alignedCell = tableCell.AlignRight();
+                                    break;
+                                default:
+                                    alignedCell = tableCell.AlignLeft();
+                                    break;
+                            }
+                        }
+
                         if (cellStyle != null)
                         {
                             var font = cellStyle.GetFont(workbook);
                             if (font != null)
                             {
-                                var textBlock = tableCell.Text(text);
+                                var textBlock = alignedCell.Text(text);
                                 if (font.IsBold)
                                     textBlock.Bold();
                                 if (font.IsItalic)
@@ -149,12 +169,12 @@ namespace FluentNPOI.Pdf
                             }
                             else
                             {
-                                tableCell.Text(text);
+                                alignedCell.Text(text);
                             }
                         }
                         else
                         {
-                            tableCell.Text(text);
+                            alignedCell.Text(text);
                         }
                     }
                 }
@@ -225,21 +245,26 @@ namespace FluentNPOI.Pdf
         {
             if (cell == null) return "";
 
-            switch (cell.CellType)
+            // Use NPOI DataFormatter for proper formatting
+            var formatter = new NPOI.SS.UserModel.DataFormatter();
+            try
             {
-                case CellType.String:
-                    return cell.StringCellValue ?? "";
-                case CellType.Numeric:
-                    if (DateUtil.IsCellDateFormatted(cell))
-                        return string.Format("{0:yyyy-MM-dd}", cell.DateCellValue);
-                    return cell.NumericCellValue.ToString();
-                case CellType.Boolean:
-                    return cell.BooleanCellValue ? "TRUE" : "FALSE";
-                case CellType.Formula:
-                    try { return cell.NumericCellValue.ToString(); }
-                    catch { return cell.StringCellValue ?? ""; }
-                default:
-                    return "";
+                return formatter.FormatCellValue(cell);
+            }
+            catch
+            {
+                // Fallback for formula cells or errors
+                switch (cell.CellType)
+                {
+                    case CellType.String:
+                        return cell.StringCellValue ?? "";
+                    case CellType.Numeric:
+                        return cell.NumericCellValue.ToString();
+                    case CellType.Boolean:
+                        return cell.BooleanCellValue ? "TRUE" : "FALSE";
+                    default:
+                        return "";
+                }
             }
         }
 

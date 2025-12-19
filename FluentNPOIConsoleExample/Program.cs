@@ -828,6 +828,26 @@ namespace FluentNPOIConsoleExample
             fluent.SetupCellStyle("NumberFmt", (w, s) =>
             {
                 s.SetDataFormat(w, "#,##0.00");
+                s.SetAlignment(HorizontalAlignment.Right);
+            });
+
+            fluent.SetupCellStyle("Currency", (w, s) =>
+            {
+                s.SetDataFormat(w, "$#,##0.00");
+                s.SetAlignment(HorizontalAlignment.Right);
+                s.SetFontInfo(w, isBold: true);
+            });
+
+            fluent.SetupCellStyle("Underline", (w, s) =>
+            {
+                var font = w.CreateFont();
+                font.Underline = FontUnderlineType.Single;
+                s.SetFont(font);
+            });
+
+            fluent.SetupCellStyle("Strikethrough", (w, s) =>
+            {
+                s.SetFontInfo(w, isStrikeout: true);
             });
 
             // 建立 Sheet 內容
@@ -837,18 +857,25 @@ namespace FluentNPOIConsoleExample
             sheet.SetCellPosition(ExcelCol.A, 1).SetValue("HTML Export Feature Demo")
                  .SetCellStyle("MergedTitle");
 
-            sheet.SetExcelCellMerge(ExcelCol.A, ExcelCol.C, 1, 1);
+            sheet.SetExcelCellMerge(ExcelCol.A, ExcelCol.D, 1, 1);
 
-            // A2: 紅色背景
+            // Row 2: 顏色示範
             sheet.SetCellPosition(ExcelCol.A, 2).SetValue("Red Background")
                  .SetCellStyle("RedBg");
-
-            // B2: 綠色文字
             sheet.SetCellPosition(ExcelCol.B, 2).SetValue("Green Italic Text")
                  .SetCellStyle("GreenText");
-
-            // C2: 普通數值
             sheet.SetCellPosition(ExcelCol.C, 2).SetValue(1234.56)
+                 .SetCellStyle("NumberFmt");
+            sheet.SetCellPosition(ExcelCol.D, 2).SetValue(9999.99)
+                 .SetCellStyle("Currency");
+
+            // Row 3: 文字裝飾示範
+            sheet.SetCellPosition(ExcelCol.A, 3).SetValue("Underlined Text")
+                 .SetCellStyle("Underline");
+            sheet.SetCellPosition(ExcelCol.B, 3).SetValue("Strikethrough Text")
+                 .SetCellStyle("Strikethrough");
+            sheet.SetCellPosition(ExcelCol.C, 3).SetValue("Plain Text");
+            sheet.SetCellPosition(ExcelCol.D, 3).SetValue(0.1234)
                  .SetCellStyle("NumberFmt");
 
             // 2. 匯出為 HTML
