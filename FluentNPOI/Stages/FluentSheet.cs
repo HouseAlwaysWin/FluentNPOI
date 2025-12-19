@@ -154,7 +154,7 @@ namespace FluentNPOI.Stages
                     if (map.FormulaFunc != null)
                         cell.SetCellFormula(map.FormulaFunc(dataRowStart + rowIdx + 1, colIdx));
                     else
-                        SetCellValueInternal(cell, actualMapping.GetValue(map, dataRow));
+                        SetCellValueInternal(cell, actualMapping.GetValue(map, dataRow, dataRowStart + rowIdx + 1, (ExcelCol)colIdx));
 
                     ApplyStyle(cell, map.StyleKey);
                 }

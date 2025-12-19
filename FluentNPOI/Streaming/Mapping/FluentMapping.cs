@@ -131,9 +131,10 @@ namespace FluentNPOI.Streaming.Mapping
         /// <summary>
         /// 設定自訂值計算 (用於寫入時)
         /// </summary>
-        public FluentColumnBuilder<T> WithValue(Func<T, object> valueFunc)
+        /// <param name="valueFunc">值計算函數，參數為 (item, row, col)，row 為 Excel 1-based 行號，col 為 ExcelCol 欄位</param>
+        public FluentColumnBuilder<T> WithValue(Func<T, int, ExcelCol, object> valueFunc)
         {
-            _mapping.ValueFunc = obj => valueFunc((T)obj);
+            _mapping.ValueFunc = (obj, row, col) => valueFunc((T)obj, row, col);
             return this;
         }
 
@@ -223,7 +224,7 @@ namespace FluentNPOI.Streaming.Mapping
         public string Format { get; set; }
 
         // 寫入時使用
-        public Func<object, object> ValueFunc { get; set; }
+        public Func<object, int, ExcelCol, object> ValueFunc { get; set; }
         public Func<int, int, string> FormulaFunc { get; set; }
         public string StyleKey { get; set; }
         public string TitleStyleKey { get; set; }

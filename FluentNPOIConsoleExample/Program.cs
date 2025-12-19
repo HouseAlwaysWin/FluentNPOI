@@ -252,7 +252,7 @@ namespace FluentNPOIConsoleExample
                 .WithTitleStyle("HeaderBlue").WithStyle("AmountCurrency").WithCellType(CellType.Numeric);
             mapping.Map("Department").ToColumn(ExcelCol.G).WithTitle("科系")
                 .WithTitleStyle("HeaderBlue")
-                .WithValue((row) => $"{row["Department"]} hello")
+                .WithValue((row, excelRow, col) => $"{row}{excelRow}{col}{row["Department"]} hello")
                 .WithStyle("BodyString").WithCellType(CellType.String);
 
             fluent.UseSheet("DataTableExample", true)

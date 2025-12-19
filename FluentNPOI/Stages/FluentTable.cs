@@ -228,7 +228,7 @@ namespace FluentNPOI.Stages
                     object value;
                     if (map.ValueFunc != null)
                     {
-                        value = map.ValueFunc(item);
+                        value = map.ValueFunc(item, targetRowIndex + 1, (ExcelCol)colIdx);
                     }
                     else if (map.Property != null)
                     {

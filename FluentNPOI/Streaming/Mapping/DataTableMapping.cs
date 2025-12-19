@@ -50,11 +50,15 @@ namespace FluentNPOI.Streaming.Mapping
         /// <summary>
         /// 從 DataRow 取值
         /// </summary>
-        public object GetValue(ColumnMapping map, DataRow row)
+        /// <param name="map">欄位對應設定</param>
+        /// <param name="row">DataRow 資料</param>
+        /// <param name="rowIndex">Excel 1-based 行號</param>
+        /// <param name="colIndex">ExcelCol 欄位</param>
+        public object GetValue(ColumnMapping map, DataRow row, int rowIndex, ExcelCol colIndex)
         {
             if (map.ValueFunc != null)
             {
-                return map.ValueFunc(row);
+                return map.ValueFunc(row, rowIndex, colIndex);
             }
 
             if (!string.IsNullOrEmpty(map.ColumnName) && row.Table.Columns.Contains(map.ColumnName))
@@ -101,9 +105,10 @@ namespace FluentNPOI.Streaming.Mapping
         /// <summary>
         /// 設定自訂值計算
         /// </summary>
-        public DataTableColumnBuilder WithValue(Func<DataRow, object> valueFunc)
+        /// <param name="valueFunc">值計算函數，參數為 (row, excelRow, col)，excelRow 為 Excel 1-based 行號，col 為 ExcelCol 欄位</param>
+        public DataTableColumnBuilder WithValue(Func<DataRow, int, ExcelCol, object> valueFunc)
         {
-            _mapping.ValueFunc = obj => valueFunc((DataRow)obj);
+            _mapping.ValueFunc = (obj, row, col) => valueFunc((DataRow)obj, row, col);
             return this;
         }
 

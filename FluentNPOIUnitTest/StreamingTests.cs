@@ -360,7 +360,7 @@ namespace FluentNPOIUnitTest
                 var mapping = new FluentMapping<Person>();
                 mapping.Map(x => x.Name).ToColumn(ExcelCol.A).WithTitle("姓名");
                 mapping.Map(x => x.Age).ToColumn(ExcelCol.B).WithTitle("年齡")
-                    .WithValue(p => p.Age * 2);  // Custom: double the age
+                    .WithValue((p, row, col) => p.Age * 2);  // Custom: double the age (row is 1-based, col is ExcelCol)
 
                 var workbook = new XSSFWorkbook();
                 new FluentWorkbook(workbook)
