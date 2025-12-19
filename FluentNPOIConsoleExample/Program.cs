@@ -23,7 +23,8 @@ namespace FluentNPOIConsoleExample
                 var outputPath = @$"{AppDomain.CurrentDomain.BaseDirectory}\Resources\Test2_v2.xlsx";
 
                 // Ensure Resources folder exists
-                Directory.CreateDirectory(Path.GetDirectoryName(outputPath));
+                var dir = Path.GetDirectoryName(outputPath);
+                if (dir != null) Directory.CreateDirectory(dir);
 
                 var workbook = new XSSFWorkbook();
                 var fluent = new FluentWorkbook(workbook);
@@ -230,7 +231,6 @@ namespace FluentNPOIConsoleExample
             dataTable.Rows.Add(105, "陳七", new DateTime(1998, 9, 12), true, 3.6, 23000m, "企業管理");
             dataTable.Rows.Add(106, "林八", new DateTime(1999, 5, 8), false, 3.2, 21000m, "財務金融");
 
-            // 使用 DataTableMapping
             // 使用 DataTableMapping
             var mapping = new DataTableMapping();
             mapping.Map("StudentID").ToColumn(ExcelCol.A).WithTitle("學號")
@@ -701,9 +701,9 @@ namespace FluentNPOIConsoleExample
         {
             Console.WriteLine("\n========== 讀取 Excel 資料 ==========");
 
-            // 讀取 Sheet1
-            var sheet1 = fluent.UseSheet("Sheet1");
-            Console.WriteLine("\n【Sheet1 標題行】:");
+            // 讀取 BasicTableExample
+            var sheet1 = fluent.UseSheet("BasicTableExample");
+            Console.WriteLine("\n【BasicTableExample 標題行】:");
             for (ExcelCol col = ExcelCol.A; col <= ExcelCol.H; col++)
             {
                 var headerValue = sheet1.GetCellValue<string>(col, 1);

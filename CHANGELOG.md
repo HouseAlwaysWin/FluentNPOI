@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.1] - 2025-12-19
+
+### Improvements
+
+- 🧪 **專案現代化**：單元測試專案 (`FluentNPOIUnitTest`) 升級至 .NET 8.0，與 Console 範例保持一致
+- ✅ **代碼品質優化**：修復 `ExampleData` 的可為空性警告，並解決範例程式中的邏輯錯誤 (Sheet 名稱不匹配)
+- 🧹 **代碼清理**：移除多餘的偵錯日誌與註釋
+
 ## [2.0.0] - 2025-12-19
 
 ### Major Features
