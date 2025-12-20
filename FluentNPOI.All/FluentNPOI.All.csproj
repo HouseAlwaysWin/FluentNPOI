@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <PackageId>FluentNPOI.All</PackageId>
+    <Description>Complete FluentNPOI package bundle including all extension modules (PDF, Streaming, Charts).</Description>
+    <PackageTags>FluentNPOI;Excel;NPOI;PDF;Streaming;Charts;Complete</PackageTags>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    
+    <!-- Meta package: no code output -->
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+  </PropertyGroup>
+
+  <!-- Dependencies on all sub-packages -->
+  <ItemGroup>
+    <ProjectReference Include="..\FluentNPOI\FluentNPOI.csproj" />
+    <ProjectReference Include="..\FluentNPOI.Pdf\FluentNPOI.Pdf.csproj" />
+    <ProjectReference Include="..\FluentNPOI.Streaming\FluentNPOI.Streaming.csproj" />
+    <ProjectReference Include="..\FluentNPOI.Charts\FluentNPOI.Charts.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+</Project>

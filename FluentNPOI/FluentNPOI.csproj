@@ -1,39 +1,28 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
-    <LangVersion>latest</LangVersion>
-    <NoWarn>$(NoWarn);1591</NoWarn>
-    
-    <!-- NuGet Package Metadata -->
+    <!-- Package-specific metadata (shared properties come from Directory.Build.props) -->
     <PackageId>FluentNPOI</PackageId>
-    <Version>2.1.0</Version>
-    <Authors>HouseAlwaysWin</Authors>
-    <Company>HouseAlwaysWin</Company>
-    <Product>FluentNPOI</Product>
     <Description>A fluent-style Excel operation library based on NPOI, providing more intuitive and easier-to-use APIs for reading and writing Excel files.</Description>
     <PackageTags>NPOI;Excel;Fluent;XLSX;XLS;Office;Spreadsheet</PackageTags>
-    <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <PackageProjectUrl>https://github.com/HouseAlwaysWin/NPOIPlus</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/HouseAlwaysWin/NPOIPlus</RepositoryUrl>
-    <RepositoryType>git</RepositoryType>
+    <PackageProjectUrl>https://github.com/HouseAlwaysWin/FluentNPOI</PackageProjectUrl>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <IncludeSymbols>true</IncludeSymbols>
-    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
   </PropertyGroup>
 
   <ItemGroup>
     <None Remove="NPOIWorkbook.cs~RF20d6cc51.TMP" />
   </ItemGroup>
 
+  <!-- Core dependencies only -->
   <ItemGroup>
     <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
-    <PackageReference Include="NPOI" Version="2.7.1" />
-    <PackageReference Include="QuestPDF" Version="2025.12.0" />
-    <PackageReference Include="System.Drawing.Common" Version="10.0.1" />
-    <PackageReference Include="ExcelDataReader" Version="3.7.0" />
-    <PackageReference Include="ExcelDataReader.DataSet" Version="3.7.0" />
+    <PackageReference Include="NPOI" Version="$(NpoiVersion)" />
+    <!-- Note: QuestPDF moved to FluentNPOI.Pdf -->
+    <!-- Note: ExcelDataReader moved to FluentNPOI.Streaming -->
+    <PackageReference Include="QuestPDF" Version="$(QuestPdfVersion)" />
+    <PackageReference Include="System.Drawing.Common" Version="$(SystemDrawingCommonVersion)" />
+    <PackageReference Include="ExcelDataReader" Version="$(ExcelDataReaderVersion)" />
+    <PackageReference Include="ExcelDataReader.DataSet" Version="$(ExcelDataReaderVersion)" />
   </ItemGroup>
 
   <!-- Include README.md in NuGet package -->

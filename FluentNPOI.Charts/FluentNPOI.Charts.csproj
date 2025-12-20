@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <PackageId>FluentNPOI.Charts</PackageId>
+    <Description>Chart generation extension for FluentNPOI using ScottPlot.</Description>
+    <PackageTags>FluentNPOI;Charts;ScottPlot;Excel;Graphs</PackageTags>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\FluentNPOI\FluentNPOI.csproj" />
+  </ItemGroup>
+
+  <!-- ScottPlot dependency will be added when implementing chart features -->
+  <!--
+  <ItemGroup>
+    <PackageReference Include="ScottPlot" Version="5.0.x" />
+  </ItemGroup>
+  -->
+
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+</Project>

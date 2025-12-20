@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <PackageId>FluentNPOI.Streaming</PackageId>
+    <Description>Streaming read extension for FluentNPOI using ExcelDataReader for large file processing.</Description>
+    <PackageTags>FluentNPOI;Streaming;ExcelDataReader;Excel;LargeFile</PackageTags>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\FluentNPOI\FluentNPOI.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="ExcelDataReader" Version="$(ExcelDataReaderVersion)" />
+    <PackageReference Include="ExcelDataReader.DataSet" Version="$(ExcelDataReaderVersion)" />
+    <PackageReference Include="System.Text.Encoding.CodePages" Version="8.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+</Project>
