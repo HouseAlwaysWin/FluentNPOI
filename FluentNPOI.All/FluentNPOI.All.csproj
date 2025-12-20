@@ -8,6 +8,8 @@
     
     <!-- Meta package: no code output -->
     <IncludeBuildOutput>false</IncludeBuildOutput>
+    <!-- Suppress NU5128 warning for meta packages -->
+    <NoWarn>$(NoWarn);NU5128</NoWarn>
   </PropertyGroup>
 
   <!-- Dependencies on all sub-packages -->
