@@ -42,19 +42,31 @@ function Clean-Build {
 }
 
 function Build-Project {
-    Write-TaskHeader "構建專案 / Building project"
+    Write-TaskHeader "構建專案 / Building projects"
+    
+    # 定義所有需要構建的專案 (按依賴順序排列)
+    $BuildProjects = @(
+        @{ Name = "FluentNPOI";           Path = Join-Path $ProjectRoot "FluentNPOI\FluentNPOI.csproj" },
+        @{ Name = "FluentNPOI.Streaming"; Path = Join-Path $ProjectRoot "FluentNPOI.Streaming\FluentNPOI.Streaming.csproj" },
+        @{ Name = "FluentNPOI.Pdf";       Path = Join-Path $ProjectRoot "FluentNPOI.Pdf\FluentNPOI.Pdf.csproj" },
+        @{ Name = "FluentNPOI.Charts";    Path = Join-Path $ProjectRoot "FluentNPOI.Charts\FluentNPOI.Charts.csproj" },
+        @{ Name = "FluentNPOI.All";       Path = Join-Path $ProjectRoot "FluentNPOI.All\FluentNPOI.All.csproj" }
+    )
     
     Write-Host "恢復依賴 / Restoring dependencies..." -ForegroundColor Yellow
-    dotnet restore $ProjectFile
+    dotnet restore (Join-Path $ProjectRoot "FluentNPOI.sln")
     
-    Write-Host "`n構建 FluentNPOI / Building FluentNPOI..." -ForegroundColor Yellow
-    dotnet build $ProjectFile --configuration $Configuration --no-restore
-    
-    if ($LASTEXITCODE -ne 0) {
-        throw "構建失敗 / Build failed"
+    foreach ($Project in $BuildProjects) {
+        Write-Host "`n構建 $($Project.Name) / Building $($Project.Name)..." -ForegroundColor Yellow
+        dotnet build $Project.Path --configuration $Configuration --no-restore
+        
+        if ($LASTEXITCODE -ne 0) {
+            throw "$($Project.Name) 構建失敗 / Build failed"
+        }
+        Write-Host "  ✅ $($Project.Name) 構建成功 / Build succeeded" -ForegroundColor Green
     }
     
-    Write-Host "`n構建完成 / Build completed" -ForegroundColor Green
+    Write-Host "`n所有專案構建完成 / All projects built successfully" -ForegroundColor Green
 }
 
 function Test-Project {
@@ -87,27 +99,50 @@ function Test-Project {
 }
 
 function Pack-Project {
-    Write-TaskHeader "打包 NuGet 套件 / Packing NuGet package"
+    Write-TaskHeader "打包 NuGet 套件 / Packing NuGet packages"
     
     if (-not (Test-Path $OutputDir)) {
         New-Item -Path $OutputDir -ItemType Directory | Out-Null
     }
     
     Write-Host "版本號 / Version: $Version" -ForegroundColor Yellow
-    Write-Host "打包中 / Packing..." -ForegroundColor Yellow
     
-    dotnet pack $ProjectFile `
-        --configuration $Configuration `
-        --no-build `
-        --output $OutputDir `
-        /p:PackageVersion=$Version `
-        /p:Version=$Version
+    # 定義所有需要打包的專案 (按依賴順序排列)
+    $PackageProjects = @(
+        @{ Name = "FluentNPOI";           Path = Join-Path $ProjectRoot "FluentNPOI\FluentNPOI.csproj" },
+        @{ Name = "FluentNPOI.Streaming"; Path = Join-Path $ProjectRoot "FluentNPOI.Streaming\FluentNPOI.Streaming.csproj" },
+        @{ Name = "FluentNPOI.Pdf";       Path = Join-Path $ProjectRoot "FluentNPOI.Pdf\FluentNPOI.Pdf.csproj" },
+        @{ Name = "FluentNPOI.Charts";    Path = Join-Path $ProjectRoot "FluentNPOI.Charts\FluentNPOI.Charts.csproj" },
+        @{ Name = "FluentNPOI.All";       Path = Join-Path $ProjectRoot "FluentNPOI.All\FluentNPOI.All.csproj" }
+    )
     
-    if ($LASTEXITCODE -ne 0) {
-        throw "打包失敗 / Pack failed"
+    $SuccessCount = 0
+    $FailedPackages = @()
+    
+    foreach ($Project in $PackageProjects) {
+        Write-Host "`n打包 $($Project.Name) / Packing $($Project.Name)..." -ForegroundColor Yellow
+        
+        dotnet pack $Project.Path `
+            --configuration $Configuration `
+            --no-build `
+            --output $OutputDir `
+            /p:PackageVersion=$Version `
+            /p:Version=$Version
+        
+        if ($LASTEXITCODE -ne 0) {
+            Write-Host "  ❌ $($Project.Name) 打包失敗 / Pack failed" -ForegroundColor Red
+            $FailedPackages += $Project.Name
+        } else {
+            Write-Host "  ✅ $($Project.Name) 打包成功 / Pack succeeded" -ForegroundColor Green
+            $SuccessCount++
+        }
     }
     
-    Write-Host "`n打包完成 / Pack completed" -ForegroundColor Green
+    if ($FailedPackages.Count -gt 0) {
+        throw "以下套件打包失敗 / The following packages failed to pack: $($FailedPackages -join ', ')"
+    }
+    
+    Write-Host "`n打包完成 / Pack completed ($SuccessCount packages)" -ForegroundColor Green
     Write-Host "輸出目錄 / Output directory: $OutputDir" -ForegroundColor Cyan
     Get-ChildItem -Path $OutputDir -Filter *.nupkg | ForEach-Object {
         Write-Host "  - $($_.Name)" -ForegroundColor White

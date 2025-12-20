@@ -25,10 +25,10 @@ jobs:
         dotnet-version: '6.0.x'
     
     - name: Restore dependencies
-      run: dotnet restore FluentNPOI/FluentNPOI.csproj
+      run: dotnet restore FluentNPOI.sln
     
-    - name: Build
-      run: dotnet build FluentNPOI/FluentNPOI.csproj --configuration Release --no-restore
+    - name: Build all projects
+      run: dotnet build FluentNPOI.sln --configuration Release --no-restore
     
     - name: Run Tests
       run: dotnet test FluentNPOIUnitTest/FluentNPOIUnitTest.csproj --configuration Release --no-build --verbosity normal
@@ -47,13 +47,26 @@ jobs:
     - name: Create artifacts directory
       run: New-Item -ItemType Directory -Force -Path ./artifacts
     
-    - name: Pack NuGet Package
+    - name: Pack all NuGet Packages
       run: |
-        Write-Host "Packing with version: ${{ env.VERSION }}"
-        dotnet pack FluentNPOI/FluentNPOI.csproj --configuration Release --output ./artifacts /p:PackageVersion=${{ env.VERSION }} /p:Version=${{ env.VERSION }}
-        if ($LASTEXITCODE -ne 0) {
-          Write-Error "Pack failed with exit code $LASTEXITCODE"
-          exit 1
+        Write-Host "Packing all packages with version: ${{ env.VERSION }}"
+        
+        $projects = @(
+          "FluentNPOI/FluentNPOI.csproj",
+          "FluentNPOI.Streaming/FluentNPOI.Streaming.csproj",
+          "FluentNPOI.Pdf/FluentNPOI.Pdf.csproj",
+          "FluentNPOI.Charts/FluentNPOI.Charts.csproj",
+          "FluentNPOI.All/FluentNPOI.All.csproj"
+        )
+        
+        foreach ($project in $projects) {
+          Write-Host "Packing $project..."
+          dotnet pack $project --configuration Release --no-build --output ./artifacts /p:PackageVersion=${{ env.VERSION }} /p:Version=${{ env.VERSION }}
+          if ($LASTEXITCODE -ne 0) {
+            Write-Error "Pack failed for $project with exit code $LASTEXITCODE"
+            exit 1
+          }
+          Write-Host "✅ $project packed successfully"
         }
     
     - name: Verify artifacts directory
