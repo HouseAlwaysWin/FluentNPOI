@@ -50,24 +50,21 @@ namespace FluentNPOIUnitTest
             wb.SaveToFile(inputFile)
               .Close();
 
-            // Act
-            // Run Pipeline: Read -> Double the Value -> Write
-            FluentWorkbook.Stream<TestData>(inputFile)
+            // Use new StreamingBuilder API from FluentNPOI.Streaming
+            StreamingBuilder<TestData>.FromFile(inputFile)
                 .Transform((item) =>
                 {
                     item.Value = item.Value * 2;
                     item.Name = item.Name + " (Processed)";
                 })
-                .WithMapping(mapping) // Use the same mapping
+                .WithMapping(mapping)
                 .Configure(sheet =>
                 {
-                    // Verify we can use FluentSheet API
                     sheet.SetColumnWidth(FluentNPOI.Models.ExcelCol.A, 50);
                 })
                 .SaveAs(outputFile);
 
             // Assert
-            // Read back to verify using FluentExcelReader directly
             var result = FluentExcelReader.Read<TestData>(outputFile).ToList();
 
             Assert.Equal(10, result.Count);
@@ -76,6 +73,7 @@ namespace FluentNPOIUnitTest
             Assert.Equal(200, result[9].Value); // 100 * 2
 
             // Cleanup
+            if (File.Exists(inputFile)) File.Delete(inputFile);
             if (File.Exists(outputFile)) File.Delete(outputFile);
         }
 
@@ -108,9 +106,8 @@ namespace FluentNPOIUnitTest
             wb.SaveToFile(inputFile)
               .Close();
 
-            // Act
-            // Use the same Stream API
-            FluentWorkbook.Stream<TestData>(inputFile)
+            // Use new StreamingBuilder API
+            StreamingBuilder<TestData>.FromFile(inputFile)
                 .Transform(x => x.Name += " (Updated)")
                 .WithMapping(mapping)
                 .SaveAs(outputFile);

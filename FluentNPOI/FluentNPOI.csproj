@@ -17,12 +17,7 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
     <PackageReference Include="NPOI" Version="$(NpoiVersion)" />
-    <!-- Note: QuestPDF moved to FluentNPOI.Pdf -->
-    <!-- Note: ExcelDataReader moved to FluentNPOI.Streaming -->
-    <PackageReference Include="QuestPDF" Version="$(QuestPdfVersion)" />
     <PackageReference Include="System.Drawing.Common" Version="$(SystemDrawingCommonVersion)" />
-    <PackageReference Include="ExcelDataReader" Version="$(ExcelDataReaderVersion)" />
-    <PackageReference Include="ExcelDataReader.DataSet" Version="$(ExcelDataReaderVersion)" />
   </ItemGroup>
 
   <!-- Include README.md in NuGet package -->

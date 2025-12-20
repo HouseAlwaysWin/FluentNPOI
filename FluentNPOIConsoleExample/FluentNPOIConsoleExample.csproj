@@ -7,6 +7,8 @@
     </PropertyGroup>
     <ItemGroup>
         <ProjectReference Include="..\FluentNPOI\FluentNPOI.csproj" />
+        <ProjectReference Include="..\FluentNPOI.Pdf\FluentNPOI.Pdf.csproj" />
+        <ProjectReference Include="..\FluentNPOI.Streaming\FluentNPOI.Streaming.csproj" />
     </ItemGroup>
     <ItemGroup>
         <None Update="Resources\Test.xlsx">

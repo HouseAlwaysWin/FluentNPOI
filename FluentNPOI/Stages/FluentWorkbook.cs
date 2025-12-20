@@ -75,33 +75,6 @@ namespace FluentNPOI.Stages
             return this;
         }
 
-        /// <summary>
-        /// Create a Streaming Pipeline Builder (Read-Modify-Write)
-        /// </summary>
-        /// <typeparam name="T">Data Model Type</typeparam>
-        /// <param name="filePath">Input file path</param>
-        /// <returns>StreamingBuilder</returns>
-        /// <example>
-        /// <code>
-        /// FluentWorkbook.Stream&lt;MyData&gt;("data.xlsx")
-        ///     .SaveAs("output.xlsx");
-        /// </code>
-        /// </example>
-        public static StreamingBuilder<T> Stream<T>(string filePath) where T : new()
-        {
-            return new StreamingBuilder<T>(filePath);
-        }
-
-        /// <summary>
-        /// Create a Streaming Pipeline Builder (Read-Modify-Write)
-        /// </summary>
-        /// <typeparam name="T">Data Model Type</typeparam>
-        /// <param name="stream">Input stream</param>
-        /// <returns>StreamingBuilder</returns>
-        public static StreamingBuilder<T> Stream<T>(System.IO.Stream stream) where T : new()
-        {
-            return new StreamingBuilder<T>(stream);
-        }
 
         /// <summary>
         /// Copy style from cell in specified sheet
@@ -303,31 +276,6 @@ namespace FluentNPOI.Stages
             return FluentNPOI.Html.HtmlConverter.ConvertSheetToHtml(_currentSheet, fullHtml);
         }
 
-        /// <summary>
-        /// Export current sheet to PDF and save to file
-        /// </summary>
-        public FluentWorkbook SaveAsPdf(string filePath)
-        {
-            if (_currentSheet == null) throw new InvalidOperationException("No active sheet selected.");
-
-            var dir = Path.GetDirectoryName(filePath);
-            if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir))
-            {
-                Directory.CreateDirectory(dir);
-            }
-
-            FluentNPOI.Pdf.PdfConverter.ConvertSheetToPdf(_currentSheet, _workbook, filePath);
-            return this;
-        }
-
-        /// <summary>
-        /// Export current sheet to PDF bytes
-        /// </summary>
-        public byte[] ToPdfBytes()
-        {
-            if (_currentSheet == null) throw new InvalidOperationException("No active sheet selected.");
-            return FluentNPOI.Pdf.PdfConverter.ConvertSheetToPdfBytes(_currentSheet, _workbook);
-        }
 
         /// <summary>
         /// Get sheet count

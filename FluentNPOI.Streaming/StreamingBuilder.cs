@@ -1,14 +1,14 @@
 using NPOI.SS.UserModel;
 using NPOI.XSSF.Streaming;
-using NPOI.HSSF.UserModel; // Added for .xls support
-using FluentNPOI.Streaming;
+using NPOI.HSSF.UserModel;
+using FluentNPOI.Stages;
 using FluentNPOI.Streaming.Mapping;
+using FluentNPOI.Models;
 using System;
 using System.IO;
 using System.Collections.Generic;
-using FluentNPOI.Models;
 
-namespace FluentNPOI.Stages
+namespace FluentNPOI.Streaming
 {
     /// <summary>
     /// Builder for Pipeline Processing (Read-Modify-Write)
@@ -17,7 +17,7 @@ namespace FluentNPOI.Stages
     /// <typeparam name="T">Data Model Type</typeparam>
     /// <example>
     /// <code>
-    /// FluentWorkbook.Stream&lt;MyData&gt;("input.xlsx")
+    /// StreamingBuilder&lt;MyData&gt;.FromFile("input.xlsx")
     ///     .Transform(x => x.Value *= 2)
     ///     .SaveAs("output.xlsx");
     /// </code>
@@ -31,17 +31,33 @@ namespace FluentNPOI.Stages
         private FluentMapping<T> _mapping;
         private string _sheetName;
 
-        internal StreamingBuilder(string inputFile)
+        private StreamingBuilder(string inputFile)
         {
             if (string.IsNullOrEmpty(inputFile)) throw new ArgumentNullException(nameof(inputFile));
             _inputStream = File.OpenRead(inputFile);
             _ownsStream = true;
         }
 
-        internal StreamingBuilder(Stream inputStream)
+        private StreamingBuilder(Stream inputStream)
         {
             _inputStream = inputStream ?? throw new ArgumentNullException(nameof(inputStream));
             _ownsStream = false;
+        }
+
+        /// <summary>
+        /// Create a pipeline from a file path
+        /// </summary>
+        public static StreamingBuilder<T> FromFile(string filePath)
+        {
+            return new StreamingBuilder<T>(filePath);
+        }
+
+        /// <summary>
+        /// Create a pipeline from a stream
+        /// </summary>
+        public static StreamingBuilder<T> FromStream(Stream stream)
+        {
+            return new StreamingBuilder<T>(stream);
         }
 
         /// <summary>
@@ -166,8 +182,7 @@ namespace FluentNPOI.Stages
             // 3. Prepare Mapping
             var mapping = _mapping ?? new FluentMapping<T>();
 
-            // 4. Read & Loop
-            // Note: ExcelDataReader works for both .xls and .xlsx input transparently
+            // 4. Read & Loop using FluentExcelReader
             var sourceData = FluentExcelReader.Read<T>(_inputStream, _sheetName);
 
             IEnumerable<T> Pipeline()

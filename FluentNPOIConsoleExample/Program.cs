@@ -723,7 +723,8 @@ namespace FluentNPOIConsoleExample
             // 2. 串流處理：輸出為 .xlsx (SXSSF - 高速)
             var outFileXlsx = @$"{AppDomain.CurrentDomain.BaseDirectory}\Resources\Pipeline_Out.xlsx";
 
-            FluentWorkbook.Stream<ExampleData>(sourceFile)
+            // Use new StreamingBuilder API from FluentNPOI.Streaming
+            FluentNPOI.Streaming.StreamingBuilder<ExampleData>.FromFile(sourceFile)
                 .Transform(d =>
                 {
                     d.Name += " (Streamed)";
@@ -742,7 +743,7 @@ namespace FluentNPOIConsoleExample
             // 3. 相容處理：輸出為 .xls (HSSF - DOM)
             var outFileXls = @$"{AppDomain.CurrentDomain.BaseDirectory}\Resources\Pipeline_Out.xls";
 
-            FluentWorkbook.Stream<ExampleData>(sourceFile)
+            FluentNPOI.Streaming.StreamingBuilder<ExampleData>.FromFile(sourceFile)
                 .Transform(d => d.Name += " (Legacy)")
                 .WithMapping(mapping)
                 .SaveAs(outFileXls);
@@ -920,8 +921,10 @@ namespace FluentNPOIConsoleExample
             //   - A1:D1 水平合併標題
             //   - A4:A6 垂直合併
             //   - B4:C5 2x2 區塊合併
-            fluent.UseSheet("HtmlDemo", true);
-            fluent.SaveAsPdf(pdfPath);
+            var sheet = fluent.UseSheet("HtmlDemo", true);
+
+            // Use PdfConverter from FluentNPOI.Pdf extension package directly
+            FluentNPOI.Pdf.PdfConverter.ConvertSheetToPdf(sheet.GetSheet(), fluent.GetWorkbook(), pdfPath);
 
             Console.WriteLine($"  ✓ PDF 匯出完成: {pdfPath}");
             Console.WriteLine("  > PDF 支援: 背景色、文字顏色、粗體/斜體、底線/刪除線、");

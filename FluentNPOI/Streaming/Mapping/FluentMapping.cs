@@ -47,9 +47,9 @@ namespace FluentNPOI.Streaming.Mapping
         public IReadOnlyList<ColumnMapping> GetMappings() => _mappings;
 
         /// <summary>
-        /// Internal use: Add Mapping directly (for auto mapping)
+        /// Add Mapping directly (for auto mapping from column headers)
         /// </summary>
-        internal void AddInternalMapping(PropertyInfo property, ExcelCol column)
+        public void AddInternalMapping(PropertyInfo property, ExcelCol column)
         {
             var mapping = new ColumnMapping
             {
@@ -60,7 +60,7 @@ namespace FluentNPOI.Streaming.Mapping
         }
 
         /// <summary>
-        /// Convert streaming row to DTO
+        /// Convert streaming row to DTO (IRowMapper implementation)
         /// </summary>
         public T Map(IStreamingRow row)
         {

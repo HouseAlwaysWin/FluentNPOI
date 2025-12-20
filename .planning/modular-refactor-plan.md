@@ -30,9 +30,11 @@ FluentNPOI/
 - [x] 建立 solution 結構，新增子專案資料夾
 - [x] 定義共用的 NuGet metadata（作者、License、Repository URL）
 
-### Phase 2: 核心套件重構
+### Phase 2: 核心套件重構 (進行中)
+- [x] 複製 Pdf/ 程式碼到 FluentNPOI.Pdf
+- [x] 複製 Streaming/ 程式碼到 FluentNPOI.Streaming
 - [ ] 從 FluentNPOI 移除 QuestPDF、ExcelDataReader 依賴
-- [ ] 保留 NPOI 相關的核心功能
+- [ ] 刪除核心套件的 Pdf/、Streaming/ 資料夾
 - [ ] 定義擴展點介面（如 IExcelExporter）
 
 ### Phase 3: 建立擴展套件
