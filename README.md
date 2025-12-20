@@ -16,22 +16,29 @@
 
 - ✅ **流暢 API** - 支援鏈式調用，代碼更簡潔易讀
 - ✅ **強型別映射** - 透過 `FluentMapping` 進行強型別資料綁定與樣式設定
+- ✅ **模組化套件** - 按需安裝：核心、PDF、串流、圖表
 - ✅ **直觀樣式** - 支援在 Mapping 中直接設定樣式，或使用 FluentCell API 進行細粒度控制
-- ✅ **樣式管理** - 智能樣式緩存機制，自動處理重複樣式，避免 Excel 樣式上限問題
+- ✅ **樣式管理** - 智能樣式緩存機制，自動處理重複樣式
 - ✅ **完整讀寫** - 支援讀寫 Excel、圖片插入、公式設定、合併儲存格
-- ✅ **工作簿管理** - 支援工作表複製、刪除、重新命名、調整行高列寬
-- ✅ **HTML 匯出** - 將 Excel 轉換為 HTML 表格，保留完整樣式
-- ✅ **PDF 匯出** - 使用 QuestPDF 引擎，支援合併儲存格、邊框、字體樣式
+- ✅ **HTML/PDF 匯出** - 將 Excel 轉換為 HTML 或 PDF
+- ✅ **圖表產生** - 使用 ScottPlot 產生圖表並嵌入 Excel
 
 ### 📦 安裝
 
-```bash
-# 使用 NuGet Package Manager
-Install-Package FluentNPOI
+#### 核心套件
 
-# 使用 .NET CLI
+```bash
 dotnet add package FluentNPOI
 ```
+
+#### 可選模組
+
+| 套件 | 用途 | 安裝 |
+|------|------|------|
+| `FluentNPOI.Pdf` | PDF 匯出 (QuestPDF) | `dotnet add package FluentNPOI.Pdf` |
+| `FluentNPOI.Streaming` | 大檔案串流讀寫 | `dotnet add package FluentNPOI.Streaming` |
+| `FluentNPOI.Charts` | 圖表產生 (ScottPlot) | `dotnet add package FluentNPOI.Charts` |
+| `FluentNPOI.All` | 完整功能 (包含所有模組) | `dotnet add package FluentNPOI.All` |
 
 ### 🎯 快速開始
 
@@ -45,164 +52,89 @@ var workbook = new XSSFWorkbook();
 var fluent = new FluentWorkbook(workbook);
 
 fluent.UseSheet("Sheet1")
-      // 定位並鏈式操作
-      .SetCellPosition(0, 1) // Row 1, Col A (0-based)
+      .SetCellPosition(ExcelCol.A, 1)
       .SetValue("Hello World!")
-      .SetBackgroundColor(IndexedColors.Yellow) // 直接設定樣式
-      .SetFont(isBold: true, fontSize: 14)
-      .SetAlignment(HorizontalAlignment.Center);
+      .SetBackgroundColor(IndexedColors.Yellow)
+      .SetFont(isBold: true, fontSize: 14);
 
 fluent.SaveToPath("output.xlsx");
 ```
 
-#### 2. 強型別表格綁定與樣式 (推薦)
-
-使用 `FluentMapping` 可以同時定義資料與外觀，這是處理列表資料最推薦的方式。
+#### 2. 強型別表格綁定 (推薦)
 
 ```csharp
-var data = new List<Student>
-{
-    new Student { Name = "Alice", Score = 95.5, Date = DateTime.Now },
-    new Student { Name = "Bob", Score = 80.0, Date = DateTime.Now }
-};
-
-// 定義 Mapping 與樣式
 var mapping = new FluentMapping<Student>();
 
 mapping.Map(x => x.Name)
     .ToColumn(ExcelCol.A)
     .WithTitle("姓名")
-    .WithAlignment(HorizontalAlignment.Center)
     .WithBackgroundColor(IndexedColors.LightCornflowerBlue);
 
 mapping.Map(x => x.Score)
     .ToColumn(ExcelCol.B)
     .WithTitle("分數")
-    .WithNumberFormat("0.0") // 設定數值格式
-    .WithFont(isBold: true);
+    .WithNumberFormat("0.0");
 
-mapping.Map(x => x.Date)
-    .ToColumn(ExcelCol.C)
-    .WithTitle("日期")
-    .WithNumberFormat("yyyy-mm-dd");
-
-// 寫入並應用功能
 fluent.UseSheet("Report")
       .SetTable(data, mapping)
       .BuildRows()
-      .SetAutoFilter() // 自動篩選
-      .FreezeTitleRow() // 凍結標題行
-      .AutoSizeColumns(); // 自動調整欄寬
+      .SetAutoFilter()
+      .FreezeTitleRow();
 ```
 
-### 📚 主要功能
-
-#### 1. 單元格操作 (FluentCell)
-
-FluentCell 提供了豐富的鏈式方法來操作單元格：
+#### 3. 串流處理大檔案
 
 ```csharp
-fluent.UseSheet("Sheet1")
-      .SetCellPosition(ExcelCol.C, 5)
-      .SetValue(12345.678)
-      .SetNumberFormat("#,##0.00")         // 數值格式
-      .SetBackgroundColor(IndexedColors.Red) // 背景色
-      .SetFont(fontName: "Arial", isBold: true) // 字體
-      .SetBorder(BorderStyle.Thin)         // 邊框
-      .SetAlignment(HorizontalAlignment.Right) // 對齊
-      .SetWrapText(true);                  // 自動換行
+using FluentNPOI.Streaming;
+
+StreamingBuilder<DataModel>.FromFile("large_input.xlsx")
+    .Transform(x => x.Value *= 2)
+    .WithMapping(mapping)
+    .SaveAs("output.xlsx");
 ```
 
-其他功能：
-
-- `SetFormula("SUM(A1:A10)")`：設定公式
-- `CopyStyleFrom(otherCell)`：複製樣式
-- `GetCellValue<T>()`：讀取值
-
-#### 2. 工作簿與工作表管理 (Workbook & Sheet)
-
-方便地管理工作表結構：
+#### 4. 圖表產生
 
 ```csharp
-// 工作表管理
-fluent.CloneSheet("Template", "NewReport"); // 複製工作表
-fluent.RenameSheet("NewReport", "2024 Report"); // 重新命名
-fluent.DeleteSheet("OldData"); // 刪除工作表
+using FluentNPOI.Charts;
 
-// 行列操作
-fluent.UseSheet("2024 Report")
-      .SetDefaultRowHeight(20) // 預設行高
-      .SetRowHeight(0, 30)     // 設定特定行高 (Row 1)
-      .SetDefaultColumnWidth(15);
+// 整合串鍊 API
+fluent.UseSheet("Charts")
+    .SetCellPosition(ExcelCol.A, 1)
+    .AddBarChart(data, chart => {
+        chart.X(d => d.Category)
+             .Y(d => d.Value)
+             .WithTitle("Sales Report");
+    }, width: 400, height: 300);
+
+// 或手動產生
+var chartBytes = ChartBuilder.Bar(data)
+    .X(d => d.Category)
+    .Y(d => d.Value)
+    .Configure(plot => {
+        // 完整存取 ScottPlot API
+        plot.FigureBackground.Color = ScottPlot.Colors.White;
+    })
+    .ToPng(400, 300);
 ```
 
-#### 3. 圖片操作
+#### 5. PDF 匯出
 
 ```csharp
-byte[] imageBytes = File.ReadAllBytes("logo.png");
+using FluentNPOI.Pdf;
 
-fluent.UseSheet("Sheet1")
-      .SetCellPosition(ExcelCol.A, 1)
-      .SetPictureOnCell(imageBytes, 200, 100); // 插入圖片並指定寬高
-```
-
-#### 4. 高級樣式管理 (Legacy & Dynamic)
-
-除了直接使用 `.Set...` 方法外，也可以使用樣式緩存系統來管理共用樣式，或進行條件格式化。
-
-**註冊共用樣式：**
-
-```csharp
-fluent.SetupCellStyle("HeaderStyle", (wb, style) =>
-{
-    style.SetAlignment(HorizontalAlignment.Center);
-    style.FillForegroundColor = IndexedColors.Grey25Percent.Index;
-    style.FillPattern = FillPattern.SolidForeground;
-});
-
-// 應用樣式
-fluent.UseSheet("Sheet1")
-      .SetCellPosition(0, 0)
-      .SetValue("Title")
-      .SetCellStyle("HeaderStyle");
-```
-
-**條件格式化 (動態樣式)：**
-
-```csharp
-mapping.Map(x => x.Score)
-    .ToColumn(ExcelCol.B)
-    .WithDynamicStyle(item =>
-    {
-        // 根據資料值返回對應的樣式 Key
-        return ((Student)item).Score < 60 ? "FailStyle" : "PassStyle";
-    });
+PdfConverter.ConvertSheetToPdf(fluent.UseSheet("Report"), "report.pdf");
 ```
 
 ### 📖 API 概覽
 
-| 用途         | 主要方法                                                                               |
-| ------------ | -------------------------------------------------------------------------------------- |
-| **Mapping**  | `Map`, `ToColumn`, `WithTitle`, `WithNumberFormat`, `WithBackgroundColor`              |
-| **Cell**     | `SetValue`, `SetFormula`, `SetBackgroundColor`, `SetBorder`, `SetFont`, `SetAlignment` |
-| **Table**    | `SetTable`, `BuildRows`, `SetAutoFilter`, `FreezeTitleRow`, `AutoSizeColumns`          |
-| **Sheet**    | `CloneSheet`, `RenameSheet`, `SetRowHeight`, `SetDefaultColumnWidth`                   |
-| **Workbook** | `SaveToPath`, `SaveToStream`, `GetSheetNames`, `DeleteSheet`                           |
-
-#### 5. HTML/PDF 匯出
-
-```csharp
-// 匯出為 HTML
-fluent.UseSheet("Report");
-fluent.SaveAsHtml("report.html");
-string htmlString = fluent.ToHtmlString();
-
-// 匯出為 PDF (需要 QuestPDF)
-fluent.SaveAsPdf("report.pdf");
-byte[] pdfBytes = fluent.ToPdfBytes();
-```
-
-PDF 支援：背景色、文字顏色、粗體/斜體、底線/刪除線、邊框樣式、數值格式化、文字對齊、合併儲存格
+| 用途 | 主要方法 |
+|------|----------|
+| **Mapping** | `Map`, `ToColumn`, `WithTitle`, `WithNumberFormat`, `WithBackgroundColor` |
+| **Cell** | `SetValue`, `SetFormula`, `SetBackgroundColor`, `SetBorder`, `SetFont` |
+| **Table** | `SetTable`, `BuildRows`, `SetAutoFilter`, `FreezeTitleRow`, `AutoSizeColumns` |
+| **Streaming** | `StreamingBuilder.FromFile`, `Transform`, `SaveAs` |
+| **Charts** | `AddBarChart`, `AddLineChart`, `AddPieChart`, `ChartBuilder` |
 
 ---
 
@@ -211,23 +143,30 @@ PDF 支援：背景色、文字顏色、粗體/斜體、底線/刪除線、邊�
 ### 🚀 Features
 
 - ✅ **Fluent API** - Chained method calls for simpler, readable code
-- ✅ **Strongly Typed Mapping** - Use `FluentMapping` for type-safe data binding and styling
-- ✅ **Direct Styling** - Configure styles directly within Mapping or use FluentCell API
-- ✅ **Style Management** - Smart caching to handle duplicate styles and avoid Excel limits
+- ✅ **Strongly Typed Mapping** - Use `FluentMapping` for type-safe data binding
+- ✅ **Modular Packages** - Install only what you need: Core, PDF, Streaming, Charts
+- ✅ **Direct Styling** - Configure styles directly within Mapping or FluentCell API
+- ✅ **Style Management** - Smart caching to handle duplicate styles
 - ✅ **Comprehensive I/O** - Read/Write, Images, Formulas, Merging
-- ✅ **Workbook Management** - Clone, Rename, Delete sheets, adjust Row/Column dimensions
-- ✅ **HTML Export** - Convert Excel to HTML tables with full styling
-- ✅ **PDF Export** - Using QuestPDF engine, supports merged cells, borders, fonts
+- ✅ **HTML/PDF Export** - Convert Excel to HTML or PDF
+- ✅ **Chart Generation** - Generate charts using ScottPlot and embed in Excel
 
 ### 📦 Installation
 
-```bash
-# Via NuGet Package Manager
-Install-Package FluentNPOI
+#### Core Package
 
-# Via .NET CLI
+```bash
 dotnet add package FluentNPOI
 ```
+
+#### Optional Modules
+
+| Package | Purpose | Install |
+|---------|---------|---------|
+| `FluentNPOI.Pdf` | PDF Export (QuestPDF) | `dotnet add package FluentNPOI.Pdf` |
+| `FluentNPOI.Streaming` | Large File Streaming | `dotnet add package FluentNPOI.Streaming` |
+| `FluentNPOI.Charts` | Chart Generation (ScottPlot) | `dotnet add package FluentNPOI.Charts` |
+| `FluentNPOI.All` | Full Features (All modules) | `dotnet add package FluentNPOI.All` |
 
 ### 🎯 Quick Start
 
@@ -241,170 +180,95 @@ var workbook = new XSSFWorkbook();
 var fluent = new FluentWorkbook(workbook);
 
 fluent.UseSheet("Sheet1")
-      // Position and modify
-      .SetCellPosition(0, 1) // Row 1, Col A (0-based)
+      .SetCellPosition(ExcelCol.A, 1)
       .SetValue("Hello World!")
-      .SetBackgroundColor(IndexedColors.Yellow) // Styled directly
-      .SetFont(isBold: true, fontSize: 14)
-      .SetAlignment(HorizontalAlignment.Center);
+      .SetBackgroundColor(IndexedColors.Yellow)
+      .SetFont(isBold: true, fontSize: 14);
 
 fluent.SaveToPath("output.xlsx");
 ```
 
 #### 2. Table Binding with FluentMapping (Recommended)
 
-`FluentMapping` allows you to define both data extraction and visual presentation in one place.
-
 ```csharp
-var data = new List<Student>
-{
-    new Student { Name = "Alice", Score = 95.5, Date = DateTime.Now },
-    new Student { Name = "Bob", Score = 80.0, Date = DateTime.Now }
-};
-
-// Define Mapping & Styles
 var mapping = new FluentMapping<Student>();
 
 mapping.Map(x => x.Name)
     .ToColumn(ExcelCol.A)
     .WithTitle("Name")
-    .WithAlignment(HorizontalAlignment.Center)
     .WithBackgroundColor(IndexedColors.LightCornflowerBlue);
 
 mapping.Map(x => x.Score)
     .ToColumn(ExcelCol.B)
     .WithTitle("Score")
-    .WithNumberFormat("0.0") // Set Number Format
-    .WithFont(isBold: true);
+    .WithNumberFormat("0.0");
 
-mapping.Map(x => x.Date)
-    .ToColumn(ExcelCol.C)
-    .WithTitle("Date")
-    .WithNumberFormat("yyyy-mm-dd");
-
-// Write and Enhance
 fluent.UseSheet("Report")
       .SetTable(data, mapping)
       .BuildRows()
-      .SetAutoFilter() // Add Auto Filter
-      .FreezeTitleRow() // Freeze top row
-      .AutoSizeColumns(); // Auto-size columns
+      .SetAutoFilter()
+      .FreezeTitleRow();
 ```
 
-### 📚 Main Features
-
-#### 1. Cell Operations (FluentCell)
-
-FluentCell offers a rich set of chained methods for cell manipulation:
+#### 3. Streaming for Large Files
 
 ```csharp
-fluent.UseSheet("Sheet1")
-      .SetCellPosition(ExcelCol.C, 5)
-      .SetValue(12345.678)
-      .SetNumberFormat("#,##0.00")
-      .SetBackgroundColor(IndexedColors.Red)
-      .SetFont(fontName: "Arial", isBold: true)
-      .SetBorder(BorderStyle.Thin)
-      .SetAlignment(HorizontalAlignment.Right)
-      .SetWrapText(true);
+using FluentNPOI.Streaming;
+
+StreamingBuilder<DataModel>.FromFile("large_input.xlsx")
+    .Transform(x => x.Value *= 2)
+    .WithMapping(mapping)
+    .SaveAs("output.xlsx");
 ```
 
-Other features:
-
-- `SetFormula("SUM(A1:A10)")`: Set formula
-- `CopyStyleFrom(otherCell)`: Copy style
-- `GetCellValue<T>()`: Read value
-
-#### 2. Workbook & Sheet Management
-
-Easily manage the structure of your workbook:
+#### 4. Chart Generation
 
 ```csharp
-// Sheet Management
-fluent.CloneSheet("Template", "NewReport"); // Clone sheet
-fluent.RenameSheet("NewReport", "2024 Report"); // Rename
-fluent.DeleteSheet("OldData"); // Delete
+using FluentNPOI.Charts;
 
-// Row & Column Dimensions
-fluent.UseSheet("2024 Report")
-      .SetDefaultRowHeight(20)
-      .SetRowHeight(0, 30) // Set specific row height (Row 1)
-      .SetDefaultColumnWidth(15);
+// Integrated chaining API
+fluent.UseSheet("Charts")
+    .SetCellPosition(ExcelCol.A, 1)
+    .AddBarChart(data, chart => {
+        chart.X(d => d.Category)
+             .Y(d => d.Value)
+             .WithTitle("Sales Report");
+    }, width: 400, height: 300);
+
+// Or generate manually
+var chartBytes = ChartBuilder.Bar(data)
+    .X(d => d.Category)
+    .Y(d => d.Value)
+    .Configure(plot => {
+        // Full access to ScottPlot API
+        plot.FigureBackground.Color = ScottPlot.Colors.White;
+    })
+    .ToPng(400, 300);
 ```
 
-#### 3. Images
+#### 5. PDF Export
 
 ```csharp
-byte[] imageBytes = File.ReadAllBytes("logo.png");
+using FluentNPOI.Pdf;
 
-fluent.UseSheet("Sheet1")
-      .SetCellPosition(ExcelCol.A, 1)
-      .SetPictureOnCell(imageBytes, 200, 100); // Insert image with specific size
-```
-
-#### 4. Advanced Styling (Legacy & Dynamic)
-
-Besides direct `.Set...` methods, you can use the Style Cache for shared styles or conditional formatting.
-
-**Register Shared Style:**
-
-```csharp
-fluent.SetupCellStyle("HeaderStyle", (wb, style) =>
-{
-    style.SetAlignment(HorizontalAlignment.Center);
-    style.FillForegroundColor = IndexedColors.Grey25Percent.Index;
-    style.FillPattern = FillPattern.SolidForeground;
-});
-
-// Apply Style
-fluent.UseSheet("Sheet1")
-      .SetCellPosition(0, 0)
-      .SetValue("Title")
-      .SetCellStyle("HeaderStyle");
-```
-
-**Conditional Formatting (Dynamic):**
-
-```csharp
-mapping.Map(x => x.Score)
-    .ToColumn(ExcelCol.B)
-    .WithDynamicStyle(item =>
-    {
-        // Return style Key based on data
-        return ((Student)item).Score < 60 ? "FailStyle" : "PassStyle";
-    });
+PdfConverter.ConvertSheetToPdf(fluent.UseSheet("Report"), "report.pdf");
 ```
 
 ### 📖 API Overview
 
-| Area         | Key Methods                                                                            |
-| ------------ | -------------------------------------------------------------------------------------- |
-| **Mapping**  | `Map`, `ToColumn`, `WithTitle`, `WithNumberFormat`, `WithBackgroundColor`              |
-| **Cell**     | `SetValue`, `SetFormula`, `SetBackgroundColor`, `SetBorder`, `SetFont`, `SetAlignment` |
-| **Table**    | `SetTable`, `BuildRows`, `SetAutoFilter`, `FreezeTitleRow`, `AutoSizeColumns`          |
-| **Sheet**    | `CloneSheet`, `RenameSheet`, `SetRowHeight`, `SetDefaultColumnWidth`                   |
-| **Workbook** | `SaveToPath`, `SaveToStream`, `GetSheetNames`, `DeleteSheet`                           |
-
-#### 5. HTML/PDF Export
-
-```csharp
-// Export to HTML
-fluent.UseSheet("Report");
-fluent.SaveAsHtml("report.html");
-string htmlString = fluent.ToHtmlString();
-
-// Export to PDF (requires QuestPDF)
-fluent.SaveAsPdf("report.pdf");
-byte[] pdfBytes = fluent.ToPdfBytes();
-```
-
-PDF supports: Background color, text color, bold/italic, underline/strikethrough, borders, number formatting, text alignment, merged cells
+| Area | Key Methods |
+|------|-------------|
+| **Mapping** | `Map`, `ToColumn`, `WithTitle`, `WithNumberFormat`, `WithBackgroundColor` |
+| **Cell** | `SetValue`, `SetFormula`, `SetBackgroundColor`, `SetBorder`, `SetFont` |
+| **Table** | `SetTable`, `BuildRows`, `SetAutoFilter`, `FreezeTitleRow`, `AutoSizeColumns` |
+| **Streaming** | `StreamingBuilder.FromFile`, `Transform`, `SaveAs` |
+| **Charts** | `AddBarChart`, `AddLineChart`, `AddPieChart`, `ChartBuilder` |
 
 ---
 
 ### 🤝 Contribution
 
-Issue and Pull Requests are welcome!
+Issues and Pull Requests are welcome!
 
 ### 📄 License
 
