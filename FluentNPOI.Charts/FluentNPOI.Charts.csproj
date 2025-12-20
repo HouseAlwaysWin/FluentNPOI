@@ -11,12 +11,9 @@
     <ProjectReference Include="..\FluentNPOI\FluentNPOI.csproj" />
   </ItemGroup>
 
-  <!-- ScottPlot dependency will be added when implementing chart features -->
-  <!--
   <ItemGroup>
-    <PackageReference Include="ScottPlot" Version="5.0.x" />
+    <PackageReference Include="ScottPlot" Version="5.0.49" />
   </ItemGroup>
-  -->
 
   <ItemGroup>
     <None Include="README.md" Pack="true" PackagePath="\" />
