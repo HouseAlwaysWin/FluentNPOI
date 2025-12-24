@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.3.0] - 2025-12-25
+
+### Major Features
+
+- 🔥 **Hot Reload Support**
+  - New `FluentNPOI.HotReload` package for live preview of Excel generation
+  - Seamless integration with LibreOffice for real-time visual feedback
+  - Support for `dotnet watch` dev loop
+  - "Shadow Copy" mechanism to prevent file locking issues
+- 🌍 **Localization & Documentation**
+  - Complete English translation of console output and comments
+  - Dual-language documentation: `README.md` (English) and `README.zh-TW.md` (Traditional Chinese)
+
 ## [2.1.0] - 2025-12-XX
 
 ### Major Features

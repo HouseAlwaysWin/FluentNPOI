@@ -1,7 +1,7 @@
 <Project>
   <PropertyGroup>
     <!-- 統一版本號 -->
-    <Version>2.2.0</Version>
+    <Version>2.3.0</Version>
     
     <!-- 共用 NuGet Metadata -->
     <Authors>HouseAlwaysWin</Authors>

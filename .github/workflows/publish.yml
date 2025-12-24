@@ -56,6 +56,7 @@ jobs:
           "FluentNPOI.Streaming/FluentNPOI.Streaming.csproj",
           "FluentNPOI.Pdf/FluentNPOI.Pdf.csproj",
           "FluentNPOI.Charts/FluentNPOI.Charts.csproj",
+          "FluentNPOI.HotReload/FluentNPOI.HotReload.csproj",
           "FluentNPOI.All/FluentNPOI.All.csproj"
         )
         

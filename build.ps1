@@ -50,6 +50,7 @@ function Build-Project {
         @{ Name = "FluentNPOI.Streaming"; Path = Join-Path $ProjectRoot "FluentNPOI.Streaming\FluentNPOI.Streaming.csproj" },
         @{ Name = "FluentNPOI.Pdf";       Path = Join-Path $ProjectRoot "FluentNPOI.Pdf\FluentNPOI.Pdf.csproj" },
         @{ Name = "FluentNPOI.Charts";    Path = Join-Path $ProjectRoot "FluentNPOI.Charts\FluentNPOI.Charts.csproj" },
+        @{ Name = "FluentNPOI.HotReload"; Path = Join-Path $ProjectRoot "FluentNPOI.HotReload\FluentNPOI.HotReload.csproj" },
         @{ Name = "FluentNPOI.All";       Path = Join-Path $ProjectRoot "FluentNPOI.All\FluentNPOI.All.csproj" }
     )
     
@@ -113,6 +114,7 @@ function Pack-Project {
         @{ Name = "FluentNPOI.Streaming"; Path = Join-Path $ProjectRoot "FluentNPOI.Streaming\FluentNPOI.Streaming.csproj" },
         @{ Name = "FluentNPOI.Pdf";       Path = Join-Path $ProjectRoot "FluentNPOI.Pdf\FluentNPOI.Pdf.csproj" },
         @{ Name = "FluentNPOI.Charts";    Path = Join-Path $ProjectRoot "FluentNPOI.Charts\FluentNPOI.Charts.csproj" },
+        @{ Name = "FluentNPOI.HotReload"; Path = Join-Path $ProjectRoot "FluentNPOI.HotReload\FluentNPOI.HotReload.csproj" },
         @{ Name = "FluentNPOI.All";       Path = Join-Path $ProjectRoot "FluentNPOI.All\FluentNPOI.All.csproj" }
     )
     
