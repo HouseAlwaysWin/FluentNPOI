@@ -12,7 +12,7 @@ namespace FluentNPOIConsoleExample
     {
         #region Read Examples
 
-        static void ReadExcelExamples(FluentWorkbook fluent)
+        public static void ReadExcelExamples(FluentWorkbook fluent)
         {
             Console.WriteLine("\n========== 讀取 Excel 資料 ==========");
 

@@ -219,9 +219,19 @@ public class FluentHotReloadSession : IDisposable
 
     private void OnRefreshRequested(Type[]? updatedTypes)
     {
+        // If not using shadow copy, we MUST kill LibreOffice before Refresh() attempts to write to the file
+        if (!LibreOfficeOptions.UseShadowCopy && LibreOfficeOptions.AutoRefresh)
+        {
+            Console.WriteLine("🛑 Closing LibreOffice to release file lock...");
+            KillExistingSofficeProcesses();
+            // Wait for file handles to be strictly released
+            Thread.Sleep(500);
+        }
+
         Refresh();
+
         // Auto-refresh LibreOffice if configured
-        if (LibreOfficeOptions.AutoRefresh && !string.IsNullOrEmpty(_shadowCopyPath))
+        if (LibreOfficeOptions.AutoRefresh)
         {
             _ = TryRefreshLibreOfficeAsync();
         }
@@ -231,13 +241,23 @@ public class FluentHotReloadSession : IDisposable
     {
         try
         {
-            // Create fixed shadow copy path (not random GUID)
-            _shadowCopyPath = GetShadowCopyPath(_outputPath);
+            string targetPath;
 
-            // Copy current output to shadow
-            if (File.Exists(_outputPath))
+            if (LibreOfficeOptions.UseShadowCopy)
             {
-                File.Copy(_outputPath, _shadowCopyPath, overwrite: true);
+                // Create fixed shadow copy path (not random GUID)
+                _shadowCopyPath = GetShadowCopyPath(_outputPath);
+                targetPath = _shadowCopyPath;
+
+                // Copy current output to shadow
+                if (File.Exists(_outputPath))
+                {
+                    File.Copy(_outputPath, _shadowCopyPath, overwrite: true);
+                }
+            }
+            else
+            {
+                targetPath = _outputPath;
             }
 
             // Detect LibreOffice
@@ -255,12 +275,12 @@ public class FluentHotReloadSession : IDisposable
             _libreOfficeProcess = System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
             {
                 FileName = sofficePath,
-                Arguments = $"--nologo --norestore --calc \"{_shadowCopyPath}\"",
+                Arguments = $"--nologo --norestore --calc \"{targetPath}\"",
                 UseShellExecute = false,
                 CreateNoWindow = true
             });
 
-            Console.WriteLine($"📂 LibreOffice opened: {Path.GetFileName(_shadowCopyPath)}");
+            Console.WriteLine($"📂 LibreOffice opened: {Path.GetFileName(targetPath)}");
             Console.WriteLine("   🔄 每次程式碼變更後 LibreOffice 會自動重新開啟");
         }
         catch (Exception ex)
@@ -292,31 +312,50 @@ public class FluentHotReloadSession : IDisposable
             // Wait for NPOI to finish writing
             await Task.Delay(200);
 
-            // Update the shadow copy file
-            if (!string.IsNullOrEmpty(_shadowCopyPath) && File.Exists(_outputPath))
+            string targetPath;
+
+            if (LibreOfficeOptions.UseShadowCopy)
             {
-                // Kill existing LibreOffice
+                // Update the shadow copy file
+                if (!string.IsNullOrEmpty(_shadowCopyPath) && File.Exists(_outputPath))
+                {
+                    // Kill existing LibreOffice BEFORE copying to avoid file in use (if it's opening the shadow file)
+                    if (_libreOfficeProcess != null && !_libreOfficeProcess.HasExited)
+                    {
+                        try { _libreOfficeProcess.Kill(); } catch { }
+                    }
+
+                    // Update shadow copy
+                    File.Copy(_outputPath, _shadowCopyPath, overwrite: true);
+                    targetPath = _shadowCopyPath;
+                }
+                else
+                {
+                    return; // Should not happen if initialized correctly
+                }
+            }
+            else
+            {
+                targetPath = _outputPath;
+                // Kill existing process
                 if (_libreOfficeProcess != null && !_libreOfficeProcess.HasExited)
                 {
                     try { _libreOfficeProcess.Kill(); } catch { }
                 }
+            }
 
-                // Update shadow copy
-                File.Copy(_outputPath, _shadowCopyPath, overwrite: true);
-
-                // Reopen LibreOffice
-                var sofficePath = LibreOfficeBridge.DetectPath();
-                if (!string.IsNullOrEmpty(sofficePath))
+            // Reopen LibreOffice
+            var sofficePath = LibreOfficeBridge.DetectPath();
+            if (!string.IsNullOrEmpty(sofficePath))
+            {
+                _libreOfficeProcess = System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
                 {
-                    _libreOfficeProcess = System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
-                    {
-                        FileName = sofficePath,
-                        Arguments = $"--nologo --norestore --calc \"{_shadowCopyPath}\"",
-                        UseShellExecute = false,
-                        CreateNoWindow = true
-                    });
-                    Console.WriteLine("🔄 LibreOffice reopened with updated file");
-                }
+                    FileName = sofficePath,
+                    Arguments = $"--nologo --norestore --calc \"{targetPath}\"",
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                });
+                Console.WriteLine("🔄 LibreOffice reopened with updated file");
             }
         }
         catch (Exception ex)
@@ -397,22 +436,40 @@ public class FluentHotReloadSession : IDisposable
     /// </summary>
     private string SaveWithFallback(FluentWorkbook workbook, string primaryPath)
     {
-        // Try primary path first
+        // Retry logic to handle race conditions where file lock isn't released immediately
+        int maxRetries = 10;
+        for (int i = 0; i < maxRetries; i++)
+        {
+            try
+            {
+                workbook.SaveToPath(primaryPath);
+                return primaryPath;
+            }
+            catch (IOException)
+            {
+                if (i < maxRetries - 1)
+                {
+                    Thread.Sleep(200); // Wait 200ms and retry
+                }
+            }
+        }
+
+        // File is definitely locked, use fallback with timestamp
+        var dir = Path.GetDirectoryName(primaryPath) ?? ".";
+        var name = Path.GetFileNameWithoutExtension(primaryPath);
+        var ext = Path.GetExtension(primaryPath);
+        var fallbackPath = Path.Combine(dir, $"{name}_{DateTime.Now:HHmmss}{ext}");
+
         try
         {
-            workbook.SaveToPath(primaryPath);
-            return primaryPath;
-        }
-        catch (IOException)
-        {
-            // File is locked, use fallback with timestamp
-            var dir = Path.GetDirectoryName(primaryPath) ?? ".";
-            var name = Path.GetFileNameWithoutExtension(primaryPath);
-            var ext = Path.GetExtension(primaryPath);
-            var fallbackPath = Path.Combine(dir, $"{name}_{DateTime.Now:HHmmss}{ext}");
-
             workbook.SaveToPath(fallbackPath);
+            Console.WriteLine($"⚠️ Target locked, saved to fallback: {Path.GetFileName(fallbackPath)}");
             return fallbackPath;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"❌ Failed to save even to fallback: {ex.Message}");
+            throw;
         }
     }
 

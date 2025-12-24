@@ -17,7 +17,7 @@ namespace FluentNPOIConsoleExample
         /// <summary>
         /// Example 12: Export to HTML
         /// </summary>
-        static void CreateHtmlExportExample(FluentWorkbook fluent)
+        public static void CreateHtmlExportExample(FluentWorkbook fluent)
         {
             Console.WriteLine("建立 HtmlExportExample...");
 
@@ -117,7 +117,7 @@ namespace FluentNPOIConsoleExample
         /// <summary>
         /// Example 13: Export to PDF with merged cells
         /// </summary>
-        static void CreatePdfExportExample(FluentWorkbook fluent)
+        public static void CreatePdfExportExample(FluentWorkbook fluent)
         {
             Console.WriteLine("建立 PdfExportExample...");
 

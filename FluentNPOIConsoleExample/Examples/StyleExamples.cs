@@ -55,7 +55,7 @@ namespace FluentNPOIConsoleExample
         /// <summary>
         /// Example 3.5: Copy style and dynamic style
         /// </summary>
-        static void CreateCopyStyleExample(FluentWorkbook fluent, List<ExampleData> testData)
+        public static void CreateCopyStyleExample(FluentWorkbook fluent, List<ExampleData> testData)
         {
             Console.WriteLine("建立 CopyStyleExample...");
 
@@ -111,7 +111,7 @@ namespace FluentNPOIConsoleExample
         /// <summary>
         /// Example 5: Per-sheet global styles
         /// </summary>
-        static void CreateSheetGlobalStyleExample(FluentWorkbook fluent, List<ExampleData> testData)
+        public static void CreateSheetGlobalStyleExample(FluentWorkbook fluent, List<ExampleData> testData)
         {
             Console.WriteLine("建立 SheetGlobalStyle...");
 
@@ -221,7 +221,7 @@ namespace FluentNPOIConsoleExample
         /// <summary>
         /// Example 9: Direct styling in mapping (New Feature)
         /// </summary>
-        static void CreateMappingStylingExample(FluentWorkbook fluent, List<ExampleData> testData)
+        public static void CreateMappingStylingExample(FluentWorkbook fluent, List<ExampleData> testData)
         {
             Console.WriteLine("建立 MappingStylingExample...");
 

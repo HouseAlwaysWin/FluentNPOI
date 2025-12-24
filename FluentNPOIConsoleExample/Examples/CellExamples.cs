@@ -18,7 +18,7 @@ namespace FluentNPOIConsoleExample
         /// <summary>
         /// Example 6: Set single cell value
         /// </summary>
-        static void CreateSetCellValueExample(FluentWorkbook fluent)
+        public static void CreateSetCellValueExample(FluentWorkbook fluent)
         {
             Console.WriteLine("建立 SetCellValueExample...");
 
@@ -34,7 +34,7 @@ namespace FluentNPOIConsoleExample
         /// <summary>
         /// Example 7: Cell merge
         /// </summary>
-        static void CreateCellMergeExample(FluentWorkbook fluent)
+        public static void CreateCellMergeExample(FluentWorkbook fluent)
         {
             Console.WriteLine("建立 CellMergeExample...");
 
@@ -105,7 +105,7 @@ namespace FluentNPOIConsoleExample
         /// <summary>
         /// Example 8: Insert picture example
         /// </summary>
-        static void CreatePictureExample(FluentWorkbook fluent)
+        public static void CreatePictureExample(FluentWorkbook fluent)
         {
             Console.WriteLine("建立 PictureExample...");
 
@@ -128,7 +128,7 @@ namespace FluentNPOIConsoleExample
                 .SetCellStyle("HeaderBlue");
 
             sheet.SetCellPosition(ExcelCol.A, 2)
-                .SetPictureOnCell(imageBytes, 200);
+                .SetPictureOnCell(imageBytes, 100);
 
             // 2. Manually set width and height
             sheet.SetCellPosition(ExcelCol.B, 1)

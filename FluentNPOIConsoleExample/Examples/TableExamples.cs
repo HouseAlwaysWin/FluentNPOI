@@ -20,7 +20,7 @@ namespace FluentNPOIConsoleExample
         /// <summary>
         /// Example 1: Basic table - Demonstrates various field types using FluentMapping
         /// </summary>
-        static void CreateBasicTableExample(FluentWorkbook fluent, List<ExampleData> testData)
+        public static void CreateBasicTableExample(FluentWorkbook fluent, List<ExampleData> testData)
         {
             Console.WriteLine("建立 BasicTableExample (BasicTable)...");
 
@@ -58,23 +58,24 @@ namespace FluentNPOIConsoleExample
         /// <summary>
         /// Example 2: Summary table
         /// </summary>
-        static void CreateSummaryExample(FluentWorkbook fluent, List<ExampleData> testData)
+        public static void CreateSummaryExample(FluentWorkbook fluent, List<ExampleData> testData)
         {
             Console.WriteLine("建立 Summary...");
 
             var mapping = new FluentMapping<ExampleData>();
             mapping.Map(x => x.Name).ToColumn(ExcelCol.A)
-                .WithTitle("姓名").WithTitleStyle("HeaderBlue");
+                .WithTitle("姓名11").WithTitleStyle("HeaderBlue");
             mapping.Map(x => x.Score).ToColumn(ExcelCol.B)
                 .WithTitle("分數").WithTitleStyle("HeaderBlue").WithStyle("AmountCurrency")
                 .WithCellType(CellType.Numeric);
             mapping.Map(x => x.DateOfBirth).ToColumn(ExcelCol.C)
-                .WithTitle("日期").WithTitleStyle("HeaderBlue").WithStyle("DateOfBirth");
+                .WithTitle("生日").WithTitleStyle("HeaderBlue").WithStyle("DateOfBirth");
             mapping.Map(x => x.IsActive).ToColumn(ExcelCol.D)
                 .WithTitle("狀態").WithTitleStyle("HeaderBlue")
                 .WithCellType(CellType.Boolean);
             mapping.Map(x => x.Notes).ToColumn(ExcelCol.E)
-                .WithTitle("備註").WithTitleStyle("HeaderBlue").WithStyle("HighlightYellow");
+                .WithTitle("備註").WithTitleStyle("HeaderBlue")
+            .WithStyle("HighlightYellow");
 
             fluent.UseSheet("Summary", true)
                 .SetColumnWidth(ExcelCol.A, ExcelCol.E, 20)
@@ -87,7 +88,7 @@ namespace FluentNPOIConsoleExample
         /// <summary>
         /// Example 3: Using DataTable as data source
         /// </summary>
-        static void CreateDataTableExample(FluentWorkbook fluent)
+        public static void CreateDataTableExample(FluentWorkbook fluent)
         {
             Console.WriteLine("建立 DataTableExample...");
 

@@ -18,7 +18,7 @@ namespace FluentNPOIConsoleExample
         /// <summary>
         /// Example 14: Generate and embed charts using ScottPlot
         /// </summary>
-        static void CreateChartExample(FluentWorkbook fluent, List<ExampleData> testData)
+        public static void CreateChartExample(FluentWorkbook fluent, List<ExampleData> testData)
         {
             Console.WriteLine("建立 ChartExample...");
 

@@ -19,7 +19,7 @@ namespace FluentNPOIConsoleExample
         /// <summary>
         /// Example 10: Smart Pipeline (Streaming and Legacy)
         /// </summary>
-        static void CreateSmartPipelineExample(List<ExampleData> testData)
+        public static void CreateSmartPipelineExample(List<ExampleData> testData)
         {
             Console.WriteLine("建立 SmartPipelineExample...");
 
@@ -67,7 +67,7 @@ namespace FluentNPOIConsoleExample
         /// <summary>
         /// Example 11: DOM Edit (Modify existing file)
         /// </summary>
-        static void CreateDomEditExample()
+        public static void CreateDomEditExample()
         {
             Console.WriteLine("建立 DomEditExample (原地編輯)...");
 

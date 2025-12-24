@@ -1,10 +1,12 @@
 using System;
 using System.IO;
 using Xunit;
+using FluentNPOI.Models;
+using FluentNPOI.Stages;
 using FluentNPOI.HotReload;
 using FluentNPOI.HotReload.HotReload;
-using FluentNPOI.HotReload.Widgets;
-using FluentNPOI.HotReload.Context;
+using NPOI.SS.UserModel;
+using NPOI.XSSF.UserModel;
 
 namespace FluentNPOIUnitTest
 {
@@ -13,20 +15,6 @@ namespace FluentNPOIUnitTest
     /// </summary>
     public class HotReloadTests
     {
-        #region Test Widget
-
-        private class TestWidget : ExcelWidget
-        {
-            public string TestValue { get; set; } = "Default";
-
-            public override void Build(ExcelContext ctx)
-            {
-                ctx.SetValue(TestValue);
-            }
-        }
-
-        #endregion
-
         #region HotReloadHandler Tests
 
         [Fact]
@@ -86,27 +74,27 @@ namespace FluentNPOIUnitTest
 
         #endregion
 
-        #region HotReloadSession Tests
+        #region FluentHotReloadSession Tests
 
         [Fact]
-        public void HotReloadSession_Constructor_ShouldStoreOutputPath()
+        public void FluentHotReloadSession_Constructor_ShouldStoreOutputPath()
         {
             // Arrange & Act
-            using var session = new HotReloadSession("test/output.xlsx", () => new TestWidget());
+            using var session = new FluentHotReloadSession("test/output.xlsx", wb => { });
 
             // Assert
             Assert.Equal("test/output.xlsx", session.OutputPath);
         }
 
         [Fact]
-        public void HotReloadSession_Refresh_ShouldIncrementRefreshCount()
+        public void FluentHotReloadSession_Refresh_ShouldIncrementRefreshCount()
         {
             // Arrange
             var tempPath = Path.Combine(Path.GetTempPath(), $"test_{Guid.NewGuid()}.xlsx");
 
             try
             {
-                using var session = new HotReloadSession(tempPath, () => new TestWidget());
+                using var session = new FluentHotReloadSession(tempPath, wb => { });
 
                 // Act
                 session.Refresh();
@@ -123,14 +111,17 @@ namespace FluentNPOIUnitTest
         }
 
         [Fact]
-        public void HotReloadSession_Refresh_ShouldCreateExcelFile()
+        public void FluentHotReloadSession_Refresh_ShouldCreateExcelFile()
         {
             // Arrange
             var tempPath = Path.Combine(Path.GetTempPath(), $"test_{Guid.NewGuid()}.xlsx");
 
             try
             {
-                using var session = new HotReloadSession(tempPath, () => new TestWidget());
+                using var session = new FluentHotReloadSession(tempPath, wb =>
+                {
+                    wb.UseSheet("Sheet1").SetCellPosition(FluentNPOI.Models.ExcelCol.A, 1).SetValue("Test");
+                });
 
                 // Act
                 session.Refresh();
@@ -146,7 +137,7 @@ namespace FluentNPOIUnitTest
         }
 
         [Fact]
-        public void HotReloadSession_RefreshCompleted_ShouldBeInvoked()
+        public void FluentHotReloadSession_RefreshCompleted_ShouldBeInvoked()
         {
             // Arrange
             var tempPath = Path.Combine(Path.GetTempPath(), $"test_{Guid.NewGuid()}.xlsx");
@@ -154,7 +145,7 @@ namespace FluentNPOIUnitTest
 
             try
             {
-                using var session = new HotReloadSession(tempPath, () => new TestWidget());
+                using var session = new FluentHotReloadSession(tempPath, wb => { });
                 session.RefreshCompleted += (count) => completedRefreshCount = count;
 
                 // Act
@@ -171,47 +162,15 @@ namespace FluentNPOIUnitTest
         }
 
         [Fact]
-        public void HotReloadSession_SheetName_ShouldBeConfigurable()
-        {
-            // Arrange
-            var tempPath = Path.Combine(Path.GetTempPath(), $"test_{Guid.NewGuid()}.xlsx");
-
-            try
-            {
-                using var session = new HotReloadSession(tempPath, () => new TestWidget());
-                session.SheetName = "MySheet";
-
-                // Act
-                session.Refresh();
-
-                // Assert - verify the file exists and can be opened
-                Assert.True(File.Exists(tempPath));
-
-                // Read back and verify sheet name
-                using var fs = File.OpenRead(tempPath);
-                var workbook = new NPOI.XSSF.UserModel.XSSFWorkbook(fs);
-                var sheet = workbook.GetSheet("MySheet");
-                Assert.NotNull(sheet);
-            }
-            finally
-            {
-                if (File.Exists(tempPath))
-                    File.Delete(tempPath);
-            }
-        }
-
-        [Fact]
-        public void HotReloadSession_RefreshError_ShouldBeInvokedOnFailure()
+        public void FluentHotReloadSession_RefreshError_ShouldBeInvokedOnFailure()
         {
             // Arrange
             var tempPath = Path.Combine(Path.GetTempPath(), $"test_{Guid.NewGuid()}.xlsx");
             Exception? capturedError = null;
 
-            static ExcelWidget ThrowingFactory() => throw new InvalidOperationException("Test error");
-
             try
             {
-                using var session = new HotReloadSession(tempPath, ThrowingFactory);
+                using var session = new FluentHotReloadSession(tempPath, wb => throw new InvalidOperationException("Test error"));
                 session.RefreshError += (ex) => capturedError = ex;
 
                 // Act
@@ -230,14 +189,14 @@ namespace FluentNPOIUnitTest
         }
 
         [Fact]
-        public void HotReloadSession_Start_ShouldPerformInitialRefresh()
+        public void FluentHotReloadSession_Start_ShouldPerformInitialRefresh()
         {
             // Arrange
             var tempPath = Path.Combine(Path.GetTempPath(), $"test_{Guid.NewGuid()}.xlsx");
 
             try
             {
-                using var session = new HotReloadSession(tempPath, () => new TestWidget());
+                using var session = new FluentHotReloadSession(tempPath, wb => { });
 
                 // Act
                 session.Start();
@@ -256,32 +215,17 @@ namespace FluentNPOIUnitTest
 
         #endregion
 
-        #region ExcelLivePreview Tests
-
-        [Fact]
-        public void ExcelLivePreview_CreateSession_ShouldReturnSession()
-        {
-            // Act
-            using var session = ExcelLivePreview.CreateSession<TestWidget>("test.xlsx");
-
-            // Assert
-            Assert.NotNull(session);
-            Assert.Equal("test.xlsx", session.OutputPath);
-        }
-
-        #endregion
-
         #region Integration Tests
 
         [Fact]
-        public void HotReloadSession_WithHotReloadHandler_ShouldRespondToEvents()
+        public void FluentHotReloadSession_WithHotReloadHandler_ShouldRespondToEvents()
         {
             // Arrange
             var tempPath = Path.Combine(Path.GetTempPath(), $"test_{Guid.NewGuid()}.xlsx");
 
             try
             {
-                using var session = new HotReloadSession(tempPath, () => new TestWidget());
+                using var session = new FluentHotReloadSession(tempPath, wb => { });
                 session.Start();
 
                 var initialCount = session.RefreshCount;
@@ -302,7 +246,7 @@ namespace FluentNPOIUnitTest
         }
 
         [Fact]
-        public void HotReloadSession_WidgetRebuildsWithNewData_ShouldReflectInOutput()
+        public void FluentHotReloadSession_UpdateLogic_ShouldReflectInOutput()
         {
             // Arrange
             var tempPath = Path.Combine(Path.GetTempPath(), $"test_{Guid.NewGuid()}.xlsx");
@@ -310,23 +254,25 @@ namespace FluentNPOIUnitTest
 
             try
             {
-                using var session = new HotReloadSession(tempPath, () => new TestWidget { TestValue = currentValue });
+                using var session = new FluentHotReloadSession(tempPath, wb =>
+                {
+                    wb.UseSheet("Sheet1").SetCellPosition(FluentNPOI.Models.ExcelCol.A, 1).SetValue(currentValue);
+                });
 
                 // Act - First refresh
                 session.Refresh();
 
-                // Change value and refresh
+                // Change value in memory (simulating code change logic)
                 currentValue = "Updated";
                 session.Refresh();
 
                 // Assert - Read the file and verify updated value
                 using var fs = File.OpenRead(tempPath);
-                var workbook = new NPOI.XSSF.UserModel.XSSFWorkbook(fs);
+                var workbook = new XSSFWorkbook(fs);
                 var sheet = workbook.GetSheetAt(0);
                 var cell = sheet.GetRow(0)?.GetCell(0);
 
-                // Note: The session uses a factory, so we need to update the factory
-                // This test verifies the refresh mechanism works
+                Assert.Equal("Updated", cell?.StringCellValue);
                 Assert.Equal(2, session.RefreshCount);
             }
             finally

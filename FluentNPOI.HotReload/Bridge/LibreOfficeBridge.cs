@@ -245,4 +245,10 @@ public class LibreOfficeOptions
     /// Default is 3000ms.
     /// </summary>
     public int FileLockWaitMs { get; set; } = 3000;
+
+    /// <summary>
+    /// Whether to use a shadow copy of the file for preview.
+    /// Default is true. Set to false to open the original file directly.
+    /// </summary>
+    public bool UseShadowCopy { get; set; } = true;
 }
