@@ -1,8 +1,25 @@
 ﻿{
 	"folders": [
 		{
-			"name": "FluentNPOI",
-			"path": "."
+			"path": "FluentNPOI"
+		},
+		{
+			"path": "FluentNPOI.All"
+		},
+		{
+			"path": "FluentNPOI.Charts"
+		},
+		{
+			"path": "FluentNPOI.Pdf"
+		},
+		{
+			"path": "FluentNPOI.Streaming"
+		},
+		{
+			"path": "FluentNPOIConsoleExample"
+		},
+		{
+			"path": "FluentNPOIUnitTest"
 		}
 	],
 	"settings": {
