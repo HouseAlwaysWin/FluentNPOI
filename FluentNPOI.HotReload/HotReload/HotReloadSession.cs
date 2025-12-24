@@ -1,3 +1,4 @@
+using FluentNPOI.HotReload.Bridge;
 using FluentNPOI.HotReload.Context;
 using FluentNPOI.HotReload.Styling;
 using FluentNPOI.HotReload.Widgets;
@@ -51,6 +52,11 @@ public class HotReloadSession : IDisposable
     public string SheetName { get; set; } = "Sheet1";
 
     /// <summary>
+    /// Gets or sets the LibreOffice options for live preview.
+    /// </summary>
+    public LibreOfficeOptions LibreOfficeOptions { get; set; } = new();
+
+    /// <summary>
     /// Creates a new HotReloadSession.
     /// </summary>
     /// <param name="outputPath">The path to write the Excel file to.</param>
@@ -81,6 +87,21 @@ public class HotReloadSession : IDisposable
 
         Console.WriteLine($"🔥 Hot Reload session started");
         Console.WriteLine($"📊 Output: {Path.GetFullPath(_outputPath)}");
+
+        // Open LibreOffice if configured
+        if (LibreOfficeOptions.AutoOpen)
+        {
+            _ = TryOpenLibreOfficeAsync();
+        }
+    }
+
+    /// <summary>
+    /// Starts the hot reload session with LibreOffice live preview.
+    /// </summary>
+    public async Task StartWithPreviewAsync()
+    {
+        Start();
+        await TryOpenLibreOfficeAsync();
     }
 
     /// <summary>
@@ -91,12 +112,21 @@ public class HotReloadSession : IDisposable
         HotReloadHandler.RefreshRequested -= OnRefreshRequested;
         HotReloadHandler.RudeEditDetected -= OnRudeEditDetected;
 
+        // Kill LibreOffice if running
+        LibreOfficeBridge.Kill();
+
         Console.WriteLine("👋 Hot Reload session stopped");
     }
 
     private void OnRefreshRequested(Type[]? updatedTypes)
     {
         Refresh();
+
+        // Refresh LibreOffice if configured
+        if (LibreOfficeOptions.AutoRefresh && LibreOfficeBridge.IsRunning)
+        {
+            _ = TryRefreshLibreOfficeAsync();
+        }
     }
 
     private void OnRudeEditDetected()
@@ -106,6 +136,7 @@ public class HotReloadSession : IDisposable
         if (AutoRestartOnRudeEdit)
         {
             Console.WriteLine("🔄 Triggering full restart...");
+            LibreOfficeBridge.Kill();
             Environment.Exit(42); // Signal dotnet watch to restart
         }
     }
@@ -147,6 +178,35 @@ public class HotReloadSession : IDisposable
                 Console.WriteLine($"❌ Refresh failed: {ex.Message}");
                 RefreshError?.Invoke(ex);
             }
+        }
+    }
+
+    private async Task TryOpenLibreOfficeAsync()
+    {
+        try
+        {
+            await LibreOfficeBridge.OpenAsync(_outputPath, LibreOfficeOptions.FileLockWaitMs);
+        }
+        catch (FileNotFoundException ex)
+        {
+            Console.WriteLine($"⚠️ {ex.Message}");
+            Console.WriteLine("   Live preview disabled. Files will still be generated.");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"⚠️ Failed to open LibreOffice: {ex.Message}");
+        }
+    }
+
+    private async Task TryRefreshLibreOfficeAsync()
+    {
+        try
+        {
+            await LibreOfficeBridge.RefreshAsync(_outputPath);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"⚠️ Failed to refresh LibreOffice: {ex.Message}");
         }
     }
 
