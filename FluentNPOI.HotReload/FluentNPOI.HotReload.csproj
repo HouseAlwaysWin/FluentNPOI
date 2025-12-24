@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <!-- HotReload requires net8.0 for record types and hot reload support -->
+    <TargetFramework>net8.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    
+    <!-- Package-specific metadata -->
+    <PackageId>FluentNPOI.HotReload</PackageId>
+    <Description>Hot Reload extension for FluentNPOI with declarative widget-based Excel development and LibreOffice live preview support.</Description>
+    <PackageTags>NPOI;Excel;Fluent;HotReload;LivePreview;Widget;LibreOffice</PackageTags>
+    <PackageProjectUrl>https://github.com/HouseAlwaysWin/FluentNPOI</PackageProjectUrl>
+    
+    <!-- NuGet Package settings from Directory.Build.props -->
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <NoWarn>$(NoWarn);1591</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\FluentNPOI\FluentNPOI.csproj" />
+  </ItemGroup>
+
+</Project>
