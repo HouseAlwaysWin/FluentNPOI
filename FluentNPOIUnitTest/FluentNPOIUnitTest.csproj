@@ -24,6 +24,7 @@
     <ProjectReference Include="..\FluentNPOI\FluentNPOI.csproj" />
     <ProjectReference Include="..\FluentNPOI.Streaming\FluentNPOI.Streaming.csproj" />
     <ProjectReference Include="..\FluentNPOI.Charts\FluentNPOI.Charts.csproj" />
+    <ProjectReference Include="..\FluentNPOI.HotReload\FluentNPOI.HotReload.csproj" />
   </ItemGroup>
 
 </Project>
