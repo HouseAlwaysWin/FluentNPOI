@@ -54,6 +54,27 @@ public static class HotReloadExamples
     }
 
     /// <summary>
+    /// 範例 4: 包裝現有的 StyleExamples (示範如何套用到舊程式碼)
+    /// 用 dotnet watch run -- style 執行
+    /// </summary>
+    public static void RunStyleExample()
+    {
+        Console.WriteLine("=== Style 範例 (包裝現有程式碼) ===");
+        Console.WriteLine("直接在 StyleExamples.cs 修改程式碼，儲存後會自動重新產生");
+        Console.WriteLine();
+
+        FluentLivePreview.Run("output/style_demo.xlsx", wb =>
+        {
+            // 先設定必要的樣式
+            Program.SetupStyles(wb);
+
+            // 直接呼叫現有的 StyleExamples 方法
+            // 修改 StyleExamples.cs 裡的程式碼就會自動熱重載！
+            Program.CreateCellStyleRangeExample(wb);
+        });
+    }
+
+    /// <summary>
     /// 現有 FluentNPOI 風格的報表
     /// 修改這裡的程式碼，儲存後會自動重新產生 Excel
     /// </summary>
@@ -67,17 +88,17 @@ public static class HotReloadExamples
             .SetFont(isBold: true, fontSize: 16);
 
         // 欄位標題
-        sheet.SetCellPosition(ExcelCol.A, 3).SetValue("產品").SetFont(isBold: true);
-        sheet.SetCellPosition(ExcelCol.B, 3).SetValue("單價").SetFont(isBold: true);
-        sheet.SetCellPosition(ExcelCol.C, 3).SetValue("數量").SetFont(isBold: true);
-        sheet.SetCellPosition(ExcelCol.D, 3).SetValue("小計").SetFont(isBold: true);
+        sheet.SetCellPosition(ExcelCol.A, 2).SetValue("品名").SetFont(isBold: true);
+        sheet.SetCellPosition(ExcelCol.B, 2).SetValue("單價").SetFont(isBold: true);
+        sheet.SetCellPosition(ExcelCol.C, 2).SetValue("數量").SetFont(isBold: true);
+        sheet.SetCellPosition(ExcelCol.D, 2).SetValue("小計").SetFont(isBold: true);
 
         // 資料列 - 修改這裡試試熱重載！
         var products = new[]
         {
-            ("蘋果", 30, 100),
+            ("蘋果", 60, 2100),
             ("香蕉", 20, 150),
-            ("橘子", 25, 80),
+            ("橘子", 20, 800),
             ("葡萄", 50, 60),
         };
 
@@ -160,7 +181,7 @@ public class SalesReportWidget : ExcelWidget
 
             // 表格標題
             new FlexibleRow(
-                new Header("產品").WithWeight(2),
+                new Header("產1品").WithWeight(2),
                 new Header("單價").WithWeight(1),
                 new Header("數量").WithWeight(1),
                 new Header("小計").WithWeight(1)
@@ -180,7 +201,7 @@ public class SalesReportWidget : ExcelWidget
                 new Label("總計:").WithWeight(2).WithStyle(new FluentStyle().SetBold()),
                 new Label("").WithWeight(1),
                 new Label("").WithWeight(1),
-                new Label("=SUM(D4:D7)").WithWeight(1).WithStyle(new FluentStyle().SetBold())
+                new Label("SUM(D4:D7)").WithWeight(1).WithStyle(new FluentStyle().SetBold())
             ).SetTotalWidth(60)
         );
 

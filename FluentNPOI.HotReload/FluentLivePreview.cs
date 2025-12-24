@@ -1,3 +1,4 @@
+using FluentNPOI.HotReload.Bridge;
 using FluentNPOI.HotReload.HotReload;
 using FluentNPOI.Stages;
 using NPOI.XSSF.UserModel;
@@ -162,6 +163,15 @@ public class FluentHotReloadSession : IDisposable
     public bool AutoRestartOnRudeEdit { get; set; } = true;
 
     /// <summary>
+    /// Gets or sets the LibreOffice options for auto-open and auto-refresh.
+    /// </summary>
+    public LibreOfficeOptions LibreOfficeOptions { get; set; } = new();
+
+    // Shadow copy path for LibreOffice
+    private string? _shadowCopyPath;
+    private System.Diagnostics.Process? _libreOfficeProcess;
+
+    /// <summary>
     /// Creates a new FluentHotReloadSession.
     /// </summary>
     /// <param name="outputPath">The path to write the Excel file to.</param>
@@ -189,6 +199,12 @@ public class FluentHotReloadSession : IDisposable
 
         Console.WriteLine($"🔥 Fluent Hot Reload session started");
         Console.WriteLine($"📊 Output: {Path.GetFullPath(_outputPath)}");
+
+        // Open LibreOffice if configured
+        if (LibreOfficeOptions.AutoOpen)
+        {
+            _ = TryOpenLibreOfficeAsync();
+        }
     }
 
     /// <summary>
@@ -201,7 +217,131 @@ public class FluentHotReloadSession : IDisposable
         Console.WriteLine("👋 Fluent Hot Reload session stopped");
     }
 
-    private void OnRefreshRequested(Type[]? updatedTypes) => Refresh();
+    private void OnRefreshRequested(Type[]? updatedTypes)
+    {
+        Refresh();
+        // Auto-refresh LibreOffice if configured
+        if (LibreOfficeOptions.AutoRefresh && !string.IsNullOrEmpty(_shadowCopyPath))
+        {
+            _ = TryRefreshLibreOfficeAsync();
+        }
+    }
+
+    private async Task TryOpenLibreOfficeAsync()
+    {
+        try
+        {
+            // Create fixed shadow copy path (not random GUID)
+            _shadowCopyPath = GetShadowCopyPath(_outputPath);
+
+            // Copy current output to shadow
+            if (File.Exists(_outputPath))
+            {
+                File.Copy(_outputPath, _shadowCopyPath, overwrite: true);
+            }
+
+            // Detect LibreOffice
+            var sofficePath = LibreOfficeBridge.DetectPath();
+            if (string.IsNullOrEmpty(sofficePath))
+            {
+                Console.WriteLine("⚠️ LibreOffice not found. Please install LibreOffice.");
+                return;
+            }
+
+            // Kill existing soffice processes (for clean restart on Rude Edit)
+            KillExistingSofficeProcesses();
+            await Task.Delay(300); // Wait for process to exit
+
+            _libreOfficeProcess = System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+            {
+                FileName = sofficePath,
+                Arguments = $"--nologo --norestore --calc \"{_shadowCopyPath}\"",
+                UseShellExecute = false,
+                CreateNoWindow = true
+            });
+
+            Console.WriteLine($"📂 LibreOffice opened: {Path.GetFileName(_shadowCopyPath)}");
+            Console.WriteLine("   🔄 每次程式碼變更後 LibreOffice 會自動重新開啟");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"⚠️ LibreOffice open failed: {ex.Message}");
+        }
+    }
+
+    private static void KillExistingSofficeProcesses()
+    {
+        try
+        {
+            foreach (var proc in System.Diagnostics.Process.GetProcessesByName("soffice"))
+            {
+                try { proc.Kill(); } catch { }
+            }
+            foreach (var proc in System.Diagnostics.Process.GetProcessesByName("soffice.bin"))
+            {
+                try { proc.Kill(); } catch { }
+            }
+        }
+        catch { }
+    }
+
+    private async Task TryRefreshLibreOfficeAsync()
+    {
+        try
+        {
+            // Wait for NPOI to finish writing
+            await Task.Delay(200);
+
+            // Update the shadow copy file
+            if (!string.IsNullOrEmpty(_shadowCopyPath) && File.Exists(_outputPath))
+            {
+                // Kill existing LibreOffice
+                if (_libreOfficeProcess != null && !_libreOfficeProcess.HasExited)
+                {
+                    try { _libreOfficeProcess.Kill(); } catch { }
+                }
+
+                // Update shadow copy
+                File.Copy(_outputPath, _shadowCopyPath, overwrite: true);
+
+                // Reopen LibreOffice
+                var sofficePath = LibreOfficeBridge.DetectPath();
+                if (!string.IsNullOrEmpty(sofficePath))
+                {
+                    _libreOfficeProcess = System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                    {
+                        FileName = sofficePath,
+                        Arguments = $"--nologo --norestore --calc \"{_shadowCopyPath}\"",
+                        UseShellExecute = false,
+                        CreateNoWindow = true
+                    });
+                    Console.WriteLine("🔄 LibreOffice reopened with updated file");
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"⚠️ LibreOffice refresh failed: {ex.Message}");
+        }
+    }
+
+    private static string GetShadowCopyPath(string sourcePath)
+    {
+        var dir = Path.GetDirectoryName(sourcePath) ?? ".";
+        var name = Path.GetFileNameWithoutExtension(sourcePath);
+        var ext = Path.GetExtension(sourcePath);
+        return Path.Combine(dir, $"{name}_preview{ext}");
+    }
+
+    private static string CreateShadowCopy(string sourcePath)
+    {
+        var shadowPath = GetShadowCopyPath(sourcePath);
+        if (File.Exists(sourcePath))
+        {
+            File.Copy(sourcePath, shadowPath, overwrite: true);
+        }
+        return shadowPath;
+    }
 
     private void OnRudeEditDetected()
     {
@@ -231,13 +371,17 @@ public class FluentHotReloadSession : IDisposable
                 // Execute user's FluentNPOI code
                 _buildAction(fluentWorkbook);
 
-                // Save to file
-                fluentWorkbook.SaveToPath(_outputPath);
+                // Save to file - with fallback for locked files
+                var savedPath = SaveWithFallback(fluentWorkbook, _outputPath);
 
                 _refreshCount++;
                 var elapsed = (DateTime.Now - startTime).TotalMilliseconds;
 
                 Console.WriteLine($"✅ Refresh #{_refreshCount} completed in {elapsed:F0}ms");
+                if (savedPath != _outputPath)
+                {
+                    Console.WriteLine($"   📁 File locked, saved to: {Path.GetFileName(savedPath)}");
+                }
                 RefreshCompleted?.Invoke(_refreshCount);
             }
             catch (Exception ex)
@@ -245,6 +389,30 @@ public class FluentHotReloadSession : IDisposable
                 Console.WriteLine($"❌ Refresh failed: {ex.Message}");
                 RefreshError?.Invoke(ex);
             }
+        }
+    }
+
+    /// <summary>
+    /// Saves the workbook, using a fallback path if the file is locked.
+    /// </summary>
+    private string SaveWithFallback(FluentWorkbook workbook, string primaryPath)
+    {
+        // Try primary path first
+        try
+        {
+            workbook.SaveToPath(primaryPath);
+            return primaryPath;
+        }
+        catch (IOException)
+        {
+            // File is locked, use fallback with timestamp
+            var dir = Path.GetDirectoryName(primaryPath) ?? ".";
+            var name = Path.GetFileNameWithoutExtension(primaryPath);
+            var ext = Path.GetExtension(primaryPath);
+            var fallbackPath = Path.Combine(dir, $"{name}_{DateTime.Now:HHmmss}{ext}");
+
+            workbook.SaveToPath(fallbackPath);
+            return fallbackPath;
         }
     }
 

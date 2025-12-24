@@ -96,7 +96,7 @@ public static class LibreOfficeBridge
                 _currentProcess = Process.Start(new ProcessStartInfo
                 {
                     FileName = sofficePath,
-                    Arguments = $"--nologo --calc \"{shadowPath}\"",
+                    Arguments = $"--nologo --norestore --calc \"{shadowPath}\"",
                     UseShellExecute = false,
                     CreateNoWindow = true
                 });
