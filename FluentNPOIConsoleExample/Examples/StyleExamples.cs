@@ -21,7 +21,7 @@ namespace FluentNPOIConsoleExample
         /// </summary>
         public static void CreateCellStyleRangeExample(FluentWorkbook fluent)
         {
-            Console.WriteLine("建立 CellStyleRangeDemo...");
+            Console.WriteLine("Creating CellStyleRangeDemo...");
 
             fluent.UseSheet("CellStyleRangeDemo", true)
                 .SetCellStyleRange(new CellStyleConfig("HighlightRed", style =>
@@ -49,7 +49,7 @@ namespace FluentNPOIConsoleExample
                     style.SetBorderAllStyle(BorderStyle.Thin);
                 }), ExcelCol.A, ExcelCol.D, 10, 12);
 
-            Console.WriteLine("  ✓ CellStyleRangeDemo 建立完成");
+            Console.WriteLine("  ✓ CellStyleRangeDemo Created");
         }
 
         /// <summary>
@@ -57,9 +57,9 @@ namespace FluentNPOIConsoleExample
         /// </summary>
         public static void CreateCopyStyleExample(FluentWorkbook fluent, List<ExampleData> testData)
         {
-            Console.WriteLine("建立 CopyStyleExample...");
+            Console.WriteLine("Creating CopyStyleExample...");
 
-            // 定義幾個動態樣式
+            // Define some dynamic styles
             fluent.SetupCellStyle("ActiveGreen", (wb, style) =>
             {
                 style.FillPattern = FillPattern.SolidForeground;
@@ -77,35 +77,35 @@ namespace FluentNPOIConsoleExample
 
             var mapping = new FluentMapping<ExampleData>();
 
-            // 1. 從 Sheet1 的 A1 複製標題樣式 (HeaderBlue)
+            // 1. Copy header style from Sheet1 A1 (HeaderBlue)
             mapping.Map(x => x.Name).ToColumn(ExcelCol.A)
-                .WithTitle("姓名 (Copy Header)")
+                .WithTitle("Name (Copy Header)")
                 .WithRowOffset(2)
                 .WithTitleStyleFrom(1, ExcelCol.B);
 
-            // 調整: 直接用樣式 Key 演示 dynamic style
+            // Adjustment: Demonstrate dynamic style directly using style Key
             mapping.Map(x => x.IsActive).ToColumn(ExcelCol.B)
-                .WithTitle("狀態 (Dynamic)")
+                .WithTitle("Status (Dynamic)")
                 .WithTitleStyle("HeaderBlue")
                 .WithDynamicStyle(item => item.IsActive ? "ActiveGreen" : "InactiveRed");
 
-            // 演示 CopyStyleFromCell: 先在目前 Sheet 建立一個樣板儲存格
+            // Demonstrate CopyStyleFromCell: Create a template cell in the current Sheet first
             var sheet = fluent.UseSheet("CopyStyleExample", true);
             sheet.SetCellPosition(ExcelCol.Z, 1).SetValue("Template").SetCellStyle("HeaderBlue");
 
             mapping.Map(x => x.Score).ToColumn(ExcelCol.C)
-                .WithTitle("分數 (Copy Z1)")
+                .WithTitle("Score (Copy Z1)")
                 .WithTitleStyleFrom(1, ExcelCol.Z)
                 .WithCellType(CellType.Numeric);
 
-            // 使用 WithStartRow 設定預設起始列
+            // Use WithStartRow to set default starting row
             mapping.WithStartRow(2);
 
             sheet.SetColumnWidth(ExcelCol.A, ExcelCol.C, 20)
                 .SetTable(testData, mapping)
                 .BuildRows();
 
-            Console.WriteLine("  ✓ CopyStyleExample 建立完成");
+            Console.WriteLine("  ✓ CopyStyleExample Created");
         }
 
         /// <summary>
@@ -113,19 +113,19 @@ namespace FluentNPOIConsoleExample
         /// </summary>
         public static void CreateSheetGlobalStyleExample(FluentWorkbook fluent, List<ExampleData> testData)
         {
-            Console.WriteLine("建立 SheetGlobalStyle...");
+            Console.WriteLine("Creating SheetGlobalStyleExample...");
 
             var limitedData = testData.Take(5).ToList();
 
             var mapping = new FluentMapping<ExampleData>();
             mapping.Map(x => x.ID).ToColumn(ExcelCol.A).WithTitle("ID");
-            mapping.Map(x => x.Name).ToColumn(ExcelCol.B).WithTitle("名稱");
-            mapping.Map(x => x.Score).ToColumn(ExcelCol.C).WithTitle("分數")
+            mapping.Map(x => x.Name).ToColumn(ExcelCol.B).WithTitle("Name");
+            mapping.Map(x => x.Score).ToColumn(ExcelCol.C).WithTitle("Score")
                 .WithCellType(CellType.Numeric);
-            mapping.Map(x => x.IsActive).ToColumn(ExcelCol.D).WithTitle("是否活躍")
+            mapping.Map(x => x.IsActive).ToColumn(ExcelCol.D).WithTitle("Is Active")
                 .WithCellType(CellType.Boolean);
 
-            // Sheet 1: 綠色
+            // Sheet 1: Green
             fluent.UseSheet("SheetGlobalStyle_Green", true)
                 .SetColumnWidth(ExcelCol.A, ExcelCol.D, 20)
                 .SetupSheetGlobalCachedCellStyles((wb, style) =>
@@ -140,12 +140,12 @@ namespace FluentNPOIConsoleExample
 
             fluent.UseSheet("SheetGlobalStyle_Green")
                 .SetCellPosition(ExcelCol.A, 1)
-                .SetValue("Sheet 全域樣式：綠色")
+                .SetValue("Sheet Global Style: Green")
                 .SetCellStyle("HeaderBlue");
             fluent.UseSheet("SheetGlobalStyle_Green")
                 .SetExcelCellMerge(ExcelCol.A, ExcelCol.D, 1);
 
-            // Sheet 2: 黃色
+            // Sheet 2: Yellow
             fluent.UseSheet("SheetGlobalStyle_Yellow", true)
                 .SetColumnWidth(ExcelCol.A, ExcelCol.D, 20)
                 .SetupSheetGlobalCachedCellStyles((wb, style) =>
@@ -160,26 +160,26 @@ namespace FluentNPOIConsoleExample
 
             fluent.UseSheet("SheetGlobalStyle_Yellow")
                 .SetCellPosition(ExcelCol.A, 1)
-                .SetValue("Sheet 全域樣式：黃色")
+                .SetValue("Sheet Global Style: Yellow")
                 .SetCellStyle("HeaderBlue");
             fluent.UseSheet("SheetGlobalStyle_Yellow")
                 .SetExcelCellMerge(ExcelCol.A, ExcelCol.D, 1);
 
-            // Sheet 3: 混合使用 Sheet 全域樣式和特定樣式
+            // Sheet 3: Mix Sheet global style and specific style
             var mixedMapping = new FluentMapping<ExampleData>();
             mixedMapping.Map(x => x.ID).ToColumn(ExcelCol.A).WithTitle("ID")
                 .WithStyle("HighlightYellow");
 
-            mixedMapping.Map(x => x.Name).ToColumn(ExcelCol.B).WithTitle("名稱");
+            mixedMapping.Map(x => x.Name).ToColumn(ExcelCol.B).WithTitle("Name");
 
-            mixedMapping.Map(x => x.DateOfBirth).ToColumn(ExcelCol.C).WithTitle("生日")
+            mixedMapping.Map(x => x.DateOfBirth).ToColumn(ExcelCol.C).WithTitle("Date of Birth")
                 .WithStyle("DateOfBirth");
 
-            mixedMapping.Map(x => x.IsActive).ToColumn(ExcelCol.D).WithTitle("是否活躍")
+            mixedMapping.Map(x => x.IsActive).ToColumn(ExcelCol.D).WithTitle("Is Active")
                 .WithCellType(CellType.Boolean)
                 .WithDynamicStyle(x => x.IsActive ? "Sheet3_ActiveGreen" : "Sheet3_InactiveRed");
 
-            // 預先註冊 Dynamic Styles
+            // Pre-register Dynamic Styles
             fluent.SetupCellStyle("Sheet3_ActiveGreen", (wb, s) =>
             {
                 s.FillPattern = FillPattern.SolidForeground;
@@ -210,12 +210,12 @@ namespace FluentNPOIConsoleExample
 
             fluent.UseSheet("SheetGlobalStyle_Mixed")
                 .SetCellPosition(ExcelCol.A, 1)
-                .SetValue("混合樣式：Sheet 全域(水藍) + 特定樣式覆蓋")
+                .SetValue("Mixed Style: Sheet Global (Aqua) + Specific Style Override")
                 .SetCellStyle("HeaderBlue");
             fluent.UseSheet("SheetGlobalStyle_Mixed")
                 .SetExcelCellMerge(ExcelCol.A, ExcelCol.D, 1);
 
-            Console.WriteLine("  ✓ SheetGlobalStyle 建立完成");
+            Console.WriteLine("  ✓ SheetGlobalStyleExample Created");
         }
 
         /// <summary>
@@ -223,25 +223,25 @@ namespace FluentNPOIConsoleExample
         /// </summary>
         public static void CreateMappingStylingExample(FluentWorkbook fluent, List<ExampleData> testData)
         {
-            Console.WriteLine("建立 MappingStylingExample...");
+            Console.WriteLine("Creating MappingStylingExample...");
 
             var mapping = new FluentMapping<ExampleData>();
 
             mapping.Map(x => x.Name)
                 .ToColumn(ExcelCol.A)
-                .WithTitle("姓名")
+                .WithTitle("Name")
                 .WithBackgroundColor(IndexedColors.LightCornflowerBlue)
                 .WithAlignment(HorizontalAlignment.Center);
 
             mapping.Map(x => x.Score)
                 .ToColumn(ExcelCol.B)
-                .WithTitle("分數")
+                .WithTitle("Score")
                 .WithNumberFormat("0.0")
                 .WithFont(isBold: true);
 
             mapping.Map(x => x.DateOfBirth)
                 .ToColumn(ExcelCol.C)
-                .WithTitle("日期")
+                .WithTitle("Date")
                 .WithNumberFormat("yyyy-mm-dd")
                 .WithBackgroundColor(IndexedColors.LightYellow);
 
@@ -251,7 +251,7 @@ namespace FluentNPOIConsoleExample
                .BuildRows()
                .SetAutoFilter();
 
-            Console.WriteLine("  ✓ MappingStylingExample 建立完成");
+            Console.WriteLine("  ✓ MappingStylingExample Created");
         }
 
         #endregion

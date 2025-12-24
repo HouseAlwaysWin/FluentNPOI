@@ -19,13 +19,13 @@ namespace FluentNPOIConsoleExample
         /// </summary>
         public static void CreateHtmlExportExample(FluentWorkbook fluent)
         {
-            Console.WriteLine("建立 HtmlExportExample...");
+            Console.WriteLine("Creating HtmlExportExample...");
 
             var htmlPath = @$"{AppDomain.CurrentDomain.BaseDirectory}\Resources\ExportedRequest.html";
 
-            Console.WriteLine("  > 正在建立 'HtmlDemo' Sheet 以展示樣式支援...");
+            Console.WriteLine("  > Creating 'HtmlDemo' Sheet to demonstrate style support...");
 
-            // 定義樣式
+            // Define Styles
             fluent.SetupCellStyle("MergedTitle", (w, s) =>
             {
                 s.SetAlignment(HorizontalAlignment.Center);
@@ -74,26 +74,26 @@ namespace FluentNPOIConsoleExample
                 s.SetFontInfo(w, isStrikeout: true);
             });
 
-            // 建立 Sheet 內容
+            // Create Sheet Content
             var sheet = fluent.UseSheet("HtmlDemo", true);
 
             sheet.SetCellPosition(ExcelCol.A, 1).SetValue("HTML Export Feature Demo")
                  .SetCellStyle("MergedTitle");
             sheet.SetExcelCellMerge(ExcelCol.A, ExcelCol.D, 1, 1);
 
-            // Row 2: 顏色示範
+            // Row 2: Color Demo
             sheet.SetCellPosition(ExcelCol.A, 2).SetValue("Red Background").SetCellStyle("RedBg");
             sheet.SetCellPosition(ExcelCol.B, 2).SetValue("Green Italic Text").SetCellStyle("GreenText");
             sheet.SetCellPosition(ExcelCol.C, 2).SetValue(1234.56).SetCellStyle("NumberFmt");
             sheet.SetCellPosition(ExcelCol.D, 2).SetValue(9999.99).SetCellStyle("Currency");
 
-            // Row 3: 文字裝飾示範
+            // Row 3: Text Decoration Demo
             sheet.SetCellPosition(ExcelCol.A, 3).SetValue("Underlined Text").SetCellStyle("Underline");
             sheet.SetCellPosition(ExcelCol.B, 3).SetValue("Strikethrough Text").SetCellStyle("Strikethrough");
             sheet.SetCellPosition(ExcelCol.C, 3).SetValue("Plain Text");
             sheet.SetCellPosition(ExcelCol.D, 3).SetValue(0.1234).SetCellStyle("NumberFmt");
 
-            // Row 4-6: 合併儲存格示範
+            // Row 4-6: Merged Cells Demo
             sheet.SetCellPosition(ExcelCol.A, 4).SetValue("Vertical\nMerge").SetCellStyle("MergedTitle");
             sheet.SetExcelCellMerge(ExcelCol.A, ExcelCol.A, 4, 6);
 
@@ -106,12 +106,12 @@ namespace FluentNPOIConsoleExample
             sheet.SetCellPosition(ExcelCol.C, 6).SetValue("C6");
             sheet.SetCellPosition(ExcelCol.D, 6).SetValue("D6");
 
-            // 匯出為 HTML
+            // Export to HTML
             fluent.SaveAsHtml(htmlPath, fullHtml: true);
             var htmlFragment = fluent.ToHtmlString(fullHtml: false);
 
-            Console.WriteLine($"  ✓ HTML 匯出完成: {htmlPath}");
-            Console.WriteLine($"  ✓ HTML 片段預覽 (前 100 字): {htmlFragment.Substring(0, Math.Min(100, htmlFragment.Length))}...");
+            Console.WriteLine($"  ✓ HTML Export Completed: {htmlPath}");
+            Console.WriteLine($"  ✓ HTML Fragment Preview (First 100 chars): {htmlFragment.Substring(0, Math.Min(100, htmlFragment.Length))}...");
         }
 
         /// <summary>
@@ -119,7 +119,7 @@ namespace FluentNPOIConsoleExample
         /// </summary>
         public static void CreatePdfExportExample(FluentWorkbook fluent)
         {
-            Console.WriteLine("建立 PdfExportExample...");
+            Console.WriteLine("Creating PdfExportExample...");
 
             var pdfPath = @$"{AppDomain.CurrentDomain.BaseDirectory}\Resources\ExportedReport.pdf";
 
@@ -127,9 +127,9 @@ namespace FluentNPOIConsoleExample
 
             FluentNPOI.Pdf.PdfConverter.ConvertSheetToPdf(sheet.GetSheet(), fluent.GetWorkbook(), pdfPath);
 
-            Console.WriteLine($"  ✓ PDF 匯出完成: {pdfPath}");
-            Console.WriteLine("  > PDF 支援: 背景色、文字顏色、粗體/斜體、底線/刪除線、");
-            Console.WriteLine("              邊框樣式、數值格式化、文字對齊、合併儲存格");
+            Console.WriteLine($"  ✓ PDF Export Completed: {pdfPath}");
+            Console.WriteLine("  > PDF Support: Background Color, Text Color, Bold/Italic, Underline/Strikeout,");
+            Console.WriteLine("              Border Styles, Number Formatting, Text Alignment, Merged Cells");
         }
 
         #endregion

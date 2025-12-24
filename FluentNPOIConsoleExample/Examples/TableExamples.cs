@@ -22,37 +22,37 @@ namespace FluentNPOIConsoleExample
         /// </summary>
         public static void CreateBasicTableExample(FluentWorkbook fluent, List<ExampleData> testData)
         {
-            Console.WriteLine("建立 BasicTableExample (BasicTable)...");
+            Console.WriteLine("Creating BasicTableExample...");
 
             var mapping = new FluentMapping<ExampleData>();
             mapping.Map(x => x.ID).ToColumn(ExcelCol.A)
                 .WithTitle("ID").WithTitleStyle("HeaderBlue").WithStyle("BodyGreen")
                 .WithCellType(CellType.Numeric);
             mapping.Map(x => x.Name).ToColumn(ExcelCol.B)
-                .WithTitle("名稱").WithTitleStyle("HeaderBlue").WithStyle("BodyGreen");
+                .WithTitle("Name").WithTitleStyle("HeaderBlue").WithStyle("BodyGreen");
             mapping.Map(x => x.DateOfBirth).ToColumn(ExcelCol.C)
-                .WithTitle("生日").WithTitleStyle("HeaderBlue").WithStyle("DateOfBirth");
+                .WithTitle("Date of Birth").WithTitleStyle("HeaderBlue").WithStyle("DateOfBirth");
             mapping.Map(x => x.IsActive).ToColumn(ExcelCol.D)
-                .WithTitle("是否活躍").WithTitleStyle("HeaderBlue")
+                .WithTitle("Is Active").WithTitleStyle("HeaderBlue")
                 .WithCellType(CellType.Boolean);
             mapping.Map(x => x.Score).ToColumn(ExcelCol.E)
-                .WithTitle("分數").WithTitleStyle("HeaderBlue")
+                .WithTitle("Score").WithTitleStyle("HeaderBlue")
                 .WithCellType(CellType.Numeric);
             mapping.Map(x => x.Amount).ToColumn(ExcelCol.F)
-                .WithTitle("金額").WithTitleStyle("HeaderBlue").WithStyle("AmountCurrency")
+                .WithTitle("Amount").WithTitleStyle("HeaderBlue").WithStyle("AmountCurrency")
                 .WithCellType(CellType.Numeric);
             mapping.Map(x => x.Notes).ToColumn(ExcelCol.G)
-                .WithTitle("備註").WithTitleStyle("HeaderBlue");
+                .WithTitle("Notes").WithTitleStyle("HeaderBlue");
 
             mapping.Map(x => x.MaybeNull).ToColumn(ExcelCol.H)
-                .WithTitle("可能為空").WithTitleStyle("HeaderBlue");
+                .WithTitle("Maybe Null").WithTitleStyle("HeaderBlue");
 
             fluent.UseSheet("BasicTableExample", true)
                 .SetColumnWidth(ExcelCol.A, ExcelCol.H, 20)
                 .SetTable(testData, mapping)
                 .BuildRows();
 
-            Console.WriteLine("  ✓ BasicTableExample 建立完成");
+            Console.WriteLine("  ✓ BasicTableExample Created");
         }
 
         /// <summary>
@@ -60,21 +60,21 @@ namespace FluentNPOIConsoleExample
         /// </summary>
         public static void CreateSummaryExample(FluentWorkbook fluent, List<ExampleData> testData)
         {
-            Console.WriteLine("建立 Summary...");
+            Console.WriteLine("Creating SummaryExample...");
 
             var mapping = new FluentMapping<ExampleData>();
             mapping.Map(x => x.Name).ToColumn(ExcelCol.A)
-                .WithTitle("姓名11").WithTitleStyle("HeaderBlue");
+                .WithTitle("Name").WithTitleStyle("HeaderBlue");
             mapping.Map(x => x.Score).ToColumn(ExcelCol.B)
-                .WithTitle("分數").WithTitleStyle("HeaderBlue").WithStyle("AmountCurrency")
+                .WithTitle("Score").WithTitleStyle("HeaderBlue").WithStyle("AmountCurrency")
                 .WithCellType(CellType.Numeric);
             mapping.Map(x => x.DateOfBirth).ToColumn(ExcelCol.C)
-                .WithTitle("生日").WithTitleStyle("HeaderBlue").WithStyle("DateOfBirth");
+                .WithTitle("Date of Birth").WithTitleStyle("HeaderBlue").WithStyle("DateOfBirth");
             mapping.Map(x => x.IsActive).ToColumn(ExcelCol.D)
-                .WithTitle("狀態").WithTitleStyle("HeaderBlue")
+                .WithTitle("Status").WithTitleStyle("HeaderBlue")
                 .WithCellType(CellType.Boolean);
             mapping.Map(x => x.Notes).ToColumn(ExcelCol.E)
-                .WithTitle("備註").WithTitleStyle("HeaderBlue")
+                .WithTitle("Notes").WithTitleStyle("HeaderBlue")
             .WithStyle("HighlightYellow");
 
             fluent.UseSheet("Summary", true)
@@ -82,7 +82,7 @@ namespace FluentNPOIConsoleExample
                 .SetTable(testData, mapping)
                 .BuildRows();
 
-            Console.WriteLine("  ✓ Summary 建立完成");
+            Console.WriteLine("  ✓ SummaryExample Created");
         }
 
         /// <summary>
@@ -90,7 +90,7 @@ namespace FluentNPOIConsoleExample
         /// </summary>
         public static void CreateDataTableExample(FluentWorkbook fluent)
         {
-            Console.WriteLine("建立 DataTableExample...");
+            Console.WriteLine("Creating DataTableExample...");
 
             DataTable dataTable = new DataTable("StudentData");
             dataTable.Columns.Add("StudentID", typeof(int));
@@ -108,21 +108,21 @@ namespace FluentNPOIConsoleExample
             dataTable.Rows.Add(105, "陳七", new DateTime(1998, 9, 12), true, 3.6, 23000m, "企業管理");
             dataTable.Rows.Add(106, "林八", new DateTime(1999, 5, 8), false, 3.2, 21000m, "財務金融");
 
-            // 使用 DataTableMapping
+            // Using DataTableMapping
             var mapping = new DataTableMapping();
-            mapping.Map("StudentID").ToColumn(ExcelCol.A).WithTitle("學號")
+            mapping.Map("StudentID").ToColumn(ExcelCol.A).WithTitle("Student ID")
                 .WithTitleStyle("HeaderBlue").WithCellType(CellType.Numeric);
-            mapping.Map("StudentName").ToColumn(ExcelCol.B).WithTitle("姓名")
+            mapping.Map("StudentName").ToColumn(ExcelCol.B).WithTitle("Name")
                 .WithTitleStyle("HeaderBlue").WithCellType(CellType.String);
-            mapping.Map("BirthDate").ToColumn(ExcelCol.C).WithTitle("出生日期")
+            mapping.Map("BirthDate").ToColumn(ExcelCol.C).WithTitle("Date of Birth")
                 .WithTitleStyle("HeaderBlue").WithStyle("DateOfBirth");
-            mapping.Map("IsEnrolled").ToColumn(ExcelCol.D).WithTitle("在學中")
+            mapping.Map("IsEnrolled").ToColumn(ExcelCol.D).WithTitle("Enrolled")
                 .WithTitleStyle("HeaderBlue").WithCellType(CellType.Boolean);
             mapping.Map("GPA").ToColumn(ExcelCol.E).WithTitle("GPA")
                 .WithTitleStyle("HeaderBlue").WithCellType(CellType.Numeric);
-            mapping.Map("Tuition").ToColumn(ExcelCol.F).WithTitle("學費")
+            mapping.Map("Tuition").ToColumn(ExcelCol.F).WithTitle("Tuition")
                 .WithTitleStyle("HeaderBlue").WithStyle("AmountCurrency").WithCellType(CellType.Numeric);
-            mapping.Map("Department").ToColumn(ExcelCol.G).WithTitle("科系")
+            mapping.Map("Department").ToColumn(ExcelCol.G).WithTitle("Department")
                 .WithTitleStyle("HeaderBlue")
                 .WithValue((row, excelRow, col) => $"{row["StudentID"]}{excelRow}{col}{row["Department"]} hello")
                 .WithStyle("BodyString")
@@ -132,7 +132,7 @@ namespace FluentNPOIConsoleExample
                 .SetColumnWidth(ExcelCol.A, ExcelCol.G, 20)
                 .WriteDataTable(dataTable, mapping);
 
-            Console.WriteLine("  ✓ DataTableExample 建立完成");
+            Console.WriteLine("  ✓ DataTableExample Created");
         }
 
         #endregion

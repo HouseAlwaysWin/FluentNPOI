@@ -21,20 +21,20 @@ namespace FluentNPOIConsoleExample
         /// </summary>
         public static void CreateSmartPipelineExample(List<ExampleData> testData)
         {
-            Console.WriteLine("建立 SmartPipelineExample...");
+            Console.WriteLine("Creating SmartPipelineExample...");
 
             var mapping = new FluentMapping<ExampleData>();
             mapping.Map(x => x.Name).ToColumn(ExcelCol.A).WithTitle("姓名");
             mapping.Map(x => x.Score).ToColumn(ExcelCol.B).WithTitle("分數");
             mapping.Map(x => x.IsActive).ToColumn(ExcelCol.C).WithTitle("狀態");
 
-            // 1. 產生來源檔案 (模擬用)
+            // 1. Generate Source File (Simulation)
             var sourceFile = @$"{AppDomain.CurrentDomain.BaseDirectory}\Resources\Source.xlsx";
             var wb = new FluentWorkbook(new XSSFWorkbook());
             wb.UseSheet("Data").SetTable(testData, mapping).BuildRows();
             wb.SaveToFile(sourceFile);
 
-            // 2. 串流處理：輸出為 .xlsx (SXSSF - 高速)
+            // 2. Stream Processing: Output as .xlsx (SXSSF - High Speed)
             var outFileXlsx = @$"{AppDomain.CurrentDomain.BaseDirectory}\Resources\Pipeline_Out.xlsx";
 
             FluentNPOI.Streaming.StreamingBuilder<ExampleData>.FromFile(sourceFile)
@@ -51,9 +51,9 @@ namespace FluentNPOIConsoleExample
                 })
                 .SaveAs(outFileXlsx);
 
-            Console.WriteLine($"  ✓ Pipeline (XLSX) 處理完成: {outFileXlsx}");
+            Console.WriteLine($"  ✓ Pipeline (XLSX) Processed: {outFileXlsx}");
 
-            // 3. 相容處理：輸出為 .xls (HSSF - DOM)
+            // 3. Compatibility Processing: Output as .xls (HSSF - DOM)
             var outFileXls = @$"{AppDomain.CurrentDomain.BaseDirectory}\Resources\Pipeline_Out.xls";
 
             FluentNPOI.Streaming.StreamingBuilder<ExampleData>.FromFile(sourceFile)
@@ -61,7 +61,7 @@ namespace FluentNPOIConsoleExample
                 .WithMapping(mapping)
                 .SaveAs(outFileXls);
 
-            Console.WriteLine($"  ✓ Pipeline (XLS) 處理完成: {outFileXls}");
+            Console.WriteLine($"  ✓ Pipeline (XLS) Processed: {outFileXls}");
         }
 
         /// <summary>
@@ -69,12 +69,12 @@ namespace FluentNPOIConsoleExample
         /// </summary>
         public static void CreateDomEditExample()
         {
-            Console.WriteLine("建立 DomEditExample (原地編輯)...");
+            Console.WriteLine("Creating DomEditExample (In-place Edit)...");
 
             var templateFile = @$"{AppDomain.CurrentDomain.BaseDirectory}\Resources\Template.xlsx";
             var editedFile = @$"{AppDomain.CurrentDomain.BaseDirectory}\Resources\Edited.xlsx";
 
-            // 1. 準備一個範本檔案
+            // 1. Prepare a template file
             var wb = new FluentWorkbook(new XSSFWorkbook());
             wb.UseSheet("Report")
               .SetCellPosition(ExcelCol.A, 1).SetValue("Title: Monthly Report")
@@ -83,7 +83,7 @@ namespace FluentNPOIConsoleExample
 
             wb.SaveToFile(templateFile).Close();
 
-            // 2. 載入並修改 (Load -> Edit -> Save)
+            // 2. Load and Edit (Load -> Edit -> Save)
             var editor = new FluentWorkbook(new XSSFWorkbook());
             editor.ReadExcelFile(templateFile);
 
@@ -95,7 +95,7 @@ namespace FluentNPOIConsoleExample
             editor.SaveToFile(editedFile);
             editor.Close();
 
-            Console.WriteLine($"  ✓ DOM 編輯完成: {editedFile}");
+            Console.WriteLine($"  ✓ DOM Edit Completed: {editedFile}");
         }
 
         #endregion

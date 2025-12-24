@@ -281,7 +281,7 @@ public class FluentHotReloadSession : IDisposable
             });
 
             Console.WriteLine($"📂 LibreOffice opened: {Path.GetFileName(targetPath)}");
-            Console.WriteLine("   🔄 每次程式碼變更後 LibreOffice 會自動重新開啟");
+            Console.WriteLine("   🔄 LibreOffice will automatically reopen after code changes");
         }
         catch (Exception ex)
         {

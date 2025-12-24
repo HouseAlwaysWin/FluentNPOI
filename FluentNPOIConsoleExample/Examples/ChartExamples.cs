@@ -20,7 +20,7 @@ namespace FluentNPOIConsoleExample
         /// </summary>
         public static void CreateChartExample(FluentWorkbook fluent, List<ExampleData> testData)
         {
-            Console.WriteLine("建立 ChartExample...");
+            Console.WriteLine("Creating ChartExample...");
 
             var sheet = fluent.UseSheet("ChartExample", true);
             sheet.SetColumnWidth(ExcelCol.A, ExcelCol.L, 15);
@@ -175,7 +175,7 @@ namespace FluentNPOIConsoleExample
             sheet.SetCellPosition(ExcelCol.A, 43)
                  .SetPictureOnCell(largeBarChartBytes, 800, 500);
 
-            Console.WriteLine("  ✓ ChartExample 建立完成");
+            Console.WriteLine("  ✓ ChartExample Created");
         }
 
         #endregion

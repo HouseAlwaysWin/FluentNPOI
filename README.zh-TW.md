@@ -4,45 +4,45 @@
 [![.NET Standard 2.0](https://img.shields.io/badge/.NET%20Standard-2.0-blue.svg)](https://docs.microsoft.com/en-us/dotnet/standard/net-standard)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-**FluentNPOI** is a fluent wrapper for [NPOI](https://github.com/dotnetcore/NPOI) that provides an intuitive and easy-to-use API for reading and writing Excel files.
+**FluentNPOI** 是基於 [NPOI](https://github.com/dotnetcore/NPOI) 的流暢（Fluent）風格 Excel 操作庫，提供更直觀、更易用的 API 來讀寫 Excel 文件。
 
-[ 繁體中文 ](README.zh-TW.md)
+[ English ](README.md)
 
 ---
 
-## 🚀 Features
+## 🚀 特性
 
-- ✅ **Fluent API** - Chained method calls for simpler, readable code
-- ✅ **Strongly Typed Mapping** - Use `FluentMapping` for type-safe data binding
-- ✅ **Modular Packages** - Install only what you need: Core, PDF, Streaming, Charts
-- ✅ **Direct Styling** - Configure styles directly within Mapping or FluentCell API
-- ✅ **Style Management** - Smart caching to handle duplicate styles
-- ✅ **Comprehensive I/O** - Read/Write, Images, Formulas, Merging
-- ✅ **HTML/PDF Export** - Convert Excel to HTML or PDF
-- ✅ **Chart Generation** - Generate charts using ScottPlot and embed in Excel
-- ✅ **Hot Reload** - Live preview changes with `dotnet watch` and LibreOffice (requires LibreOffice)
+- ✅ **流暢 API** - 支援鏈式調用，代碼更簡潔易讀
+- ✅ **強型別映射** - 透過 `FluentMapping` 進行強型別資料綁定與樣式設定
+- ✅ **模組化套件** - 按需安裝：核心、PDF、串流、圖表
+- ✅ **直觀樣式** - 支援在 Mapping 中直接設定樣式，或使用 FluentCell API 進行細粒度控制
+- ✅ **樣式管理** - 智能樣式緩存機制，自動處理重複樣式
+- ✅ **完整讀寫** - 支援讀寫 Excel、圖片插入、公式設定、合併儲存格
+- ✅ **HTML/PDF 匯出** - 將 Excel 轉換為 HTML 或 PDF
+- ✅ **圖表產生** - 使用 ScottPlot 產生圖表並嵌入 Excel
+- ✅ **即時預覽 (Hot Reload)** - 支援 `dotnet watch` 與 LibreOffice 即時預覽變更 (需安裝 LibreOffice)
 
-## 📦 Installation
+## 📦 安裝
 
-### Core Package
+### 核心套件
 
 ```bash
 dotnet add package FluentNPOI
 ```
 
-### Optional Modules
+### 可選模組
 
-| Package | Purpose | Install |
-|---------|---------|---------|
-| `FluentNPOI.Pdf` | PDF Export (QuestPDF) | `dotnet add package FluentNPOI.Pdf` |
-| `FluentNPOI.Streaming` | Large File Streaming | `dotnet add package FluentNPOI.Streaming` |
-| `FluentNPOI.Charts` | Chart Generation (ScottPlot) | `dotnet add package FluentNPOI.Charts` |
-| `FluentNPOI.HotReload` | Live Preview (Dev only) | `dotnet add package FluentNPOI.HotReload` |
-| `FluentNPOI.All` | Full Features (All modules) | `dotnet add package FluentNPOI.All` |
+| 套件 | 用途 | 安裝 |
+|------|------|------|
+| `FluentNPOI.Pdf` | PDF 匯出 (QuestPDF) | `dotnet add package FluentNPOI.Pdf` |
+| `FluentNPOI.Streaming` | 大檔案串流讀寫 | `dotnet add package FluentNPOI.Streaming` |
+| `FluentNPOI.Charts` | 圖表產生 (ScottPlot) | `dotnet add package FluentNPOI.Charts` |
+| `FluentNPOI.HotReload` | 即時預覽 (開發用) | `dotnet add package FluentNPOI.HotReload` |
+| `FluentNPOI.All` | 完整功能 (包含所有模組) | `dotnet add package FluentNPOI.All` |
 
-## 🎯 Quick Start
+## 🎯 快速開始
 
-### 1. Basic Write
+### 1. 基本讀寫
 
 ```csharp
 using FluentNPOI;
@@ -60,19 +60,19 @@ fluent.UseSheet("Sheet1")
 fluent.SaveToPath("output.xlsx");
 ```
 
-### 2. Table Binding with FluentMapping (Recommended)
+### 2. 強型別表格綁定 (推薦)
 
 ```csharp
 var mapping = new FluentMapping<Student>();
 
 mapping.Map(x => x.Name)
     .ToColumn(ExcelCol.A)
-    .WithTitle("Name")
+    .WithTitle("姓名")
     .WithBackgroundColor(IndexedColors.LightCornflowerBlue);
 
 mapping.Map(x => x.Score)
     .ToColumn(ExcelCol.B)
-    .WithTitle("Score")
+    .WithTitle("分數")
     .WithNumberFormat("0.0");
 
 fluent.UseSheet("Report")
@@ -82,7 +82,7 @@ fluent.UseSheet("Report")
       .FreezeTitleRow();
 ```
 
-### 3. Streaming for Large Files
+### 3. 串流處理大檔案
 
 ```csharp
 using FluentNPOI.Streaming;
@@ -93,12 +93,12 @@ StreamingBuilder<DataModel>.FromFile("large_input.xlsx")
     .SaveAs("output.xlsx");
 ```
 
-### 4. Chart Generation
+### 4. 圖表產生
 
 ```csharp
 using FluentNPOI.Charts;
 
-// Integrated chaining API
+// 整合串鍊 API
 fluent.UseSheet("Charts")
     .SetCellPosition(ExcelCol.A, 1)
     .AddBarChart(data, chart => {
@@ -107,18 +107,18 @@ fluent.UseSheet("Charts")
              .WithTitle("Sales Report");
     }, width: 400, height: 300);
 
-// Or generate manually
+// 或手動產生
 var chartBytes = ChartBuilder.Bar(data)
     .X(d => d.Category)
     .Y(d => d.Value)
     .Configure(plot => {
-        // Full access to ScottPlot API
+        // 完整存取 ScottPlot API
         plot.FigureBackground.Color = ScottPlot.Colors.White;
     })
     .ToPng(400, 300);
 ```
 
-### 5. PDF Export
+### 5. PDF 匯出
 
 ```csharp
 using FluentNPOI.Pdf;
@@ -126,41 +126,41 @@ using FluentNPOI.Pdf;
 PdfConverter.ConvertSheetToPdf(fluent.UseSheet("Report"), "report.pdf");
 ```
 
-### 6. Live Preview (Hot Reload)
+### 6. 即時預覽 (Hot Reload)
 
-Ensure `FluentNPOI.HotReload` and LibreOffice are installed.
+確保已安裝 `FluentNPOI.HotReload` 與 LibreOffice。
 
-#### Code Implementation
+#### 程式碼實作
 
-Wrap your generation logic with `FluentLivePreview.Run`:
+使用 `FluentLivePreview.Run` 包裝您的產生邏輯：
 
 ```csharp
 using FluentNPOI.HotReload;
 
-// ... inside your Main method or setup
+// ... 在 Main 方法或設定中
 FluentLivePreview.Run("output/report.xlsx", fluent =>
 {
-    // Your FluentNPOI code goes here
+    // 在此撰寫 FluentNPOI 程式碼
     fluent.UseSheet("Sheet1")
           .SetCellPosition(ExcelCol.A, 1)
-          .SetValue("Live Update!")
+          .SetValue("即時更新！")
           .SetBackgroundColor(IndexedColors.LightGreen);
 });
 ```
 
-#### Run with dotnet watch
+#### 使用 dotnet watch 執行
 
 ```bash
-# Run in your Console project directory
+# 在 Console 專案目錄下執行
 dotnet watch run
 ```
 
-Changes to your code will automatically trigger a reload and show the latest result in LibreOffice.
+修改代碼後儲存，LibreOffice 將會自動重新載入並顯示最新結果。
 
-## 📖 API Overview
+## 📖 API 概覽
 
-| Area | Key Methods |
-|------|-------------|
+| 用途 | 主要方法 |
+|------|----------|
 | **Mapping** | `Map`, `ToColumn`, `WithTitle`, `WithNumberFormat`, `WithBackgroundColor` |
 | **Cell** | `SetValue`, `SetFormula`, `SetBackgroundColor`, `SetBorder`, `SetFont` |
 | **Table** | `SetTable`, `BuildRows`, `SetAutoFilter`, `FreezeTitleRow`, `AutoSizeColumns` |
@@ -170,10 +170,10 @@ Changes to your code will automatically trigger a reload and show the latest res
 
 ---
 
-### 🤝 Contribution
+### 🤝 貢獻
 
-Issues and Pull Requests are welcome!
+歡迎提交 Issues 和 Pull Requests！
 
-### 📄 License
+### 📄 授權
 
-MIT License - See [LICENSE](LICENSE) file.
+MIT License - 詳見 [LICENSE](LICENSE) 文件。

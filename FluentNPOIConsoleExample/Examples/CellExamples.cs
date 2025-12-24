@@ -20,7 +20,7 @@ namespace FluentNPOIConsoleExample
         /// </summary>
         public static void CreateSetCellValueExample(FluentWorkbook fluent)
         {
-            Console.WriteLine("建立 SetCellValueExample...");
+            Console.WriteLine("Creating SetCellValueExample...");
 
             fluent.UseSheet("SetCellValueExample", true)
                 .SetColumnWidth(ExcelCol.A, 20)
@@ -28,7 +28,7 @@ namespace FluentNPOIConsoleExample
                 .SetValue("Hello, World!")
                 .SetCellStyle("HighlightYellow");
 
-            Console.WriteLine("  ✓ SetCellValueExample 建立完成");
+            Console.WriteLine("  ✓ SetCellValueExample Created");
         }
 
         /// <summary>
@@ -36,18 +36,18 @@ namespace FluentNPOIConsoleExample
         /// </summary>
         public static void CreateCellMergeExample(FluentWorkbook fluent)
         {
-            Console.WriteLine("建立 CellMergeExample...");
+            Console.WriteLine("Creating CellMergeExample...");
 
             var sheet = fluent.UseSheet("CellMergeExample", true);
             sheet.SetColumnWidth(ExcelCol.A, ExcelCol.E, 15);
 
-            // 水平合併
+            // Horizontal Merge
             sheet.SetCellPosition(ExcelCol.A, 1)
                 .SetValue("銷售報表")
                 .SetCellStyle("HeaderBlue");
             sheet.SetExcelCellMerge(ExcelCol.A, ExcelCol.E, 1);
 
-            // 設定子標題
+            // Set Sub-headers
             sheet.SetCellPosition(ExcelCol.A, 2).SetValue("產品名稱");
             sheet.SetCellPosition(ExcelCol.B, 2).SetValue("銷售量");
             sheet.SetCellPosition(ExcelCol.C, 2).SetValue("單價");
@@ -59,7 +59,7 @@ namespace FluentNPOIConsoleExample
                 sheet.SetCellPosition(col, 2).SetCellStyle("HeaderBlue");
             }
 
-            // 垂直合併
+            // Vertical Merge
             sheet.SetCellPosition(ExcelCol.A, 3).SetValue("電子產品");
             sheet.SetExcelCellMerge(ExcelCol.A, ExcelCol.A, 3, 5);
 
@@ -78,7 +78,7 @@ namespace FluentNPOIConsoleExample
             sheet.SetCellPosition(ExcelCol.D, 5).SetValue(100000);
             sheet.SetCellPosition(ExcelCol.E, 5).SetValue("一般");
 
-            // 區域合併
+            // Region Merge
             sheet.SetCellPosition(ExcelCol.A, 6).SetValue("總計");
             sheet.SetCellPosition(ExcelCol.D, 6).SetValue(840000);
             sheet.SetExcelCellMerge(ExcelCol.A, ExcelCol.C, 6);
@@ -99,7 +99,7 @@ namespace FluentNPOIConsoleExample
             sheet.SetExcelCellMerge(ExcelCol.A, ExcelCol.E, 12, 14);
             sheet.SetCellPosition(ExcelCol.A, 12).SetCellStyle("HighlightYellow");
 
-            Console.WriteLine("  ✓ CellMergeExample 建立完成");
+            Console.WriteLine("  ✓ CellMergeExample Created");
         }
 
         /// <summary>
@@ -107,7 +107,7 @@ namespace FluentNPOIConsoleExample
         /// </summary>
         public static void CreatePictureExample(FluentWorkbook fluent)
         {
-            Console.WriteLine("建立 PictureExample...");
+            Console.WriteLine("Creating PictureExample...");
 
             var sheet = fluent.UseSheet("PictureExample", true);
             sheet.SetColumnWidth(ExcelCol.A, ExcelCol.D, 20);
@@ -189,7 +189,7 @@ namespace FluentNPOIConsoleExample
                     .SetPictureOnCell(imageBytes, 100, 100);
             }
 
-            Console.WriteLine("  ✓ PictureExample 建立完成");
+            Console.WriteLine("  ✓ PictureExample Created");
         }
 
         #endregion

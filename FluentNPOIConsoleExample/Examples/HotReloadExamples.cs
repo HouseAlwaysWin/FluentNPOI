@@ -23,33 +23,33 @@ public static class HotReloadExamples
 
         FluentLivePreview.Run("output/style_demo.xlsx", wb =>
         {
-            // 先設定必要的樣式
+            // Set up necessary styles first
             Program.SetupStyles(wb);
 
-            // === 基礎範例 ===
+            // === Basic Examples ===
             Program.CreateBasicTableExample(wb, Program.testData);
             Program.CreateSummaryExample(wb, Program.testData);
             Program.CreateDataTableExample(wb);
 
-            // === 樣式範例 ===
+            // === Style Examples ===
             // Program.CreateCellStyleRangeExample(wb);
             // Program.CreateCopyStyleExample(wb, Program.testData); // (Part 2)
             // Program.CreateSheetGlobalStyleExample(wb, Program.testData); // (Part 3)
             // Program.CreateMappingStylingExample(wb, Program.testData); // (New Feature)
 
-            // === 儲存格操作 ===
+            // === Cell Operations ===
             // Program.CreateSetCellValueExample(wb);
             // Program.CreateCellMergeExample(wb);
             // Program.CreatePictureExample(wb);
 
-            // === 圖表範例 ===
+            // === Chart Examples ===
             // Program.CreateChartExample(wb, Program.testData);
 
-            // === 匯出範例 ===
+            // === Export Examples ===
             // Program.CreateHtmlExportExample(wb);
             // Program.CreatePdfExportExample(wb);
 
-            // === 進階範例 (注意：這些可能不需要 wb 參數或會建立新檔案，請小心使用) ===
+            // === Advanced Examples (Note: These might not need 'wb' or may create new files) ===
             // Program.CreateSmartPipelineExample(Program.testData);
             // Program.CreateDomEditExample();
             // Program.ReadExcelExamples(wb);
@@ -58,7 +58,7 @@ public static class HotReloadExamples
         },
         session =>
         {
-            // 使用 Shadow Copy (預設)，避免檔案鎖定問題
+            // Use Shadow Copy (Default) to avoid file locking issues
             // session.LibreOfficeOptions.UseShadowCopy = false;
         });
     }
