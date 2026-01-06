@@ -361,9 +361,6 @@ namespace FluentNPOI.Streaming.Mapping
             });
         }
 
-        /// <summary>
-        /// Set wrap text
-        /// </summary>
         public FluentColumnBuilder<T> WithWrapText(bool wrap = true)
         {
             return WithStyleConfig((wb, style) =>
@@ -372,11 +369,83 @@ namespace FluentNPOI.Streaming.Mapping
             });
         }
 
+        /// <summary>
+        /// Set title style configuration (will be merged into automatically generated style)
+        /// </summary>
+        public FluentColumnBuilder<T> WithTitleStyleConfig(Action<NPOI.SS.UserModel.IWorkbook, NPOI.SS.UserModel.ICellStyle> config)
+        {
+            EnsureTitleStyleKey();
+            _mapping.TitleStyleConfig += config;
+            return this;
+        }
+
+        /// <summary>
+        /// Set title font
+        /// </summary>
+        public FluentColumnBuilder<T> WithTitleFont(string fontName = null, double? fontSize = null, bool isBold = false, NPOI.SS.UserModel.IndexedColors color = null)
+        {
+            return WithTitleStyleConfig((wb, style) =>
+            {
+                var font = wb.CreateFont();
+                if (fontName != null) font.FontName = fontName;
+                if (fontSize.HasValue) font.FontHeightInPoints = fontSize.Value;
+                if (color != null) font.Color = color.Index;
+                font.IsBold = isBold;
+                style.SetFont(font);
+            });
+        }
+
+        /// <summary>
+        /// Set title background color
+        /// </summary>
+        public FluentColumnBuilder<T> WithTitleBackgroundColor(NPOI.SS.UserModel.IndexedColors color)
+        {
+            return WithTitleStyleConfig((wb, style) =>
+            {
+                style.FillPattern = NPOI.SS.UserModel.FillPattern.SolidForeground;
+                style.FillForegroundColor = color.Index;
+            });
+        }
+
+        /// <summary>
+        /// Set title alignment
+        /// </summary>
+        public FluentColumnBuilder<T> WithTitleAlignment(NPOI.SS.UserModel.HorizontalAlignment horizontal = NPOI.SS.UserModel.HorizontalAlignment.General, NPOI.SS.UserModel.VerticalAlignment vertical = NPOI.SS.UserModel.VerticalAlignment.Center)
+        {
+            return WithTitleStyleConfig((wb, style) =>
+            {
+                style.Alignment = horizontal;
+                style.VerticalAlignment = vertical;
+            });
+        }
+
+        /// <summary>
+        /// Set title border
+        /// </summary>
+        public FluentColumnBuilder<T> WithTitleBorder(NPOI.SS.UserModel.BorderStyle borderStyle)
+        {
+            return WithTitleStyleConfig((wb, style) =>
+            {
+                style.BorderTop = borderStyle;
+                style.BorderBottom = borderStyle;
+                style.BorderLeft = borderStyle;
+                style.BorderRight = borderStyle;
+            });
+        }
+
         private void EnsureStyleKey()
         {
             if (string.IsNullOrEmpty(_mapping.GeneratedStyleKey))
             {
                 _mapping.GeneratedStyleKey = $"AutoStyle_{Guid.NewGuid()}";
+            }
+        }
+
+        private void EnsureTitleStyleKey()
+        {
+            if (string.IsNullOrEmpty(_mapping.GeneratedTitleStyleKey))
+            {
+                _mapping.GeneratedTitleStyleKey = $"AutoTitleStyle_{Guid.NewGuid()}";
             }
         }
 
@@ -414,9 +483,19 @@ namespace FluentNPOI.Streaming.Mapping
         public Action<NPOI.SS.UserModel.IWorkbook, NPOI.SS.UserModel.ICellStyle> StyleConfig { get; set; }
 
         /// <summary>
+        /// Title style configuration (used for dynamic style generation)
+        /// </summary>
+        public Action<NPOI.SS.UserModel.IWorkbook, NPOI.SS.UserModel.ICellStyle> TitleStyleConfig { get; set; }
+
+        /// <summary>
         /// Automatically generated style Key (internal use)
         /// </summary>
         public string GeneratedStyleKey { get; set; }
+
+        /// <summary>
+        /// Automatically generated title style Key (internal use)
+        /// </summary>
+        public string GeneratedTitleStyleKey { get; set; }
 
         // Column name (for DataTable)
         public string ColumnName { get; set; }

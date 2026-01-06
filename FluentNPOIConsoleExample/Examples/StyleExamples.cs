@@ -254,6 +254,71 @@ namespace FluentNPOIConsoleExample
             Console.WriteLine("  ✓ MappingStylingExample Created");
         }
 
+        /// <summary>
+        /// Example 10: DataTable Styling (New Feature)
+        /// </summary>
+        public static void CreateDataTableStyleExample(FluentWorkbook fluent)
+        {
+            Console.WriteLine("Creating DataTableStyleExample...");
+
+            var dt = new System.Data.DataTable();
+            dt.Columns.Add("Product", typeof(string));
+            dt.Columns.Add("Price", typeof(decimal));
+            dt.Columns.Add("InStock", typeof(bool));
+
+            dt.Rows.Add("Laptop", 1200.00m, true);
+            dt.Rows.Add("Mouse", 25.50m, true);
+            dt.Rows.Add("Keyboard", 45.00m, false);
+
+            var mapping = DataTableMapping.FromDataTable(dt);
+
+            // Customize mapping with styles
+            mapping.Map("Product")
+                .ToColumn(ExcelCol.A)
+                .WithTitle("Product Name")
+                .WithTitleFont(fontName: "Arial", isBold: true, fontSize: 14)
+                .WithTitleBackgroundColor(IndexedColors.Grey25Percent)
+                .WithFont(isBold: true, fontSize: 12)
+                .WithBackgroundColor(IndexedColors.LightCornflowerBlue)
+                .WithAlignment(HorizontalAlignment.Center);
+
+            mapping.Map("Price")
+                .ToColumn(ExcelCol.B)
+                .WithTitle("Price (USD)")
+                .WithTitleFont(color: IndexedColors.White)
+                .WithTitleBackgroundColor(IndexedColors.DarkBlue)
+                .WithTitleAlignment(HorizontalAlignment.Right)
+                .WithNumberFormat("$#,##0.00")
+                .WithFont(color: IndexedColors.Green);
+
+            mapping.Map("InStock")
+                .ToColumn(ExcelCol.C)
+                .WithTitle("Available")
+                .WithAlignment(HorizontalAlignment.Center)
+                .WithDynamicStyle(row => 
+                {
+                    // Dynamic style based on value (DataRow)
+                    var inStock = (bool)row["InStock"];
+                    return inStock ? "InStockStyle" : "OutOfStockStyle";
+                });
+
+            // Register dynamic styles
+            fluent.SetupCellStyle("InStockStyle", (wb, s) => 
+            {
+                s.SetFontInfo(wb, color: IndexedColors.Green);
+            });
+            fluent.SetupCellStyle("OutOfStockStyle", (wb, s) =>
+            {
+                s.SetFontInfo(wb, color: IndexedColors.Red, isBold: true);
+            });
+
+            fluent.UseSheet("DataTableStyleExample", true)
+                .WriteDataTable(dt, mapping)
+                .SetColumnWidth(ExcelCol.A, ExcelCol.C, 15);
+
+            Console.WriteLine("  ✓ DataTableStyleExample Created");
+        }
+
         #endregion
     }
 }

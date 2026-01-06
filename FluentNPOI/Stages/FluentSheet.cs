@@ -210,6 +210,19 @@ namespace FluentNPOI.Stages
             int actualStartRow = startRow ?? actualMapping.StartRow;
             var mappings = actualMapping.GetMappings().Where(m => m.ColumnIndex.HasValue).ToList();
 
+            // Register auto-generated styles
+            foreach (var map in mappings)
+            {
+                if (map.StyleConfig != null && !string.IsNullOrEmpty(map.GeneratedStyleKey))
+                {
+                    RegisterStyle(map.GeneratedStyleKey, map.StyleConfig);
+                }
+                if (map.TitleStyleConfig != null && !string.IsNullOrEmpty(map.GeneratedTitleStyleKey))
+                {
+                    RegisterStyle(map.GeneratedTitleStyleKey, map.TitleStyleConfig);
+                }
+            }
+
             bool writeTitle = mappings.Any(m => !string.IsNullOrEmpty(m.Title));
 
             // Write title row
@@ -220,7 +233,7 @@ namespace FluentNPOI.Stages
                 {
                     var cell = GetOrCreateCell(titleRow, (int)map.ColumnIndex.Value);
                     cell.SetCellValue(map.Title ?? map.ColumnName ?? "");
-                    ApplyStyle(cell, map.TitleStyleKey);
+                    ApplyStyle(cell, map.TitleStyleKey ?? map.GeneratedTitleStyleKey);
                 }
             }
 
@@ -241,7 +254,14 @@ namespace FluentNPOI.Stages
                     else
                         SetCellValueInternal(cell, actualMapping.GetValue(map, dataRow, dataRowStart + rowIdx + 1, (ExcelCol)colIdx));
 
-                    ApplyStyle(cell, map.StyleKey);
+                    // Apply dynamic style from function if present, otherwise use static/generated style
+                    string styleKey = null;
+                    if (map.DynamicStyleFunc != null)
+                    {
+                        styleKey = map.DynamicStyleFunc(dataRow);
+                    }
+                    
+                    ApplyStyle(cell, styleKey ?? map.StyleKey ?? map.GeneratedStyleKey);
                 }
             }
 

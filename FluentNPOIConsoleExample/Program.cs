@@ -23,7 +23,13 @@ namespace FluentNPOIConsoleExample
         public static List<ExampleData> testData = GetTestData();
         static void Main(string[] args)
         {
-            HotReloadExamples.RunHotReloadExample();
+            var fluent = new FluentWorkbook(new XSSFWorkbook());
+            SetupStyles(fluent);
+
+            CreateDataTableStyleExample(fluent);
+
+            fluent.SaveToFile("output.xlsx");
+            Console.WriteLine("Done. Output saved to output.xlsx");
         }
 
         #region Test Data
