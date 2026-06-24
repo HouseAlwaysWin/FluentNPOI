@@ -24,7 +24,9 @@ namespace FluentNPOI.Stages
             Dictionary<string, ICellStyle> cellStylesCached)
             : base(workbook, sheet, cellStylesCached)
         {
-            _table = table;
+            // Materialize once so Count()/indexing are O(1) (List<T> is ICollection<T>, so
+            // Enumerable.Count() short-circuits) and the source isn't re-enumerated per call.
+            _table = table as List<T> ?? table?.ToList() ?? new List<T>();
             // ExcelCol is already a valid column enum, no need to normalize
             _startCol = startCol;
             _startRow = NormalizeRow(startRow);

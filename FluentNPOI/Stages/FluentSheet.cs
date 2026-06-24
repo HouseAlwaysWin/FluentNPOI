@@ -298,41 +298,6 @@ namespace FluentNPOI.Stages
         }
 
         /// <summary>
-        /// Get cell value and convert to specified type
-        /// </summary>
-        private object? GetCellValueForType(ICell? cell, System.Type targetType)
-        {
-            if (cell == null)
-                return null;
-
-            try
-            {
-                // Use generic method to get value - find protected GetCellValue<T>(ICell) method
-                var methods = typeof(FluentCellBase).GetMethods(
-                    System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-
-                var method = methods.FirstOrDefault(m =>
-                    m.Name == "GetCellValue" &&
-                    m.IsGenericMethodDefinition &&
-                    m.GetParameters().Length == 1 &&
-                    m.GetParameters()[0].ParameterType == typeof(ICell));
-
-                if (method != null)
-                {
-                    var genericMethod = method.MakeGenericMethod(targetType);
-                    return genericMethod.Invoke(this, new object[] { cell });
-                }
-            }
-            catch
-            {
-                // If reflection fails, use fallback
-            }
-
-            // Fallback: get value directly
-            return GetCellValue(cell);
-        }
-
-        /// <summary>
         /// Get cell value at specified position
         /// </summary>
         /// <param name="col">Column position</param>
