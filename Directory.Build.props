@@ -13,9 +13,6 @@
 
     <!-- 依賴版本統一在 Directory.Packages.props（中央套件管理 CPM）管理 -->
 
-    <!-- 產生 packages.lock.json 讓還原可重現（commit 後 CI 可用 --locked-mode） -->
-    <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
-
     <!-- 共用建置設定 -->
     <TargetFramework>netstandard2.0</TargetFramework>
     <LangVersion>latest</LangVersion>
