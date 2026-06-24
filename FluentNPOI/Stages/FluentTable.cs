@@ -147,7 +147,7 @@ namespace FluentNPOI.Stages
                         value = null;
                     }
 
-                    SetCellValue(cell, value, map.CellType ?? CellType.Unknown);
+                    SetCellValue(cell, value, map.CellType ?? CellType._None);
                 }
 
                 // Register automatically generated style

@@ -135,7 +135,8 @@ namespace FluentNPOI.Stages
             int picIndex = _workbook.AddPicture(pictureBytes, picType);
 
             // Create drawing patriarch and anchor
-            IDrawing drawing = Sheet.CreateDrawingPatriarch();
+            // NPOI 2.8.0 made IDrawing generic (IDrawing<T>); use var to bind the concrete type.
+            var drawing = Sheet.CreateDrawingPatriarch();
             IClientAnchor anchor = CreatePictureAnchor(imgWidth, imgHeight, anchorType);
 
             // Create picture
@@ -489,7 +490,7 @@ namespace FluentNPOI.Stages
             if (_cell == null || string.IsNullOrEmpty(text)) return this;
 
             ICreationHelper factory = _workbook.GetCreationHelper();
-            IDrawing drawing = Sheet.CreateDrawingPatriarch();
+            var drawing = Sheet.CreateDrawingPatriarch();
 
             // Create anchor (comment display position)
             IClientAnchor anchor = factory.CreateClientAnchor();

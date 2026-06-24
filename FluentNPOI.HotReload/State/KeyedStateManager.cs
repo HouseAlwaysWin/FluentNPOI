@@ -245,7 +245,9 @@ public class KeyedStateManager
 
         // Create new hidden state sheet
         var stateSheet = workbook.CreateSheet(StateSheetName);
-        workbook.SetSheetHidden(workbook.GetSheetIndex(StateSheetName), SheetState.VeryHidden);
+        // NPOI 2.8.0 renamed SheetState -> SheetVisibility and replaced
+        // SetSheetHidden(int, SheetState) with SetSheetVisibility(int, SheetVisibility).
+        workbook.SetSheetVisibility(workbook.GetSheetIndex(StateSheetName), SheetVisibility.VeryHidden);
 
         int rowIndex = 0;
         foreach (var entry in _stateCache.Values)
