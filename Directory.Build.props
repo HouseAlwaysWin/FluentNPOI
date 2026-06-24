@@ -21,6 +21,9 @@
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     <NoWarn>$(NoWarn);1591</NoWarn>
 
+    <!-- 將警告視為錯誤，鎖住零警告基線、防止回退（1591/NU5128 已於 NoWarn 排除） -->
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+
     <!-- 接受 NPOI OSMF EULA，消除每次 build 的授權警告 -->
     <AcceptNPOIOSMFLicense>true</AcceptNPOIOSMFLicense>
   </PropertyGroup>
