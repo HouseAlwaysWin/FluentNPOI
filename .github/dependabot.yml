@@ -9,6 +9,21 @@ updates:
       time: "09:00"
       timezone: "Asia/Taipei"
     open-pull-requests-limit: 10
+    # Group updates so the central Directory.Packages.props is touched by one PR
+    # per category instead of one PR per package (avoids mutual merge conflicts).
+    groups:
+      production-dependencies:
+        patterns:
+          - "*"
+        exclude-patterns:
+          - "xunit*"
+          - "coverlet*"
+          - "Microsoft.NET.Test.Sdk"
+      test-dependencies:
+        patterns:
+          - "xunit*"
+          - "coverlet*"
+          - "Microsoft.NET.Test.Sdk"
     reviewers:
       - "HouseAlwaysWin"
     labels:
@@ -17,7 +32,7 @@ updates:
     commit-message:
       prefix: "chore"
       include: "scope"
-    
+
   # Enable version updates for GitHub Actions
   - package-ecosystem: "github-actions"
     directory: "/"
@@ -27,6 +42,11 @@ updates:
       time: "09:00"
       timezone: "Asia/Taipei"
     open-pull-requests-limit: 5
+    # Group all GitHub Actions bumps into a single PR.
+    groups:
+      github-actions:
+        patterns:
+          - "*"
     reviewers:
       - "HouseAlwaysWin"
     labels:
