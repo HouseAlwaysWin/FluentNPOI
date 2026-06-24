@@ -50,16 +50,25 @@ jobs:
       - name: Generate Coverage Summary
         if: always()
         run: |
+          # NOTE: pipe the string itself to Out-File. `Write-Host | Out-File` writes
+          # nothing to the file (Write-Host goes to the host, not the pipeline), which
+          # produced an empty summary and broke the PR-comment step.
           $coberturaFile = "./coveragereport/Cobertura.xml"
+          $summary = "## Code Coverage Summary`n`n"
           if (Test-Path $coberturaFile) {
-            Write-Host "## Code Coverage Summary" | Out-File -FilePath coverage-summary.md -Encoding utf8
-            Write-Host "" | Out-File -FilePath coverage-summary.md -Append -Encoding utf8
-            Write-Host "Coverage report generated successfully!" | Out-File -FilePath coverage-summary.md -Append -Encoding utf8
-            Write-Host "View full report in the coverage-report artifact." | Out-File -FilePath coverage-summary.md -Append -Encoding utf8
+            try {
+              [xml]$xml = Get-Content $coberturaFile
+              $lineRate = [math]::Round([double]$xml.coverage.'line-rate' * 100, 2)
+              $branchRate = [math]::Round([double]$xml.coverage.'branch-rate' * 100, 2)
+              $summary += "| Metric | Coverage |`n| --- | --- |`n| Line | $lineRate% |`n| Branch | $branchRate% |`n`nView the full report in the **coverage-report** artifact."
+            } catch {
+              $summary += "Coverage was generated, but the summary could not be parsed."
+            }
           } else {
-            Write-Host "## Code Coverage Report" | Out-File -FilePath coverage-summary.md -Encoding utf8
-            Write-Host "Coverage report not found or failed to generate." | Out-File -FilePath coverage-summary.md -Append -Encoding utf8
+            $summary += "Coverage report not found or failed to generate."
           }
+          $summary | Out-File -FilePath coverage-summary.md -Encoding utf8
+          Write-Host $summary
 
       - name: Add Coverage PR Comment
         uses: marocchino/sticky-pull-request-comment@v2
