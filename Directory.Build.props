@@ -20,5 +20,8 @@
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     <NoWarn>$(NoWarn);1591</NoWarn>
+
+    <!-- 接受 NPOI OSMF EULA，消除每次 build 的授權警告 -->
+    <AcceptNPOIOSMFLicense>true</AcceptNPOIOSMFLicense>
   </PropertyGroup>
 </Project>

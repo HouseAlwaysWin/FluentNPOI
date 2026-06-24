@@ -70,10 +70,8 @@ namespace FluentNPOI.Html
             var sb = new StringBuilder();
             sb.AppendLine("<table>");
 
-            var rowEnumerator = sheet.GetRowEnumerator();
-            while (rowEnumerator.MoveNext())
+            foreach (IRow row in sheet)
             {
-                var row = (IRow)rowEnumerator.Current;
                 if (row == null) continue;
 
                 sb.AppendLine("<tr>");

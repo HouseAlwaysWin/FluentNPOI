@@ -341,10 +341,47 @@ namespace FluentNPOI.Stages
 
             if (sourceCell?.CellStyle != null)
             {
-                ICellStyle newStyle = _workbook.CreateCellStyle();
-                newStyle.CloneStyleFrom(sourceCell.CellStyle);
+                // Cache one clone per source style so copying from the same cell to many
+                // targets reuses a single style (avoids the ~64k cell-style limit).
+                string key = $"__copyfrom:{sourceCell.CellStyle.Index}";
+                if (!_cellStylesCached.TryGetValue(key, out var newStyle))
+                {
+                    newStyle = _workbook.CreateCellStyle();
+                    newStyle.CloneStyleFrom(sourceCell.CellStyle);
+                    _cellStylesCached[key] = newStyle;
+                }
                 _cell.CellStyle = newStyle;
             }
+            return this;
+        }
+
+        /// <summary>
+        /// Apply an incremental style modification through the shared style cache.
+        /// The cache key combines the current style's index with a deterministic operation
+        /// signature, so applying the same modification to many cells that share a base style
+        /// reuses one ICellStyle instead of creating one per cell. This avoids exhausting
+        /// NPOI's hard ~64k cell-style-per-workbook limit on large/styled sheets.
+        /// </summary>
+        /// <param name="opSignature">Deterministic signature of the modification + its arguments</param>
+        /// <param name="modifier">Mutates the (cloned) style; runs only on a cache miss</param>
+        private FluentCell ApplyStyleModification(string opSignature, Action<ICellStyle> modifier)
+        {
+            if (_cell == null) return this;
+
+            int baseIndex = _cell.CellStyle?.Index ?? -1;
+            string key = $"__auto:{baseIndex}:{opSignature}";
+
+            if (!_cellStylesCached.TryGetValue(key, out var style))
+            {
+                style = _workbook.CreateCellStyle();
+                if (_cell.CellStyle != null)
+                {
+                    style.CloneStyleFrom(_cell.CellStyle);
+                }
+                modifier(style);
+                _cellStylesCached[key] = style;
+            }
+            _cell.CellStyle = style;
             return this;
         }
 
@@ -353,19 +390,11 @@ namespace FluentNPOI.Stages
         /// </summary>
         /// <param name="color">Indexed color</param>
         public FluentCell SetBackgroundColor(IndexedColors color)
-        {
-            if (_cell == null) return this;
-
-            ICellStyle style = _workbook.CreateCellStyle();
-            if (_cell.CellStyle != null)
+            => ApplyStyleModification($"bg:{color.Index}", style =>
             {
-                style.CloneStyleFrom(_cell.CellStyle);
-            }
-            style.FillPattern = FillPattern.SolidForeground;
-            style.FillForegroundColor = color.Index;
-            _cell.CellStyle = style;
-            return this;
-        }
+                style.FillPattern = FillPattern.SolidForeground;
+                style.FillForegroundColor = color.Index;
+            });
 
         /// <summary>
         /// Set font
@@ -374,44 +403,29 @@ namespace FluentNPOI.Stages
         /// <param name="fontSize">Font size (points)</param>
         /// <param name="isBold">Is bold</param>
         public FluentCell SetFont(string? fontName = null, double? fontSize = null, bool isBold = false)
-        {
-            if (_cell == null) return this;
-
-            ICellStyle style = _workbook.CreateCellStyle();
-            if (_cell.CellStyle != null)
+            => ApplyStyleModification($"font:{fontName}|{fontSize}|{isBold}", style =>
             {
-                style.CloneStyleFrom(_cell.CellStyle);
-            }
-
-            IFont font = _workbook.CreateFont();
-            if (fontName != null) font.FontName = fontName;
-            if (fontSize.HasValue) font.FontHeightInPoints = fontSize.Value;
-            font.IsBold = isBold;
-            style.SetFont(font);
-            _cell.CellStyle = style;
-            return this;
-        }
+                // CreateFont() now runs only on a cache miss, so fonts are no longer
+                // created per cell (NPOI also caps fonts per workbook).
+                IFont font = _workbook.CreateFont();
+                if (fontName != null) font.FontName = fontName;
+                if (fontSize.HasValue) font.FontHeightInPoints = fontSize.Value;
+                font.IsBold = isBold;
+                style.SetFont(font);
+            });
 
         /// <summary>
         /// Set border for all sides
         /// </summary>
         /// <param name="style">Border style</param>
         public FluentCell SetBorder(BorderStyle style)
-        {
-            if (_cell == null) return this;
-
-            ICellStyle cellStyle = _workbook.CreateCellStyle();
-            if (_cell.CellStyle != null)
+            => ApplyStyleModification($"border:{style}", s =>
             {
-                cellStyle.CloneStyleFrom(_cell.CellStyle);
-            }
-            cellStyle.BorderTop = style;
-            cellStyle.BorderBottom = style;
-            cellStyle.BorderLeft = style;
-            cellStyle.BorderRight = style;
-            _cell.CellStyle = cellStyle;
-            return this;
-        }
+                s.BorderTop = style;
+                s.BorderBottom = style;
+                s.BorderLeft = style;
+                s.BorderRight = style;
+            });
 
         /// <summary>
         /// Set alignment
@@ -419,19 +433,11 @@ namespace FluentNPOI.Stages
         /// <param name="horizontal">Horizontal alignment</param>
         /// <param name="vertical">Vertical alignment</param>
         public FluentCell SetAlignment(HorizontalAlignment horizontal = HorizontalAlignment.General, VerticalAlignment vertical = VerticalAlignment.Center)
-        {
-            if (_cell == null) return this;
-
-            ICellStyle style = _workbook.CreateCellStyle();
-            if (_cell.CellStyle != null)
+            => ApplyStyleModification($"align:{horizontal}|{vertical}", style =>
             {
-                style.CloneStyleFrom(_cell.CellStyle);
-            }
-            style.Alignment = horizontal;
-            style.VerticalAlignment = vertical;
-            _cell.CellStyle = style;
-            return this;
-        }
+                style.Alignment = horizontal;
+                style.VerticalAlignment = vertical;
+            });
 
         /// <summary>
         /// Get current cell position information
@@ -448,18 +454,12 @@ namespace FluentNPOI.Stages
         /// <param name="format">Format string (e.g. "#,##0.00", "yyyy-mm-dd", "0%")</param>
         public FluentCell SetNumberFormat(string format)
         {
-            if (_cell == null || string.IsNullOrEmpty(format)) return this;
-
-            ICellStyle style = _workbook.CreateCellStyle();
-            if (_cell.CellStyle != null)
+            if (string.IsNullOrEmpty(format)) return this;
+            return ApplyStyleModification($"numfmt:{format}", style =>
             {
-                style.CloneStyleFrom(_cell.CellStyle);
-            }
-
-            IDataFormat dataFormat = _workbook.CreateDataFormat();
-            style.DataFormat = dataFormat.GetFormat(format);
-            _cell.CellStyle = style;
-            return this;
+                IDataFormat dataFormat = _workbook.CreateDataFormat();
+                style.DataFormat = dataFormat.GetFormat(format);
+            });
         }
 
         /// <summary>
@@ -467,18 +467,7 @@ namespace FluentNPOI.Stages
         /// </summary>
         /// <param name="wrap">Enable wrap text</param>
         public FluentCell SetWrapText(bool wrap = true)
-        {
-            if (_cell == null) return this;
-
-            ICellStyle style = _workbook.CreateCellStyle();
-            if (_cell.CellStyle != null)
-            {
-                style.CloneStyleFrom(_cell.CellStyle);
-            }
-            style.WrapText = wrap;
-            _cell.CellStyle = style;
-            return this;
-        }
+            => ApplyStyleModification($"wrap:{wrap}", style => style.WrapText = wrap);
 
         /// <summary>
         /// Add comment
@@ -516,72 +505,28 @@ namespace FluentNPOI.Stages
         /// </summary>
         /// <param name="locked">Is locked</param>
         public FluentCell SetLocked(bool locked = true)
-        {
-            if (_cell == null) return this;
-
-            ICellStyle style = _workbook.CreateCellStyle();
-            if (_cell.CellStyle != null)
-            {
-                style.CloneStyleFrom(_cell.CellStyle);
-            }
-            style.IsLocked = locked;
-            _cell.CellStyle = style;
-            return this;
-        }
+            => ApplyStyleModification($"locked:{locked}", style => style.IsLocked = locked);
 
         /// <summary>
         /// Set cell hidden formula (must be used with sheet protection)
         /// </summary>
         /// <param name="hidden">Is hidden formula</param>
         public FluentCell SetHidden(bool hidden = true)
-        {
-            if (_cell == null) return this;
-
-            ICellStyle style = _workbook.CreateCellStyle();
-            if (_cell.CellStyle != null)
-            {
-                style.CloneStyleFrom(_cell.CellStyle);
-            }
-            style.IsHidden = hidden;
-            _cell.CellStyle = style;
-            return this;
-        }
+            => ApplyStyleModification($"hidden:{hidden}", style => style.IsHidden = hidden);
 
         /// <summary>
         /// Set text rotation angle
         /// </summary>
         /// <param name="degrees">Rotation angle (-90 to 90)</param>
         public FluentCell SetRotation(short degrees)
-        {
-            if (_cell == null) return this;
-
-            ICellStyle style = _workbook.CreateCellStyle();
-            if (_cell.CellStyle != null)
-            {
-                style.CloneStyleFrom(_cell.CellStyle);
-            }
-            style.Rotation = degrees;
-            _cell.CellStyle = style;
-            return this;
-        }
+            => ApplyStyleModification($"rot:{degrees}", style => style.Rotation = degrees);
 
         /// <summary>
         /// Set indentation level
         /// </summary>
         /// <param name="indent">Indentation level (0-15)</param>
         public FluentCell SetIndent(short indent)
-        {
-            if (_cell == null) return this;
-
-            ICellStyle style = _workbook.CreateCellStyle();
-            if (_cell.CellStyle != null)
-            {
-                style.CloneStyleFrom(_cell.CellStyle);
-            }
-            style.Indention = indent;
-            _cell.CellStyle = style;
-            return this;
-        }
+            => ApplyStyleModification($"indent:{indent}", style => style.Indention = indent);
     }
 }
 
