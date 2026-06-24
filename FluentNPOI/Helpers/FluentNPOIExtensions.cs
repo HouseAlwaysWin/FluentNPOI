@@ -28,7 +28,9 @@ namespace FluentNPOI
         /// <param name="blue"></param>
         public static void SetCellFillForegroundColor(this ICellStyle style, byte red, byte green, byte blue)
         {
-            XSSFColor redColor = new XSSFColor(new byte[] { red, green, blue }); // Set to red
+            // NPOI 2.8.0 removed the XSSFColor(byte[]) constructor; the RGB overload now
+            // takes an IIndexedColorMap (only used for indexed-color lookups, so null is fine here).
+            XSSFColor redColor = new XSSFColor(new byte[] { red, green, blue }, null); // Set to red
             style.FillPattern = FillPattern.SolidForeground;
             ((XSSFCellStyle)style).SetFillForegroundColor(redColor);
         }
@@ -41,7 +43,7 @@ namespace FluentNPOI
         public static void SetCellFillForegroundColor(this ICellStyle style, string hexColor)
         {
             byte[] rgbColor = HexToRgb(hexColor); // Convert to RGB array
-            XSSFColor xssfColor = new XSSFColor(rgbColor);
+            XSSFColor xssfColor = new XSSFColor(rgbColor, null);
 
             // Set background color
             style.FillPattern = FillPattern.SolidForeground;

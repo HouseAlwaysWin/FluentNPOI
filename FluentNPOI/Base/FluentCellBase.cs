@@ -89,8 +89,9 @@ namespace FluentNPOI.Base
                 return;
             }
 
-            // 2) If CellType is Unknown, just use auto-detection
-            if (cellType == CellType.Unknown)
+            // 2) If CellType is unset (_None, the NPOI 2.8.0 replacement for the removed
+            //    Unknown sentinel), just use auto-detection
+            if (cellType == CellType._None)
             {
                 SetCellValue(cell, value);
                 return;
