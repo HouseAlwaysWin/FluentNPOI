@@ -40,7 +40,7 @@ namespace FluentNPOI.Streaming.Rows
         {
             var value = GetValue(columnIndex);
             if (value == null)
-                return default;
+                return default!;
 
             var targetType = typeof(T);
             var underlyingType = Nullable.GetUnderlyingType(targetType) ?? targetType;
@@ -53,11 +53,11 @@ namespace FluentNPOI.Streaming.Rows
                 if (value is IConvertible)
                     return (T)Convert.ChangeType(value, underlyingType);
 
-                return default;
+                return default!;
             }
             catch
             {
-                return default;
+                return default!;
             }
         }
 

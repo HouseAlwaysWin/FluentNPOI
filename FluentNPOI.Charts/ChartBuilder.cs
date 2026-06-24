@@ -148,10 +148,10 @@ namespace FluentNPOI.Charts
                 plot.Title(_title);
 
             if (!string.IsNullOrEmpty(_xLabel))
-                plot.XLabel(_xLabel);
+                plot.XLabel(_xLabel!);
 
             if (!string.IsNullOrEmpty(_yLabel))
-                plot.YLabel(_yLabel);
+                plot.YLabel(_yLabel!);
 
             // Apply custom configuration
             _configurePlot?.Invoke(plot);

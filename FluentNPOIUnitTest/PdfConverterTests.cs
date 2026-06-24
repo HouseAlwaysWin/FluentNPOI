@@ -3,6 +3,7 @@ using System.Text;
 using Xunit;
 using FluentNPOI;
 using FluentNPOI.Models;
+using FluentNPOI.Stages;
 using FluentNPOI.Pdf;
 using NPOI.XSSF.UserModel;
 using NPOI.SS.UserModel;

@@ -24,7 +24,7 @@ namespace FluentNPOI.Streaming
             using (var reader = new ExcelDataReaderAdapter(filePath))
             {
                 if (!string.IsNullOrEmpty(sheetName))
-                    reader.SelectSheet(sheetName);
+                    reader.SelectSheet(sheetName!);
 
                 // Read Header to create auto Mapping
                 var headers = reader.ReadHeader();
@@ -50,7 +50,7 @@ namespace FluentNPOI.Streaming
             using (var reader = new ExcelDataReaderAdapter(stream, ownsStream: false))
             {
                 if (!string.IsNullOrEmpty(sheetName))
-                    reader.SelectSheet(sheetName);
+                    reader.SelectSheet(sheetName!);
 
                 // Read Header to create auto Mapping
                 var headers = reader.ReadHeader();
@@ -77,7 +77,7 @@ namespace FluentNPOI.Streaming
             using (var reader = new ExcelDataReaderAdapter(filePath))
             {
                 if (!string.IsNullOrEmpty(sheetName))
-                    reader.SelectSheet(sheetName);
+                    reader.SelectSheet(sheetName!);
 
                 var pipeline = StreamingPipelineBuilder.CreatePipeline(reader, mapping);
 

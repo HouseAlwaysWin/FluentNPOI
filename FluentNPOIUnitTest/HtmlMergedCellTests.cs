@@ -3,6 +3,7 @@ using NPOI.XSSF.UserModel;
 using Xunit;
 using FluentNPOI;
 using FluentNPOI.Models;
+using FluentNPOI.Stages;
 
 namespace FluentNPOIUnitTest
 {

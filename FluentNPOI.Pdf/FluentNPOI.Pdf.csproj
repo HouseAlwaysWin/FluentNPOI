@@ -5,6 +5,7 @@
     <Description>PDF export extension for FluentNPOI using QuestPDF.</Description>
     <PackageTags>FluentNPOI;PDF;QuestPDF;Excel;Export</PackageTags>
     <PackageReadmeFile>README.md</PackageReadmeFile>
+    <Nullable>enable</Nullable>
   </PropertyGroup>
 
   <ItemGroup>
