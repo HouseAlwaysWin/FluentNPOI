@@ -19,7 +19,7 @@ namespace FluentNPOI.Stages
         /// <param name="workbook">Workbook object</param>
         /// <param name="sheet">Sheet object</param>
         /// <param name="cellStylesCached">Style cache dictionary</param>
-        public FluentSheet(IWorkbook workbook, ISheet sheet, Dictionary<string, ICellStyle> cellStylesCached)
+        public FluentSheet(IWorkbook workbook, ISheet? sheet, Dictionary<string, ICellStyle> cellStylesCached)
             : base(workbook, sheet, cellStylesCached)
         {
         }
@@ -41,7 +41,7 @@ namespace FluentNPOI.Stages
         /// <returns>FluentSheet instance, supports method chaining</returns>
         public FluentSheet SetColumnWidth(ExcelCol col, int width)
         {
-            _sheet.SetColumnWidth((int)col, width * 256);
+            Sheet.SetColumnWidth((int)col, width * 256);
             return new FluentSheet(_workbook, _sheet, _cellStylesCached);
         }
 
@@ -56,7 +56,7 @@ namespace FluentNPOI.Stages
         {
             for (int i = (int)startCol; i <= (int)endCol; i++)
             {
-                _sheet.SetColumnWidth(i, width * 256);
+                Sheet.SetColumnWidth(i, width * 256);
             }
             return new FluentSheet(_workbook, _sheet, _cellStylesCached);
         }
@@ -70,7 +70,7 @@ namespace FluentNPOI.Stages
         public FluentSheet SetRowHeight(int row, float heightInPoints)
         {
             var normalizedRow = NormalizeRow(row);
-            var rowObj = _sheet.GetRow(normalizedRow) ?? _sheet.CreateRow(normalizedRow);
+            var rowObj = Sheet.GetRow(normalizedRow) ?? Sheet.CreateRow(normalizedRow);
             rowObj.HeightInPoints = heightInPoints;
             return new FluentSheet(_workbook, _sheet, _cellStylesCached);
         }
@@ -88,7 +88,7 @@ namespace FluentNPOI.Stages
             var normalizedEndRow = NormalizeRow(endRow);
             for (int i = normalizedStartRow; i <= normalizedEndRow; i++)
             {
-                var rowObj = _sheet.GetRow(i) ?? _sheet.CreateRow(i);
+                var rowObj = Sheet.GetRow(i) ?? Sheet.CreateRow(i);
                 rowObj.HeightInPoints = heightInPoints;
             }
             return new FluentSheet(_workbook, _sheet, _cellStylesCached);
@@ -101,7 +101,7 @@ namespace FluentNPOI.Stages
         /// <returns>FluentSheet instance, supports method chaining</returns>
         public FluentSheet SetDefaultRowHeight(float heightInPoints)
         {
-            _sheet.DefaultRowHeightInPoints = heightInPoints;
+            Sheet.DefaultRowHeightInPoints = heightInPoints;
             return new FluentSheet(_workbook, _sheet, _cellStylesCached);
         }
 
@@ -112,7 +112,7 @@ namespace FluentNPOI.Stages
         /// <returns>FluentSheet instance, supports method chaining</returns>
         public FluentSheet SetDefaultColumnWidth(int width)
         {
-            _sheet.DefaultColumnWidth = width;
+            Sheet.DefaultColumnWidth = width;
             return new FluentSheet(_workbook, _sheet, _cellStylesCached);
         }
 
@@ -125,7 +125,7 @@ namespace FluentNPOI.Stages
         /// <returns>FluentSheet instance, supports method chaining</returns>
         public FluentSheet SetExcelCellMerge(ExcelCol startCol, ExcelCol endCol, int row)
         {
-            _sheet.SetExcelCellMerge(startCol, endCol, row);
+            Sheet.SetExcelCellMerge(startCol, endCol, row);
             return new FluentSheet(_workbook, _sheet, _cellStylesCached);
         }
 
@@ -140,7 +140,7 @@ namespace FluentNPOI.Stages
         public FluentSheet SetExcelCellMerge(ExcelCol startCol, ExcelCol endCol, int firstRow, int lastRow)
         {
             var region = new NPOI.SS.Util.CellRangeAddress(firstRow - 1, lastRow - 1, (int)startCol, (int)endCol);
-            _sheet.AddMergedRegion(region);
+            Sheet.AddMergedRegion(region);
             return this;
         }
 
@@ -154,7 +154,7 @@ namespace FluentNPOI.Stages
         /// <returns>FluentSheet instance</returns>
         public FluentSheet CreateFreezePane(int colSplit, int rowSplit, int leftmostColumn = 0, int topRow = 0)
         {
-            _sheet.CreateFreezePane(colSplit, rowSplit, leftmostColumn, topRow);
+            Sheet.CreateFreezePane(colSplit, rowSplit, leftmostColumn, topRow);
             return this;
         }
 
@@ -165,7 +165,7 @@ namespace FluentNPOI.Stages
         /// <returns>FluentSheet instance</returns>
         public FluentSheet FreezeTitleRow(int rowCount = 1)
         {
-            _sheet.CreateFreezePane(0, rowCount);
+            Sheet.CreateFreezePane(0, rowCount);
             return this;
         }
 
@@ -231,7 +231,7 @@ namespace FluentNPOI.Stages
                 var titleRow = GetOrCreateRow(actualStartRow - 1);
                 foreach (var map in mappings)
                 {
-                    var cell = GetOrCreateCell(titleRow, (int)map.ColumnIndex.Value);
+                    var cell = GetOrCreateCell(titleRow, (int)map.ColumnIndex!.Value);
                     cell.SetCellValue(map.Title ?? map.ColumnName ?? "");
                     ApplyStyle(cell, map.TitleStyleKey ?? map.GeneratedTitleStyleKey);
                 }
@@ -246,7 +246,7 @@ namespace FluentNPOI.Stages
 
                 foreach (var map in mappings)
                 {
-                    var colIdx = (int)map.ColumnIndex.Value;
+                    var colIdx = (int)map.ColumnIndex!.Value;
                     var cell = GetOrCreateCell(excelRow, colIdx);
 
                     if (map.FormulaFunc != null)
@@ -268,15 +268,15 @@ namespace FluentNPOI.Stages
             return this;
         }
 
-        private IRow GetOrCreateRow(int rowIndex) => _sheet.GetRow(rowIndex) ?? _sheet.CreateRow(rowIndex);
+        private IRow GetOrCreateRow(int rowIndex) => Sheet.GetRow(rowIndex) ?? Sheet.CreateRow(rowIndex);
 
         private ICell GetOrCreateCell(IRow row, int colIndex) => row.GetCell(colIndex) ?? row.CreateCell(colIndex);
 
-        private void ApplyStyle(ICell cell, string styleKey)
+        private void ApplyStyle(ICell cell, string? styleKey)
         {
             if (string.IsNullOrEmpty(styleKey)) styleKey = "global";
 
-            if (!string.IsNullOrEmpty(styleKey) && _cellStylesCached.TryGetValue(styleKey, out var style))
+            if (_cellStylesCached.TryGetValue(styleKey!, out var style))
                 cell.CellStyle = style;
         }
 
@@ -341,7 +341,7 @@ namespace FluentNPOI.Stages
         public object? GetCellValue(ExcelCol col, int row)
         {
             var normalizedRow = NormalizeRow(row);
-            var rowObj = _sheet.GetRow(normalizedRow);
+            var rowObj = Sheet.GetRow(normalizedRow);
             if (rowObj == null) return null;
 
             var cell = rowObj.GetCell((int)col);
@@ -358,8 +358,8 @@ namespace FluentNPOI.Stages
         public T GetCellValue<T>(ExcelCol col, int row)
         {
             var normalizedRow = NormalizeRow(row);
-            var rowObj = _sheet.GetRow(normalizedRow);
-            if (rowObj == null) return default;
+            var rowObj = Sheet.GetRow(normalizedRow);
+            if (rowObj == null) return default!;
 
             var cell = rowObj.GetCell((int)col);
             return GetCellValue<T>(cell);
@@ -374,7 +374,7 @@ namespace FluentNPOI.Stages
         public string? GetCellFormula(ExcelCol col, int row)
         {
             var normalizedRow = NormalizeRow(row);
-            var rowObj = _sheet.GetRow(normalizedRow);
+            var rowObj = Sheet.GetRow(normalizedRow);
             if (rowObj == null) return null;
 
             var cell = rowObj.GetCell((int)col);
@@ -390,7 +390,7 @@ namespace FluentNPOI.Stages
         // public FluentCell GetCellPosition(ExcelCol col, int row)
         // {
         //     var normalizedRow = NormalizeRow(row);
-        //     var rowObj = _sheet.GetRow(normalizedRow);
+        //     var rowObj = Sheet.GetRow(normalizedRow);
         //     if (rowObj == null) return null;
 
         //     var cell = rowObj.GetCell((int)col);
@@ -439,7 +439,7 @@ namespace FluentNPOI.Stages
         {
             ICellStyle newCellStyle = _workbook.CreateCellStyle();
             styles(_workbook, newCellStyle);
-            string sheetGlobalKey = $"global_{_sheet.SheetName}";
+            string sheetGlobalKey = $"global_{Sheet.SheetName}";
 
             // Remove existing sheet global style if present
             if (_cellStylesCached.ContainsKey(sheetGlobalKey))
@@ -463,13 +463,13 @@ namespace FluentNPOI.Stages
             if (_sheet == null) return startRow;
 
             // LastRowNum is 0-based, convert to 1-based
-            int lastRowNum = _sheet.LastRowNum + 1;
+            int lastRowNum = Sheet.LastRowNum + 1;
 
             // Search upwards from last row to find first row with data
             for (int row = lastRowNum; row >= startRow; row--)
             {
                 var normalizedRow = NormalizeRow(row);
-                var rowObj = _sheet.GetRow(normalizedRow);
+                var rowObj = Sheet.GetRow(normalizedRow);
 
                 if (rowObj != null)
                 {

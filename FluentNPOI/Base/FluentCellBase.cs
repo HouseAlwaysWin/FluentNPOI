@@ -10,9 +10,14 @@ namespace FluentNPOI.Base
     /// </summary>
     public abstract class FluentCellBase : FluentWorkbookBase
     {
-        protected ISheet _sheet;
+        protected ISheet? _sheet;
 
-        protected FluentCellBase(IWorkbook workbook, ISheet sheet, Dictionary<string, ICellStyle> cellStylesCached)
+        /// <summary>
+        /// The active sheet. Throws if no sheet has been selected.
+        /// </summary>
+        protected ISheet Sheet => _sheet ?? throw new InvalidOperationException("No active sheet. Call UseSheet(...) to select a valid sheet first.");
+
+        protected FluentCellBase(IWorkbook workbook, ISheet? sheet, Dictionary<string, ICellStyle> cellStylesCached)
             : base(workbook, cellStylesCached)
         {
             _sheet = sheet;
@@ -203,7 +208,7 @@ namespace FluentNPOI.Base
             {
                 // Value could not be converted to the requested type; return the
                 // type default rather than masking unexpected runtime exceptions.
-                return default;
+                return default!;
             }
         }
 
@@ -279,16 +284,18 @@ namespace FluentNPOI.Base
         {
             if (!string.IsNullOrWhiteSpace(config.Key))
             {
+                string key = config.Key!;
+
                 // ✅ Check cache first
-                if (!_cellStylesCached.ContainsKey(config.Key))
+                if (!_cellStylesCached.ContainsKey(key))
                 {
                     // ✅ Create new style only if not exists
                     ICellStyle newCellStyle = _workbook.CreateCellStyle();
-                    config.StyleSetter(newCellStyle);
-                    _cellStylesCached.Add(config.Key, newCellStyle);
+                    config.StyleSetter?.Invoke(newCellStyle);
+                    _cellStylesCached.Add(key, newCellStyle);
                 }
                 // Always use cached style
-                cell.CellStyle = _cellStylesCached[config.Key];
+                cell.CellStyle = _cellStylesCached[key];
             }
             else
             {
@@ -315,7 +322,7 @@ namespace FluentNPOI.Base
 
             for (int rowIndex = startRowIndex; rowIndex <= endRowIndex; rowIndex++)
             {
-                IRow row = _sheet.GetRow(rowIndex) ?? _sheet.CreateRow(rowIndex);
+                IRow row = Sheet.GetRow(rowIndex) ?? Sheet.CreateRow(rowIndex);
                 for (int colIndex = startColIndex; colIndex <= endColIndex; colIndex++)
                 {
                     ICell cell = row.GetCell(colIndex) ?? row.CreateCell(colIndex);
@@ -330,7 +337,7 @@ namespace FluentNPOI.Base
 
             var normalizedRow = NormalizeRow(row);
 
-            var rowObj = _sheet.GetRow(normalizedRow) ?? _sheet.CreateRow(normalizedRow);
+            var rowObj = Sheet.GetRow(normalizedRow) ?? Sheet.CreateRow(normalizedRow);
             var cell = rowObj.GetCell((int)col) ?? rowObj.CreateCell((int)col);
             return cell;
         }

@@ -17,9 +17,9 @@ namespace FluentNPOI.Stages
         private IEnumerable<T> _table;
         private ExcelCol _startCol;
         private int _startRow;
-        private IReadOnlyList<ColumnMapping> _columnMappings;
+        private IReadOnlyList<ColumnMapping> _columnMappings = new List<ColumnMapping>();
 
-        public FluentTable(IWorkbook workbook, ISheet sheet, IEnumerable<T> table,
+        public FluentTable(IWorkbook workbook, ISheet? sheet, IEnumerable<T> table,
             ExcelCol startCol, int startRow,
             Dictionary<string, ICellStyle> cellStylesCached)
             : base(workbook, sheet, cellStylesCached)
@@ -42,7 +42,7 @@ namespace FluentNPOI.Stages
         private T GetItemAt(int index)
         {
             var items = _table as IList<T> ?? _table?.ToList() ?? new List<T>();
-            if (index < 0 || index >= items.Count) return default;
+            if (index < 0 || index >= items.Count) return default!;
             return items[index];
         }
 
@@ -68,22 +68,22 @@ namespace FluentNPOI.Stages
             {
                 // Calculate title row position for this column (add per-column offset)
                 var titleRowIndex = _startRow + map.RowOffset;
-                var titleRow = _sheet.GetRow(titleRowIndex) ?? _sheet.CreateRow(titleRowIndex);
-                var colIdx = (int)map.ColumnIndex.Value;
+                var titleRow = Sheet.GetRow(titleRowIndex) ?? Sheet.CreateRow(titleRowIndex);
+                var colIdx = (int)map.ColumnIndex!.Value;
                 var cell = titleRow.GetCell(colIdx) ?? titleRow.CreateCell(colIdx);
                 cell.SetCellValue(map.Title ?? map.Property?.Name ?? map.ColumnName ?? "");
 
                 // Apply title style
                 if (map.TitleStyleRef != null)
                 {
-                    string refKey = $"{_sheet.SheetName}_{map.TitleStyleRef.Column}{map.TitleStyleRef.Row}";
+                    string refKey = $"{Sheet.SheetName}_{map.TitleStyleRef.Column}{map.TitleStyleRef.Row}";
                     if (_cellStylesCached.TryGetValue(refKey, out var cachedStyle))
                     {
                         cell.CellStyle = cachedStyle;
                     }
                     else
                     {
-                        var refRow = _sheet.GetRow(map.TitleStyleRef.Row);
+                        var refRow = Sheet.GetRow(map.TitleStyleRef.Row);
                         var refCell = refRow?.GetCell((int)map.TitleStyleRef.Column);
                         if (refCell != null && refCell.CellStyle != null)
                         {
@@ -94,14 +94,14 @@ namespace FluentNPOI.Stages
                         }
                     }
                 }
-                else if (!string.IsNullOrEmpty(map.TitleStyleKey) && _cellStylesCached.TryGetValue(map.TitleStyleKey, out var titleStyle))
+                else if (!string.IsNullOrEmpty(map.TitleStyleKey) && _cellStylesCached.TryGetValue(map.TitleStyleKey!, out var titleStyle))
                 {
                     cell.CellStyle = titleStyle;
                 }
                 else if (cell.CellStyle.Index == 0) // Try global style
                 {
                     // Prioritize Sheet global style, if not present, use Workbook global style
-                    string sheetGlobalKey = $"global_{_sheet.SheetName}";
+                    string sheetGlobalKey = $"global_{Sheet.SheetName}";
                     if (_cellStylesCached.TryGetValue(sheetGlobalKey, out var sheetGlobalStyle))
                     {
                         cell.CellStyle = sheetGlobalStyle;
@@ -120,8 +120,8 @@ namespace FluentNPOI.Stages
             {
                 // Calculate data row position for this column (add per-column offset)
                 var colTargetRowIndex = targetRowIndex + map.RowOffset;
-                var dataRow = _sheet.GetRow(colTargetRowIndex) ?? _sheet.CreateRow(colTargetRowIndex);
-                var colIdx = (int)map.ColumnIndex.Value;
+                var dataRow = Sheet.GetRow(colTargetRowIndex) ?? Sheet.CreateRow(colTargetRowIndex);
+                var colIdx = (int)map.ColumnIndex!.Value;
                 var cell = dataRow.GetCell(colIdx) ?? dataRow.CreateCell(colIdx);
 
                 // Formula first
@@ -133,10 +133,10 @@ namespace FluentNPOI.Stages
                 else
                 {
                     // Calculate value (Prioritize ValueFunc, otherwise get from property)
-                    object value;
+                    object? value;
                     if (map.ValueFunc != null)
                     {
-                        value = map.ValueFunc(item, targetRowIndex + 1, (ExcelCol)colIdx);
+                        value = map.ValueFunc(item!, targetRowIndex + 1, (ExcelCol)colIdx);
                     }
                     else if (map.Property != null)
                     {
@@ -157,7 +157,7 @@ namespace FluentNPOI.Stages
                 }
 
                 // Apply data style
-                string styleKey = map.StyleKey;
+                string? styleKey = map.StyleKey;
 
                 // If StyleKey is not specified, try to use GeneratedStyleKey
                 if (string.IsNullOrEmpty(styleKey))
@@ -168,14 +168,14 @@ namespace FluentNPOI.Stages
                 // If there is dynamic style setting, use it first
                 if (map.DynamicStyleFunc != null)
                 {
-                    string dynamicKey = map.DynamicStyleFunc(item);
+                    string dynamicKey = map.DynamicStyleFunc(item!);
                     if (!string.IsNullOrEmpty(dynamicKey))
                     {
                         styleKey = dynamicKey;
                     }
                 }
 
-                if (!string.IsNullOrEmpty(styleKey) && _cellStylesCached.TryGetValue(styleKey, out var dataStyle))
+                if (!string.IsNullOrEmpty(styleKey) && _cellStylesCached.TryGetValue(styleKey!, out var dataStyle))
                 {
                     cell.CellStyle = dataStyle;
                 }
@@ -183,14 +183,14 @@ namespace FluentNPOI.Stages
                 // Copy data style
                 if (map.DataStyleRef != null)
                 {
-                    string refKey = $"{_sheet.SheetName}_{map.DataStyleRef.Column}{map.DataStyleRef.Row}";
+                    string refKey = $"{Sheet.SheetName}_{map.DataStyleRef.Column}{map.DataStyleRef.Row}";
                     if (_cellStylesCached.TryGetValue(refKey, out var cachedStyle))
                     {
                         cell.CellStyle = cachedStyle;
                     }
                     else
                     {
-                        var refRow = _sheet.GetRow(map.DataStyleRef.Row);
+                        var refRow = Sheet.GetRow(map.DataStyleRef.Row);
                         var refCell = refRow?.GetCell((int)map.DataStyleRef.Column);
                         if (refCell != null && refCell.CellStyle != null)
                         {
@@ -206,7 +206,7 @@ namespace FluentNPOI.Stages
                 // Prioritize Sheet global style, if not present, use Workbook global style
                 if (cell.CellStyle.Index == 0) // Default style index is usually 0
                 {
-                    string sheetGlobalKey = $"global_{_sheet.SheetName}";
+                    string sheetGlobalKey = $"global_{Sheet.SheetName}";
                     if (_cellStylesCached.TryGetValue(sheetGlobalKey, out var sheetGlobalStyle))
                     {
                         cell.CellStyle = sheetGlobalStyle;
@@ -260,7 +260,7 @@ namespace FluentNPOI.Stages
 
             foreach (var map in _columnMappings.Where(m => m.ColumnIndex.HasValue))
             {
-                _sheet.AutoSizeColumn((int)map.ColumnIndex.Value);
+                Sheet.AutoSizeColumn((int)map.ColumnIndex!.Value);
             }
             return this;
         }
@@ -276,7 +276,7 @@ namespace FluentNPOI.Stages
 
             foreach (var map in _columnMappings.Where(m => m.ColumnIndex.HasValue))
             {
-                _sheet.SetColumnWidth((int)map.ColumnIndex.Value, width * 256);
+                Sheet.SetColumnWidth((int)map.ColumnIndex!.Value, width * 256);
             }
             return this;
         }
@@ -288,7 +288,7 @@ namespace FluentNPOI.Stages
         /// <returns>FluentTable instance, supports method chaining</returns>
         public FluentTable<T> SetTitleRowHeight(float heightInPoints)
         {
-            var row = _sheet.GetRow(_startRow);
+            var row = Sheet.GetRow(_startRow);
             if (row != null)
             {
                 row.HeightInPoints = heightInPoints;
@@ -306,7 +306,7 @@ namespace FluentNPOI.Stages
             int dataStartRow = _startRow + 1; // Skip title row
             for (int i = 0; i < _table.Count(); i++)
             {
-                var row = _sheet.GetRow(dataStartRow + i);
+                var row = Sheet.GetRow(dataStartRow + i);
                 if (row != null)
                 {
                     row.HeightInPoints = heightInPoints;
@@ -322,7 +322,7 @@ namespace FluentNPOI.Stages
         public FluentTable<T> FreezeTitleRow()
         {
             // Freeze below title row (_startRow + 1)
-            _sheet.CreateFreezePane(0, _startRow + 1);
+            Sheet.CreateFreezePane(0, _startRow + 1);
             return this;
         }
 
@@ -337,12 +337,12 @@ namespace FluentNPOI.Stages
             var columns = _columnMappings.Where(m => m.ColumnIndex.HasValue).ToList();
             if (!columns.Any()) return this;
 
-            int firstCol = (int)columns.Min(m => m.ColumnIndex.Value);
-            int lastCol = (int)columns.Max(m => m.ColumnIndex.Value);
+            int firstCol = (int)columns.Min(m => m.ColumnIndex!.Value);
+            int lastCol = (int)columns.Max(m => m.ColumnIndex!.Value);
             int lastRow = _startRow + _table.Count(); // Title row + data row count
 
             var range = new NPOI.SS.Util.CellRangeAddress(_startRow, lastRow, firstCol, lastCol);
-            _sheet.SetAutoFilter(range);
+            Sheet.SetAutoFilter(range);
             return this;
         }
 
@@ -359,8 +359,8 @@ namespace FluentNPOI.Stages
             if (!columns.Any())
                 return (_startRow, _startRow, 0, 0);
 
-            int firstCol = (int)columns.Min(m => m.ColumnIndex.Value);
-            int lastCol = (int)columns.Max(m => m.ColumnIndex.Value);
+            int firstCol = (int)columns.Min(m => m.ColumnIndex!.Value);
+            int lastCol = (int)columns.Max(m => m.ColumnIndex!.Value);
             int lastRow = _startRow + _table.Count();
 
             return (_startRow, lastRow, firstCol, lastCol);

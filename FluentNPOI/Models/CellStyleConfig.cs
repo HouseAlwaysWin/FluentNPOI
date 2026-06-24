@@ -12,19 +12,19 @@ namespace FluentNPOI.Models
         /// Style cache key (same key reuses style)
         /// If null or empty string, style will not be cached
         /// </summary>
-        public string Key { get; set; }
+        public string? Key { get; set; }
 
         /// <summary>
         /// Style setter (executed only when style not in cache)
         /// </summary>
-        public Action<ICellStyle> StyleSetter { get; set; }
+        public Action<ICellStyle>? StyleSetter { get; set; }
 
         /// <summary>
         /// Constructor
         /// </summary>
         /// <param name="key">Style cache key</param>
         /// <param name="styleSetter">Style setter</param>
-        public CellStyleConfig(string key, Action<ICellStyle> styleSetter)
+        public CellStyleConfig(string? key, Action<ICellStyle>? styleSetter)
         {
             Key = key;
             StyleSetter = styleSetter;
@@ -33,7 +33,7 @@ namespace FluentNPOI.Models
         /// <summary>
         /// Deconstruct method (supports tuple syntax)
         /// </summary>
-        public void Deconstruct(out string key, out Action<ICellStyle> styleSetter)
+        public void Deconstruct(out string? key, out Action<ICellStyle>? styleSetter)
         {
             key = Key;
             styleSetter = StyleSetter;

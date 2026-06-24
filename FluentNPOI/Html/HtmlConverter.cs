@@ -286,7 +286,7 @@ namespace FluentNPOI.Html
             sb.Append($"border-{side}: {width} {style} {colorHex}; ");
         }
 
-        private static string GetFontColorHex(IFont font, IWorkbook wb)
+        private static string? GetFontColorHex(IFont font, IWorkbook wb)
         {
             if (font is NPOI.XSSF.UserModel.XSSFFont xFont)
             {
@@ -298,7 +298,7 @@ namespace FluentNPOI.Html
             return GetColorFromIndex(font.Color, wb);
         }
 
-        private static string GetColorHex(IColor color, IWorkbook wb)
+        private static string? GetColorHex(IColor? color, IWorkbook wb)
         {
             if (color == null) return null;
 
@@ -319,7 +319,7 @@ namespace FluentNPOI.Html
             return null;
         }
 
-        private static string GetColorFromIndex(short index, IWorkbook wb)
+        private static string? GetColorFromIndex(short index, IWorkbook wb)
         {
             if (index == IndexedColors.Automatic.Index || index == 0) return null;
 
@@ -343,7 +343,7 @@ namespace FluentNPOI.Html
             return null;
         }
 
-        private static string GetXSSFColorHex(NPOI.XSSF.UserModel.XSSFColor xColor)
+        private static string? GetXSSFColorHex(NPOI.XSSF.UserModel.XSSFColor xColor)
         {
             if (xColor.IsRGB)
             {

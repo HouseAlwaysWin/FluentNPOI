@@ -47,11 +47,6 @@ namespace FluentNPOI.Stages
         /// </summary>
         /// <param name="stream">Excel file stream</param>
         /// <returns>FluentWorkbook instance, supports method chaining</returns>
-        /// <summary>
-        /// Read Excel from stream
-        /// </summary>
-        /// <param name="stream">Excel file stream</param>
-        /// <returns>FluentWorkbook instance, supports method chaining</returns>
         public FluentWorkbook ReadExcelStream(Stream stream)
         {
             if (stream == null) throw new ArgumentNullException(nameof(stream));
@@ -122,7 +117,7 @@ namespace FluentNPOI.Stages
             ICellStyle newCellStyle = _workbook.CreateCellStyle();
 
             // If inheritance is specified, copy all properties from parent style first
-            if (!string.IsNullOrEmpty(inheritFrom) && _cellStylesCached.TryGetValue(inheritFrom, out var parentStyle))
+            if (!string.IsNullOrEmpty(inheritFrom) && _cellStylesCached.TryGetValue(inheritFrom!, out var parentStyle))
             {
                 newCellStyle.CloneStyleFrom(parentStyle);
             }

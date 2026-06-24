@@ -15,7 +15,7 @@ namespace FluentNPOI.Stages
         private ICell? _cell;
         private ExcelCol _col;
         private int _row;
-        public FluentCell(IWorkbook workbook, ISheet sheet,
+        public FluentCell(IWorkbook workbook, ISheet? sheet,
         ICell cell, Dictionary<string, ICellStyle>? cellStylesCached = null)
             : base(workbook, sheet, cellStylesCached ?? new Dictionary<string, ICellStyle>())
         {
@@ -128,14 +128,14 @@ namespace FluentNPOI.Stages
 
             // Set column width
             double columnWidth = CalculateColumnWidth(imgWidth, columnWidthRatio);
-            _sheet.SetColumnWidth((int)_col, (int)Math.Round(columnWidth * 256));
+            Sheet.SetColumnWidth((int)_col, (int)Math.Round(columnWidth * 256));
 
             // Get picture type and add to workbook
             var picType = GetPictureType(pictureBytes);
             int picIndex = _workbook.AddPicture(pictureBytes, picType);
 
             // Create drawing patriarch and anchor
-            IDrawing drawing = _sheet.CreateDrawingPatriarch();
+            IDrawing drawing = Sheet.CreateDrawingPatriarch();
             IClientAnchor anchor = CreatePictureAnchor(imgWidth, imgHeight, anchorType);
 
             // Create picture
@@ -213,10 +213,10 @@ namespace FluentNPOI.Stages
 
             // Get current column width (in characters)
             // GetColumnWidth returns int (in 1/256 characters), convert to character count
-            double columnWidthInChars = _sheet.GetColumnWidth((int)_col) / 256.0;
+            double columnWidthInChars = Sheet.GetColumnWidth((int)_col) / 256.0;
 
             // Get current row height (in points, 1 point ≈ 1.33 pixels)
-            IRow row = _sheet.GetRow(_row) ?? _sheet.CreateRow(_row);
+            IRow row = Sheet.GetRow(_row) ?? Sheet.CreateRow(_row);
             short rowHeightInPoints = row.Height > 0 ? (short)(row.Height / 20.0) : (short)15; // Default row height about 15 points
 
             // Calculate columns needed (considering column width)
@@ -335,7 +335,7 @@ namespace FluentNPOI.Stages
             if (_cell == null) return this;
 
             var normalizedRow = NormalizeRow(row);
-            var sourceRow = _sheet.GetRow(normalizedRow);
+            var sourceRow = Sheet.GetRow(normalizedRow);
             var sourceCell = sourceRow?.GetCell((int)col);
 
             if (sourceCell?.CellStyle != null)
@@ -489,7 +489,7 @@ namespace FluentNPOI.Stages
             if (_cell == null || string.IsNullOrEmpty(text)) return this;
 
             ICreationHelper factory = _workbook.GetCreationHelper();
-            IDrawing drawing = _sheet.CreateDrawingPatriarch();
+            IDrawing drawing = Sheet.CreateDrawingPatriarch();
 
             // Create anchor (comment display position)
             IClientAnchor anchor = factory.CreateClientAnchor();

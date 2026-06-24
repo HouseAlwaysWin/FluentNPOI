@@ -69,7 +69,7 @@ namespace FluentNPOI.Streaming.Mapping
         /// <param name="row">DataRow data</param>
         /// <param name="rowIndex">Excel 1-based row number</param>
         /// <param name="colIndex">ExcelCol column</param>
-        public object GetValue(ColumnMapping map, DataRow row, int rowIndex, ExcelCol colIndex)
+        public object? GetValue(ColumnMapping map, DataRow row, int rowIndex, ExcelCol colIndex)
         {
             if (map.ValueFunc != null)
             {
@@ -273,7 +273,7 @@ namespace FluentNPOI.Streaming.Mapping
         /// <summary>
         /// Set font
         /// </summary>
-        public DataTableColumnBuilder WithFont(string fontName = null, double? fontSize = null, bool isBold = false, NPOI.SS.UserModel.IndexedColors color = null)
+        public DataTableColumnBuilder WithFont(string? fontName = null, double? fontSize = null, bool isBold = false, NPOI.SS.UserModel.IndexedColors? color = null)
         {
             return WithStyleConfig((wb, style) =>
             {
@@ -336,7 +336,7 @@ namespace FluentNPOI.Streaming.Mapping
         /// <summary>
         /// Set title font
         /// </summary>
-        public DataTableColumnBuilder WithTitleFont(string fontName = null, double? fontSize = null, bool isBold = false, NPOI.SS.UserModel.IndexedColors color = null)
+        public DataTableColumnBuilder WithTitleFont(string? fontName = null, double? fontSize = null, bool isBold = false, NPOI.SS.UserModel.IndexedColors? color = null)
         {
             return WithTitleStyleConfig((wb, style) =>
             {

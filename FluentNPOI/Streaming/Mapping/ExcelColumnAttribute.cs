@@ -16,17 +16,17 @@ namespace FluentNPOI.Streaming.Mapping
         /// <summary>
         /// Column name (Header mapping)
         /// </summary>
-        public string Name { get; set; }
+        public string? Name { get; set; }
 
         /// <summary>
         /// Title (used when writing)
         /// </summary>
-        public string Title { get; set; }
+        public string? Title { get; set; }
 
         /// <summary>
         /// Format
         /// </summary>
-        public string Format { get; set; }
+        public string? Format { get; set; }
 
         /// <summary>
         /// Create with index
