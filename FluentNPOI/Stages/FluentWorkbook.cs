@@ -14,7 +14,7 @@ namespace FluentNPOI.Stages
     /// </summary>
     public class FluentWorkbook : FluentWorkbookBase, IDisposable
     {
-        private ISheet _currentSheet;
+        private ISheet? _currentSheet;
 
         /// <summary>
         /// Initialize FluentWorkbook instance
@@ -117,7 +117,7 @@ namespace FluentNPOI.Stages
         /// <param name="styles">Style configuration action</param>
         /// <param name="inheritFrom">Optional, inherited parent style key. If specified, copies all properties from parent first, then applies custom changes</param>
         /// <returns>FluentWorkbook instance, supports method chaining</returns>
-        public FluentWorkbook SetupCellStyle(string cellStyleKey, Action<IWorkbook, ICellStyle> styles, string inheritFrom = null)
+        public FluentWorkbook SetupCellStyle(string cellStyleKey, Action<IWorkbook, ICellStyle> styles, string? inheritFrom = null)
         {
             ICellStyle newCellStyle = _workbook.CreateCellStyle();
 

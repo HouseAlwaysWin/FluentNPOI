@@ -160,7 +160,11 @@ namespace FluentNPOI.Html
                         if (cell.CachedFormulaResultType == CellType.Numeric) return cell.NumericCellValue.ToString();
                         if (cell.CachedFormulaResultType == CellType.String) return cell.StringCellValue;
                     }
-                    catch { }
+                    catch (Exception ex) when (ex is InvalidOperationException || ex is FormatException || ex is NotSupportedException)
+                    {
+                        // Cached formula value unavailable/unreadable; fall back to
+                        // emitting the formula text below.
+                    }
                     return "=" + cell.CellFormula;
                 default:
                     return "";

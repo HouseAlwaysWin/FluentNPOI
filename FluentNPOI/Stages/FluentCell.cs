@@ -12,11 +12,11 @@ namespace FluentNPOI.Stages
     /// </summary>
     public class FluentCell : FluentCellBase
     {
-        private ICell _cell;
+        private ICell? _cell;
         private ExcelCol _col;
         private int _row;
         public FluentCell(IWorkbook workbook, ISheet sheet,
-        ICell cell, Dictionary<string, ICellStyle> cellStylesCached = null)
+        ICell cell, Dictionary<string, ICellStyle>? cellStylesCached = null)
             : base(workbook, sheet, cellStylesCached ?? new Dictionary<string, ICellStyle>())
         {
             _cell = cell;
@@ -61,7 +61,7 @@ namespace FluentNPOI.Stages
         /// Get current cell value
         /// </summary>
         /// <returns>Cell value (return bool, DateTime, double, string or null based on type)</returns>
-        public object GetValue()
+        public object? GetValue()
         {
             return GetCellValue(_cell);
         }
@@ -80,7 +80,7 @@ namespace FluentNPOI.Stages
         /// Get current cell formula string (if it is a formula cell)
         /// </summary>
         /// <returns>Formula string (without '=' prefix), or null if not a formula</returns>
-        public string GetFormula()
+        public string? GetFormula()
         {
             return GetCellFormulaValue(_cell);
         }
@@ -89,7 +89,7 @@ namespace FluentNPOI.Stages
         /// Get current cell object
         /// </summary>
         /// <returns>NPOI ICell object</returns>
-        public ICell GetCell()
+        public ICell? GetCell()
         {
             return _cell;
         }
@@ -121,7 +121,7 @@ namespace FluentNPOI.Stages
         /// <param name="pictureAction">Picture action delegate</param>
         /// <returns>FluentCell instance, supports method chaining</returns>
         public FluentCell SetPictureOnCell(byte[] pictureBytes, int imgWidth, int imgHeight, AnchorType anchorType = AnchorType.MoveAndResize,
-        double columnWidthRatio = 7.0, Action<IPicture> pictureAction = null)
+        double columnWidthRatio = 7.0, Action<IPicture>? pictureAction = null)
         {
             // Parameter validation
             ValidatePictureParameters(pictureBytes, imgWidth, imgHeight, columnWidthRatio);
@@ -372,7 +372,7 @@ namespace FluentNPOI.Stages
         /// <param name="fontName">Font name</param>
         /// <param name="fontSize">Font size (points)</param>
         /// <param name="isBold">Is bold</param>
-        public FluentCell SetFont(string fontName = null, double? fontSize = null, bool isBold = false)
+        public FluentCell SetFont(string? fontName = null, double? fontSize = null, bool isBold = false)
         {
             if (_cell == null) return this;
 
@@ -484,7 +484,7 @@ namespace FluentNPOI.Stages
         /// </summary>
         /// <param name="text">Comment text</param>
         /// <param name="author">Author (optional)</param>
-        public FluentCell SetComment(string text, string author = null)
+        public FluentCell SetComment(string text, string? author = null)
         {
             if (_cell == null || string.IsNullOrEmpty(text)) return this;
 

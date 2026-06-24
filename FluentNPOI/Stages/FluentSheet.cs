@@ -28,7 +28,7 @@ namespace FluentNPOI.Stages
         /// Get NPOI Sheet object
         /// </summary>
         /// <returns>ISheet object</returns>
-        public ISheet GetSheet()
+        public ISheet? GetSheet()
         {
             return _sheet;
         }
@@ -203,7 +203,7 @@ namespace FluentNPOI.Stages
         /// <param name="dataTable">DataTable data</param>
         /// <param name="mapping">DataTableMapping configuration (can be null, will be automatically generated)</param>
         /// <param name="startRow">Start row (1-based), defaults to mapping.StartRow (default 1) if not specified</param>
-        public FluentSheet WriteDataTable(System.Data.DataTable dataTable, DataTableMapping mapping = null, int? startRow = null)
+        public FluentSheet WriteDataTable(System.Data.DataTable dataTable, DataTableMapping? mapping = null, int? startRow = null)
         {
             var actualMapping = mapping ?? DataTableMapping.FromDataTable(dataTable);
             // Use startRow from parameter first, otherwise use StartRow from mapping
@@ -255,7 +255,7 @@ namespace FluentNPOI.Stages
                         SetCellValueInternal(cell, actualMapping.GetValue(map, dataRow, dataRowStart + rowIdx + 1, (ExcelCol)colIdx));
 
                     // Apply dynamic style from function if present, otherwise use static/generated style
-                    string styleKey = null;
+                    string? styleKey = null;
                     if (map.DynamicStyleFunc != null)
                     {
                         styleKey = map.DynamicStyleFunc(dataRow);
@@ -280,7 +280,7 @@ namespace FluentNPOI.Stages
                 cell.CellStyle = style;
         }
 
-        private void SetCellValueInternal(ICell cell, object value)
+        private void SetCellValueInternal(ICell cell, object? value)
         {
             if (value == null || value == DBNull.Value) { cell.SetCellValue(""); return; }
 
@@ -300,7 +300,7 @@ namespace FluentNPOI.Stages
         /// <summary>
         /// Get cell value and convert to specified type
         /// </summary>
-        private object GetCellValueForType(ICell cell, System.Type targetType)
+        private object? GetCellValueForType(ICell? cell, System.Type targetType)
         {
             if (cell == null)
                 return null;
@@ -338,7 +338,7 @@ namespace FluentNPOI.Stages
         /// <param name="col">Column position</param>
         /// <param name="row">Row position (1-based)</param>
         /// <returns>Cell value</returns>
-        public object GetCellValue(ExcelCol col, int row)
+        public object? GetCellValue(ExcelCol col, int row)
         {
             var normalizedRow = NormalizeRow(row);
             var rowObj = _sheet.GetRow(normalizedRow);
@@ -371,7 +371,7 @@ namespace FluentNPOI.Stages
         /// <param name="col">Column position</param>
         /// <param name="row">Row position (1-based)</param>
         /// <returns>Formula string (without '=' prefix)</returns>
-        public string GetCellFormula(ExcelCol col, int row)
+        public string? GetCellFormula(ExcelCol col, int row)
         {
             var normalizedRow = NormalizeRow(row);
             var rowObj = _sheet.GetRow(normalizedRow);

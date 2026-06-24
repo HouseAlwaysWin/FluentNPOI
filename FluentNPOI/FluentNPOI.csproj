@@ -7,6 +7,8 @@
     <PackageTags>NPOI;Excel;Fluent;XLSX;XLS;Office;Spreadsheet</PackageTags>
     <PackageProjectUrl>https://github.com/HouseAlwaysWin/FluentNPOI</PackageProjectUrl>
     <PackageReadmeFile>README.md</PackageReadmeFile>
+    <!-- Enable nullable reference types for compile-time null-safety on the public API -->
+    <Nullable>enable</Nullable>
   </PropertyGroup>
 
   <ItemGroup>
