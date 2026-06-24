@@ -74,6 +74,15 @@ namespace FluentNPOI.Pdf
                     maxCol = row.LastCellNum;
             }
 
+            // Merged regions can extend beyond the populated cells; widen the table so their
+            // column spans stay within the defined columns (QuestPDF validates this).
+            for (int i = 0; i < sheet.NumMergedRegions; i++)
+            {
+                var region = sheet.GetMergedRegion(i);
+                if (region.LastColumn + 1 > maxCol)
+                    maxCol = region.LastColumn + 1;
+            }
+
             if (maxCol == 0) return;
 
             container.Table(table =>

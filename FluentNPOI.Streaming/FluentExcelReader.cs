@@ -12,6 +12,15 @@ namespace FluentNPOI.Streaming
     /// </summary>
     public static class FluentExcelReader
     {
+        static FluentExcelReader()
+        {
+            // ExcelDataReader's configuration resolves codepage 1252 even for .xlsx, which
+            // requires the CodePages provider. Register it once so ReadAsDataTable works
+            // without first constructing an ExcelDataReaderAdapter (whose static ctor also
+            // registers it).
+            System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
+        }
+
         /// <summary>
         /// Read Excel using Header auto-mapping
         /// </summary>
