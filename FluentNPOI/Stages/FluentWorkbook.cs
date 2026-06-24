@@ -79,8 +79,10 @@ namespace FluentNPOI.Stages
         /// <param name="col">Column position</param>
         /// <param name="rowIndex">Row index (1-based)</param>
         /// <returns>FluentWorkbook instance, supports method chaining</returns>
-        public FluentWorkbook CopyStyleFromSheetCell(string cellStyleKey, ISheet sheet, ExcelCol col, int rowIndex)
+        public FluentWorkbook CopyStyleFromSheetCell(string cellStyleKey, ISheet? sheet, ExcelCol col, int rowIndex)
         {
+            if (sheet == null) return this;
+
             ICell cell = sheet.GetExcelCell(col, rowIndex);
             if (cell != null && cell.CellStyle != null && !_cellStylesCached.ContainsKey(cellStyleKey))
             {

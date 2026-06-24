@@ -33,7 +33,7 @@ namespace FluentNPOIUnitTest
             // Assert
             Assert.NotNull(sheet);
             Assert.NotNull(sheet.GetSheet());
-            Assert.Equal("TestSheet", sheet.GetSheet().SheetName);
+            Assert.Equal("TestSheet", sheet.GetSheet()!.SheetName);
         }
 
         [Fact]

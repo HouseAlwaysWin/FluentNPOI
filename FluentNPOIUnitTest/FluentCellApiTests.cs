@@ -44,6 +44,7 @@ namespace FluentNPOIUnitTest
 
             var sheet = workbook.GetSheet("Test");
             var cell = sheet.GetRow(0)?.GetCell(0);
+            Assert.NotNull(cell);
             Assert.Equal("SUM(B1:B10)", cell.CellFormula);
         }
 
@@ -89,6 +90,8 @@ namespace FluentNPOIUnitTest
             var npSheet = workbook.GetSheet("Test");
             var sourceCell = npSheet.GetRow(0)?.GetCell(0);
             var targetCell = npSheet.GetRow(0)?.GetCell(1);
+            Assert.NotNull(sourceCell);
+            Assert.NotNull(targetCell);
 
             Assert.Equal(sourceCell.CellStyle.FillForegroundColor, targetCell.CellStyle.FillForegroundColor);
         }
@@ -106,6 +109,7 @@ namespace FluentNPOIUnitTest
 
             var sheet = workbook.GetSheet("Test");
             var cell = sheet.GetRow(0)?.GetCell(0);
+            Assert.NotNull(cell);
             Assert.Equal(IndexedColors.LightBlue.Index, cell.CellStyle.FillForegroundColor);
         }
 
@@ -122,6 +126,7 @@ namespace FluentNPOIUnitTest
 
             var sheet = workbook.GetSheet("Test");
             var cell = sheet.GetRow(0)?.GetCell(0);
+            Assert.NotNull(cell);
             Assert.Equal(BorderStyle.Thin, cell.CellStyle.BorderTop);
             Assert.Equal(BorderStyle.Thin, cell.CellStyle.BorderBottom);
             Assert.Equal(BorderStyle.Thin, cell.CellStyle.BorderLeft);
@@ -141,6 +146,7 @@ namespace FluentNPOIUnitTest
 
             var sheet = workbook.GetSheet("Test");
             var cell = sheet.GetRow(0)?.GetCell(0);
+            Assert.NotNull(cell);
             Assert.Equal(HorizontalAlignment.Center, cell.CellStyle.Alignment);
             Assert.Equal(VerticalAlignment.Top, cell.CellStyle.VerticalAlignment);
         }
@@ -158,6 +164,7 @@ namespace FluentNPOIUnitTest
 
             var sheet = workbook.GetSheet("Test");
             var cell = sheet.GetRow(0)?.GetCell(0);
+            Assert.NotNull(cell);
             Assert.NotEqual(0, cell.CellStyle.DataFormat);
         }
 
@@ -174,6 +181,7 @@ namespace FluentNPOIUnitTest
 
             var sheet = workbook.GetSheet("Test");
             var cell = sheet.GetRow(0)?.GetCell(0);
+            Assert.NotNull(cell);
             Assert.True(cell.CellStyle.WrapText);
         }
 
@@ -190,6 +198,7 @@ namespace FluentNPOIUnitTest
 
             var sheet = workbook.GetSheet("Test");
             var cell = sheet.GetRow(0)?.GetCell(0);
+            Assert.NotNull(cell);
             Assert.NotNull(cell.CellComment);
             Assert.Equal("Author", cell.CellComment.Author);
         }

@@ -135,13 +135,6 @@ namespace FluentNPOI.Streaming
         /// <param name="sheetName">Sheet name (optional)</param>
         /// <param name="useHeaderRow">Whether to use the first row as column names (default is true)</param>
         /// <returns>DataTable</returns>
-        /// <summary>
-        /// Read Excel to DataTable
-        /// </summary>
-        /// <param name="filePath">File path</param>
-        /// <param name="sheetName">Sheet name (optional)</param>
-        /// <param name="useHeaderRow">Whether to use the first row as column names (default is true)</param>
-        /// <returns>DataTable</returns>
         public static System.Data.DataTable ReadAsDataTable(string filePath, string sheetName = null, bool useHeaderRow = true)
         {
             using (var stream = System.IO.File.Open(filePath, System.IO.FileMode.Open, System.IO.FileAccess.Read, System.IO.FileShare.ReadWrite))
