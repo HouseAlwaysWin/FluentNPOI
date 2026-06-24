@@ -12,9 +12,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="ExcelDataReader" Version="$(ExcelDataReaderVersion)" />
-    <PackageReference Include="ExcelDataReader.DataSet" Version="$(ExcelDataReaderVersion)" />
-    <PackageReference Include="System.Text.Encoding.CodePages" Version="8.0.0" />
+    <PackageReference Include="ExcelDataReader" />
+    <PackageReference Include="ExcelDataReader.DataSet" />
+    <PackageReference Include="System.Text.Encoding.CodePages" />
   </ItemGroup>
 
   <ItemGroup>
