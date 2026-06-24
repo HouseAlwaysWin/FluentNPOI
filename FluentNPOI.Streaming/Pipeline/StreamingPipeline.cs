@@ -13,7 +13,7 @@ namespace FluentNPOI.Streaming.Pipeline
         private readonly IStreamingReader _reader;
         private readonly IRowMapper<T> _mapper;
         private int _skipRows;
-        private Func<IStreamingRow, bool> _filter;
+        private Func<IStreamingRow, bool>? _filter;
 
         internal StreamingPipeline(IStreamingReader reader, IRowMapper<T> mapper)
         {

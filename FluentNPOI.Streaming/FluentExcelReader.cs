@@ -19,7 +19,7 @@ namespace FluentNPOI.Streaming
         /// <param name="filePath">File path</param>
         /// <param name="sheetName">Sheet name (optional)</param>
         /// <returns>Object enumeration</returns>
-        public static IEnumerable<T> Read<T>(string filePath, string sheetName = null) where T : new()
+        public static IEnumerable<T> Read<T>(string filePath, string? sheetName = null) where T : new()
         {
             using (var reader = new ExcelDataReaderAdapter(filePath))
             {
@@ -44,7 +44,7 @@ namespace FluentNPOI.Streaming
         /// <param name="stream">Stream</param>
         /// <param name="sheetName">Sheet name (optional)</param>
         /// <returns>Object enumeration</returns>
-        public static IEnumerable<T> Read<T>(System.IO.Stream stream, string sheetName = null) where T : new()
+        public static IEnumerable<T> Read<T>(System.IO.Stream stream, string? sheetName = null) where T : new()
         {
             // Note: We don't own the stream here so we don't dispose it, but we dispose the adapter wrapper
             using (var reader = new ExcelDataReaderAdapter(stream, ownsStream: false))
@@ -72,7 +72,7 @@ namespace FluentNPOI.Streaming
         /// <param name="sheetName">Sheet name (optional)</param>
         /// <param name="skipHeader">Whether to skip the first row (Header) (default is true)</param>
         /// <returns>Object enumeration</returns>
-        public static IEnumerable<T> Read<T>(string filePath, FluentMapping<T> mapping, string sheetName = null, bool skipHeader = true) where T : new()
+        public static IEnumerable<T> Read<T>(string filePath, FluentMapping<T> mapping, string? sheetName = null, bool skipHeader = true) where T : new()
         {
             using (var reader = new ExcelDataReaderAdapter(filePath))
             {
@@ -135,7 +135,7 @@ namespace FluentNPOI.Streaming
         /// <param name="sheetName">Sheet name (optional)</param>
         /// <param name="useHeaderRow">Whether to use the first row as column names (default is true)</param>
         /// <returns>DataTable</returns>
-        public static System.Data.DataTable ReadAsDataTable(string filePath, string sheetName = null, bool useHeaderRow = true)
+        public static System.Data.DataTable? ReadAsDataTable(string filePath, string? sheetName = null, bool useHeaderRow = true)
         {
             using (var stream = System.IO.File.Open(filePath, System.IO.FileMode.Open, System.IO.FileAccess.Read, System.IO.FileShare.ReadWrite))
             {
@@ -150,7 +150,7 @@ namespace FluentNPOI.Streaming
         /// <param name="sheetName">Sheet name (optional)</param>
         /// <param name="useHeaderRow">Whether to use the first row as column names (default is true)</param>
         /// <returns>DataTable</returns>
-        public static System.Data.DataTable ReadAsDataTable(System.IO.Stream stream, string sheetName = null, bool useHeaderRow = true)
+        public static System.Data.DataTable? ReadAsDataTable(System.IO.Stream stream, string? sheetName = null, bool useHeaderRow = true)
         {
             using (var reader = ExcelDataReader.ExcelReaderFactory.CreateReader(stream))
             {

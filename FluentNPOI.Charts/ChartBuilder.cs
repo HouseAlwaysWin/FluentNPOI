@@ -13,12 +13,12 @@ namespace FluentNPOI.Charts
     {
         private readonly IEnumerable<T> _data;
         private readonly ChartType _chartType;
-        private Func<T, string> _xSelector;
-        private Func<T, double> _ySelector;
-        private string _title;
-        private string _xLabel;
-        private string _yLabel;
-        private Action<Plot> _configurePlot;
+        private Func<T, string>? _xSelector;
+        private Func<T, double>? _ySelector;
+        private string? _title;
+        private string? _xLabel;
+        private string? _yLabel;
+        private Action<Plot>? _configurePlot;
 
         private ChartBuilder(IEnumerable<T> data, ChartType chartType)
         {
@@ -159,7 +159,7 @@ namespace FluentNPOI.Charts
             return plot.GetImageBytes(width, height, ImageFormat.Png);
         }
 
-        private void BuildBarChart(Plot plot, string[] labels, double[] values)
+        private void BuildBarChart(Plot plot, string[]? labels, double[] values)
         {
             var positions = Enumerable.Range(0, values.Length).Select(i => (double)i).ToArray();
             var bars = plot.Add.Bars(positions, values);
@@ -185,7 +185,7 @@ namespace FluentNPOI.Charts
             scatter.LineWidth = 0; // Scatter only shows markers
         }
 
-        private void BuildPieChart(Plot plot, string[] labels, double[] values)
+        private void BuildPieChart(Plot plot, string[]? labels, double[] values)
         {
             var slices = new List<PieSlice>();
             for (int i = 0; i < values.Length; i++)

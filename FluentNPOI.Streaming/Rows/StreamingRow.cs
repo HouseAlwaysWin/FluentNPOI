@@ -28,7 +28,7 @@ namespace FluentNPOI.Streaming.Rows
         public int ColumnCount => _values.Length;
 
         /// <inheritdoc/>
-        public object GetValue(int columnIndex)
+        public object? GetValue(int columnIndex)
         {
             if (columnIndex < 0 || columnIndex >= _values.Length)
                 return null;

@@ -5,6 +5,7 @@
     <Description>Streaming read extension for FluentNPOI using ExcelDataReader for large file processing.</Description>
     <PackageTags>FluentNPOI;Streaming;ExcelDataReader;Excel;LargeFile</PackageTags>
     <PackageReadmeFile>README.md</PackageReadmeFile>
+    <Nullable>enable</Nullable>
   </PropertyGroup>
 
   <ItemGroup>

@@ -26,10 +26,10 @@ namespace FluentNPOI.Streaming
     {
         private readonly Stream _inputStream;
         private readonly bool _ownsStream;
-        private Action<T> _transform;
-        private Action<FluentSheet> _configureSheet;
-        private FluentMapping<T> _mapping;
-        private string _sheetName;
+        private Action<T>? _transform;
+        private Action<FluentSheet>? _configureSheet;
+        private FluentMapping<T>? _mapping;
+        private string? _sheetName;
 
         private StreamingBuilder(string inputFile)
         {

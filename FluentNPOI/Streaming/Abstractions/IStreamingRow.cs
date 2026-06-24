@@ -20,7 +20,7 @@ namespace FluentNPOI.Streaming.Abstractions
         /// </summary>
         /// <param name="columnIndex">Column index (0-based)</param>
         /// <returns>Column value, may be null</returns>
-        object GetValue(int columnIndex);
+        object? GetValue(int columnIndex);
 
         /// <summary>
         /// Get value of specified column and convert to specified type

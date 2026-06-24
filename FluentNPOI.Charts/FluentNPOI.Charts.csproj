@@ -5,6 +5,7 @@
     <Description>Chart generation extension for FluentNPOI using ScottPlot.</Description>
     <PackageTags>FluentNPOI;Charts;ScottPlot;Excel;Graphs</PackageTags>
     <PackageReadmeFile>README.md</PackageReadmeFile>
+    <Nullable>enable</Nullable>
   </PropertyGroup>
 
   <ItemGroup>
