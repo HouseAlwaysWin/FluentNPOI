@@ -5,7 +5,6 @@ using NPOI.XSSF.UserModel;
 using FluentNPOI.Models;
 using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Runtime.CompilerServices;
 using System.Text;
 
@@ -83,7 +82,7 @@ namespace FluentNPOI
             style.DataFormat = dataFormat.GetFormat(format);
         }
 
-        public static void SetFontInfo(this ICellStyle style, IWorkbook workbook, string fontFamily = null, double? fontHeight = null, bool isBold = false, bool isItalic = false, bool isStrikeout = false, IndexedColors color = null)
+        public static void SetFontInfo(this ICellStyle style, IWorkbook workbook, string? fontFamily = null, double? fontHeight = null, bool isBold = false, bool isItalic = false, bool isStrikeout = false, IndexedColors? color = null)
         {
             IFont font = workbook.CreateFont();
             if (fontFamily != null) font.FontName = fontFamily;
@@ -170,7 +169,7 @@ namespace FluentNPOI
         /// <param name="colNum"></param>
         /// <param name="rowNum"></param>
         /// <returns></returns>
-        public static ICell GetCellValue(this ISheet sheet, ExcelCol colNum, int rowNum = 1)
+        public static ICell? GetCellValue(this ISheet sheet, ExcelCol colNum, int rowNum = 1)
         {
             if (rowNum < 1) rowNum = 1;
             int rowIndex = rowNum - 1;

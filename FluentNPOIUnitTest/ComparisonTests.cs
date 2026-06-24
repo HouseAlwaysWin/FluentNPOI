@@ -34,8 +34,7 @@ namespace FluentNPOIUnitTest
             // Fail if there are differences (heuristic: result contains brackets like [CELL ...])
             if (result.Contains("[NAME]") || result.Contains("[CELL ") || result.Contains("[SHEET COUNT") || result.Contains("[ROW "))
             {
-                // Assert.Fail is valid in xUnit 2.5+, but for compatibility let's use True(false)
-                Assert.True(false, "Differences found:\n" + result);
+                Assert.Fail("Differences found:\n" + result);
             }
         }
     }

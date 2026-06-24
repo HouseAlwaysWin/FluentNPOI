@@ -10,9 +10,14 @@ namespace FluentNPOI.Base
     /// </summary>
     public abstract class FluentCellBase : FluentWorkbookBase
     {
-        protected ISheet _sheet;
+        protected ISheet? _sheet;
 
-        protected FluentCellBase(IWorkbook workbook, ISheet sheet, Dictionary<string, ICellStyle> cellStylesCached)
+        /// <summary>
+        /// The active sheet. Throws if no sheet has been selected.
+        /// </summary>
+        protected ISheet Sheet => _sheet ?? throw new InvalidOperationException("No active sheet. Call UseSheet(...) to select a valid sheet first.");
+
+        protected FluentCellBase(IWorkbook workbook, ISheet? sheet, Dictionary<string, ICellStyle> cellStylesCached)
             : base(workbook, cellStylesCached)
         {
             _sheet = sheet;
@@ -26,7 +31,7 @@ namespace FluentNPOI.Base
         /// </summary>
         /// <param name="cell">Cell</param>
         /// <param name="value">Value</param>
-        protected void SetCellValue(ICell cell, object value)
+        protected void SetCellValue(ICell cell, object? value)
         {
             switch (value)
             {
@@ -67,7 +72,7 @@ namespace FluentNPOI.Base
         /// <param name="cell">Cell</param>
         /// <param name="value">Value</param>
         /// <param name="cellType">Cell Type</param>
-        protected void SetCellValue(ICell cell, object value, CellType cellType)
+        protected void SetCellValue(ICell cell, object? value, CellType cellType)
         {
             if (cell == null) return;
 
@@ -127,7 +132,7 @@ namespace FluentNPOI.Base
         /// </summary>
         /// <param name="cell">Cell</param>
         /// <param name="value">Value</param>
-        protected void SetFormulaValue(ICell cell, object value)
+        protected void SetFormulaValue(ICell cell, object? value)
         {
             if (cell == null) return;
             if (value == null || value == DBNull.Value) return;
@@ -146,7 +151,7 @@ namespace FluentNPOI.Base
         /// </summary>
         /// <param name="cell">Cell to read</param>
         /// <returns>Cell value (bool, DateTime, double, string or null)</returns>
-        protected object GetCellValue(ICell cell)
+        protected object? GetCellValue(ICell? cell)
         {
             if (cell == null) return null;
 
@@ -167,10 +172,10 @@ namespace FluentNPOI.Base
         /// <typeparam name="T">Target Type</typeparam>
         /// <param name="cell">Cell to read</param>
         /// <returns>Converted value</returns>
-        protected T GetCellValue<T>(ICell cell)
+        protected T GetCellValue<T>(ICell? cell)
         {
             var value = GetCellValue(cell);
-            if (value == null) return default;
+            if (value == null) return default!;
 
             if (value is T tValue) return tValue;
 
@@ -185,7 +190,11 @@ namespace FluentNPOI.Base
                 {
                     if (value is double d)
                     {
-                        try { return (T)(object)DateUtil.GetJavaDate(d); } catch { }
+                        // Only swallow conversion-related failures; let unexpected
+                        // exceptions (e.g. OutOfMemoryException) propagate. On failure
+                        // we fall through to the Convert.ChangeType attempt below.
+                        try { return (T)(object)DateUtil.GetJavaDate(d); }
+                        catch (Exception ex) when (ex is ArgumentException || ex is OverflowException || ex is InvalidOperationException) { }
                     }
                     if (value is string s && DateTime.TryParse(s, out var dt))
                     {
@@ -195,9 +204,11 @@ namespace FluentNPOI.Base
 
                 return (T)Convert.ChangeType(value, underlyingType);
             }
-            catch
+            catch (Exception ex) when (ex is InvalidCastException || ex is FormatException || ex is OverflowException || ex is ArgumentException)
             {
-                return default;
+                // Value could not be converted to the requested type; return the
+                // type default rather than masking unexpected runtime exceptions.
+                return default!;
             }
         }
 
@@ -206,7 +217,7 @@ namespace FluentNPOI.Base
         /// </summary>
         /// <param name="cell">Cell to read</param>
         /// <returns>Formula string (without '=' prefix), or null if not a formula cell</returns>
-        protected string GetCellFormulaValue(ICell cell)
+        protected string? GetCellFormulaValue(ICell? cell)
         {
             if (cell == null)
                 return null;
@@ -224,7 +235,7 @@ namespace FluentNPOI.Base
         /// </summary>
         /// <param name="cell">Formula cell</param>
         /// <returns>Calculated value</returns>
-        private object GetCellFormulaResultValue(ICell cell)
+        private object? GetCellFormulaResultValue(ICell? cell)
         {
             if (cell == null || cell.CellType != CellType.Formula)
                 return null;
@@ -256,9 +267,9 @@ namespace FluentNPOI.Base
                         return null;
                 }
             }
-            catch
+            catch (Exception ex) when (ex is InvalidOperationException || ex is FormatException || ex is NotSupportedException)
             {
-                // If unable to get calculated result, return null
+                // If unable to read the cached calculated result, return null.
                 return null;
             }
         }
@@ -273,16 +284,18 @@ namespace FluentNPOI.Base
         {
             if (!string.IsNullOrWhiteSpace(config.Key))
             {
+                string key = config.Key!;
+
                 // ✅ Check cache first
-                if (!_cellStylesCached.ContainsKey(config.Key))
+                if (!_cellStylesCached.ContainsKey(key))
                 {
                     // ✅ Create new style only if not exists
                     ICellStyle newCellStyle = _workbook.CreateCellStyle();
-                    config.StyleSetter(newCellStyle);
-                    _cellStylesCached.Add(config.Key, newCellStyle);
+                    config.StyleSetter?.Invoke(newCellStyle);
+                    _cellStylesCached.Add(key, newCellStyle);
                 }
                 // Always use cached style
-                cell.CellStyle = _cellStylesCached[config.Key];
+                cell.CellStyle = _cellStylesCached[key];
             }
             else
             {
@@ -309,7 +322,7 @@ namespace FluentNPOI.Base
 
             for (int rowIndex = startRowIndex; rowIndex <= endRowIndex; rowIndex++)
             {
-                IRow row = _sheet.GetRow(rowIndex) ?? _sheet.CreateRow(rowIndex);
+                IRow row = Sheet.GetRow(rowIndex) ?? Sheet.CreateRow(rowIndex);
                 for (int colIndex = startColIndex; colIndex <= endColIndex; colIndex++)
                 {
                     ICell cell = row.GetCell(colIndex) ?? row.CreateCell(colIndex);
@@ -324,7 +337,7 @@ namespace FluentNPOI.Base
 
             var normalizedRow = NormalizeRow(row);
 
-            var rowObj = _sheet.GetRow(normalizedRow) ?? _sheet.CreateRow(normalizedRow);
+            var rowObj = Sheet.GetRow(normalizedRow) ?? Sheet.CreateRow(normalizedRow);
             var cell = rowObj.GetCell((int)col) ?? rowObj.CreateCell((int)col);
             return cell;
         }

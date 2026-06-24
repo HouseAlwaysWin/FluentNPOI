@@ -11,7 +11,7 @@ namespace FluentNPOIUnitTest
 {
     public static class ExcelComparer
     {
-        public static string Compare(string path1, string path2, string sheetFilter = null)
+        public static string Compare(string path1, string path2, string? sheetFilter = null)
         {
             StringBuilder sb = new StringBuilder();
             sb.AppendLine($"Comparing:\n  A: {path1}\n  B: {path2}");
@@ -156,7 +156,7 @@ namespace FluentNPOIUnitTest
             try
             {
                 if (cell.CellType == CellType.Formula) return "=" + cell.CellFormula;
-                return cell.ToString();
+                return cell.ToString() ?? "";
             }
             catch { return "Error"; }
         }

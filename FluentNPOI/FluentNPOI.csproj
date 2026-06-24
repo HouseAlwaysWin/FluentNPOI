@@ -7,17 +7,18 @@
     <PackageTags>NPOI;Excel;Fluent;XLSX;XLS;Office;Spreadsheet</PackageTags>
     <PackageProjectUrl>https://github.com/HouseAlwaysWin/FluentNPOI</PackageProjectUrl>
     <PackageReadmeFile>README.md</PackageReadmeFile>
+    <!-- Enable nullable reference types for compile-time null-safety on the public API -->
+    <Nullable>enable</Nullable>
   </PropertyGroup>
 
   <ItemGroup>
     <None Remove="NPOIWorkbook.cs~RF20d6cc51.TMP" />
   </ItemGroup>
 
-  <!-- Core dependencies only -->
+  <!-- Core dependencies only (versions managed centrally in Directory.Packages.props) -->
   <ItemGroup>
-    <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
-    <PackageReference Include="NPOI" Version="$(NpoiVersion)" />
-    <PackageReference Include="System.Drawing.Common" Version="$(SystemDrawingCommonVersion)" />
+    <PackageReference Include="Microsoft.CSharp" />
+    <PackageReference Include="NPOI" />
   </ItemGroup>
 
   <!-- Include README.md in NuGet package -->

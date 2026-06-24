@@ -14,7 +14,7 @@ namespace FluentNPOIUnitTest
         private class TestData
         {
             public int ID { get; set; }
-            public string Name { get; set; }
+            public string Name { get; set; } = string.Empty;
             public TestData() { }
             public TestData(int id, string name) { ID = id; Name = name; }
         }

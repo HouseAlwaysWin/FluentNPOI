@@ -1,0 +1,26 @@
+<Project>
+  <PropertyGroup>
+    <!-- Central Package Management: dependency versions live here, not in each .csproj.
+         See https://learn.microsoft.com/nuget/consume-packages/central-package-management -->
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Core runtime dependencies -->
+    <PackageVersion Include="NPOI" Version="2.7.1" />
+    <PackageVersion Include="Microsoft.CSharp" Version="4.7.0" />
+
+    <!-- Extension module dependencies -->
+    <PackageVersion Include="QuestPDF" Version="2025.12.0" />
+    <PackageVersion Include="ScottPlot" Version="5.0.49" />
+    <PackageVersion Include="ExcelDataReader" Version="3.7.0" />
+    <PackageVersion Include="ExcelDataReader.DataSet" Version="3.7.0" />
+    <PackageVersion Include="System.Text.Encoding.CodePages" Version="8.0.0" />
+
+    <!-- Test dependencies -->
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="16.11.0" />
+    <PackageVersion Include="xunit" Version="2.9.3" />
+    <PackageVersion Include="xunit.runner.visualstudio" Version="3.0.2" />
+    <PackageVersion Include="coverlet.collector" Version="6.0.4" />
+  </ItemGroup>
+</Project>

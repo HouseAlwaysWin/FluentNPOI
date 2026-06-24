@@ -68,7 +68,7 @@ namespace FluentNPOI.Streaming.Mapping
 
             foreach (var mapping in _mappings)
             {
-                if (!mapping.ColumnIndex.HasValue)
+                if (!mapping.ColumnIndex.HasValue || mapping.Property == null)
                     continue;
 
                 var value = row.GetValue((int)mapping.ColumnIndex.Value);
@@ -107,10 +107,10 @@ namespace FluentNPOI.Streaming.Mapping
 
         private PropertyInfo GetPropertyInfo<TProperty>(Expression<Func<T, TProperty>> expression)
         {
-            if (expression.Body is MemberExpression member)
-                return member.Member as PropertyInfo;
-            if (expression.Body is UnaryExpression unary && unary.Operand is MemberExpression unaryMember)
-                return unaryMember.Member as PropertyInfo;
+            if (expression.Body is MemberExpression member && member.Member is PropertyInfo memberProperty)
+                return memberProperty;
+            if (expression.Body is UnaryExpression unary && unary.Operand is MemberExpression unaryMember && unaryMember.Member is PropertyInfo unaryProperty)
+                return unaryProperty;
             throw new ArgumentException("Expression must be a property selector");
         }
     }
@@ -323,7 +323,7 @@ namespace FluentNPOI.Streaming.Mapping
         /// <summary>
         /// Set font
         /// </summary>
-        public FluentColumnBuilder<T> WithFont(string fontName = null, double? fontSize = null, bool isBold = false)
+        public FluentColumnBuilder<T> WithFont(string? fontName = null, double? fontSize = null, bool isBold = false)
         {
             return WithStyleConfig((wb, style) =>
             {
@@ -382,7 +382,7 @@ namespace FluentNPOI.Streaming.Mapping
         /// <summary>
         /// Set title font
         /// </summary>
-        public FluentColumnBuilder<T> WithTitleFont(string fontName = null, double? fontSize = null, bool isBold = false, NPOI.SS.UserModel.IndexedColors color = null)
+        public FluentColumnBuilder<T> WithTitleFont(string? fontName = null, double? fontSize = null, bool isBold = false, NPOI.SS.UserModel.IndexedColors? color = null)
         {
             return WithTitleStyleConfig((wb, style) =>
             {
@@ -463,46 +463,46 @@ namespace FluentNPOI.Streaming.Mapping
     /// </summary>
     public class ColumnMapping
     {
-        public PropertyInfo Property { get; set; }
+        public PropertyInfo? Property { get; set; }
         public ExcelCol? ColumnIndex { get; set; }
-        public string Title { get; set; }
-        public Func<int, ExcelCol, string> TitleFunc { get; set; }
-        public string Format { get; set; }
+        public string? Title { get; set; }
+        public Func<int, ExcelCol, string>? TitleFunc { get; set; }
+        public string? Format { get; set; }
 
         // Used when writing
-        public Func<object, int, ExcelCol, object> ValueFunc { get; set; }
-        public Func<int, ExcelCol, string> FormulaFunc { get; set; }
-        public string StyleKey { get; set; }
-        public string TitleStyleKey { get; set; }
+        public Func<object, int, ExcelCol, object>? ValueFunc { get; set; }
+        public Func<int, ExcelCol, string>? FormulaFunc { get; set; }
+        public string? StyleKey { get; set; }
+        public string? TitleStyleKey { get; set; }
         public NPOI.SS.UserModel.CellType? CellType { get; set; }
-        public Func<object, string> DynamicStyleFunc { get; set; }
+        public Func<object, string>? DynamicStyleFunc { get; set; }
 
         /// <summary>
         /// Static style configuration (used for dynamic style generation)
         /// </summary>
-        public Action<NPOI.SS.UserModel.IWorkbook, NPOI.SS.UserModel.ICellStyle> StyleConfig { get; set; }
+        public Action<NPOI.SS.UserModel.IWorkbook, NPOI.SS.UserModel.ICellStyle>? StyleConfig { get; set; }
 
         /// <summary>
         /// Title style configuration (used for dynamic style generation)
         /// </summary>
-        public Action<NPOI.SS.UserModel.IWorkbook, NPOI.SS.UserModel.ICellStyle> TitleStyleConfig { get; set; }
+        public Action<NPOI.SS.UserModel.IWorkbook, NPOI.SS.UserModel.ICellStyle>? TitleStyleConfig { get; set; }
 
         /// <summary>
         /// Automatically generated style Key (internal use)
         /// </summary>
-        public string GeneratedStyleKey { get; set; }
+        public string? GeneratedStyleKey { get; set; }
 
         /// <summary>
         /// Automatically generated title style Key (internal use)
         /// </summary>
-        public string GeneratedTitleStyleKey { get; set; }
+        public string? GeneratedTitleStyleKey { get; set; }
 
         // Column name (for DataTable)
-        public string ColumnName { get; set; }
+        public string? ColumnName { get; set; }
 
         // Style reference
-        public StyleReference TitleStyleRef { get; set; }
-        public StyleReference DataStyleRef { get; set; }
+        public StyleReference? TitleStyleRef { get; set; }
+        public StyleReference? DataStyleRef { get; set; }
 
         /// <summary>
         /// Column row offset (default 0, positive number means downward offset)

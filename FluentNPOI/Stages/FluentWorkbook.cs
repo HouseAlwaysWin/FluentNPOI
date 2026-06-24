@@ -14,7 +14,7 @@ namespace FluentNPOI.Stages
     /// </summary>
     public class FluentWorkbook : FluentWorkbookBase, IDisposable
     {
-        private ISheet _currentSheet;
+        private ISheet? _currentSheet;
 
         /// <summary>
         /// Initialize FluentWorkbook instance
@@ -42,11 +42,6 @@ namespace FluentNPOI.Stages
             }
         }
 
-        /// <summary>
-        /// Read Excel from stream
-        /// </summary>
-        /// <param name="stream">Excel file stream</param>
-        /// <returns>FluentWorkbook instance, supports method chaining</returns>
         /// <summary>
         /// Read Excel from stream
         /// </summary>
@@ -84,8 +79,10 @@ namespace FluentNPOI.Stages
         /// <param name="col">Column position</param>
         /// <param name="rowIndex">Row index (1-based)</param>
         /// <returns>FluentWorkbook instance, supports method chaining</returns>
-        public FluentWorkbook CopyStyleFromSheetCell(string cellStyleKey, ISheet sheet, ExcelCol col, int rowIndex)
+        public FluentWorkbook CopyStyleFromSheetCell(string cellStyleKey, ISheet? sheet, ExcelCol col, int rowIndex)
         {
+            if (sheet == null) return this;
+
             ICell cell = sheet.GetExcelCell(col, rowIndex);
             if (cell != null && cell.CellStyle != null && !_cellStylesCached.ContainsKey(cellStyleKey))
             {
@@ -117,12 +114,12 @@ namespace FluentNPOI.Stages
         /// <param name="styles">Style configuration action</param>
         /// <param name="inheritFrom">Optional, inherited parent style key. If specified, copies all properties from parent first, then applies custom changes</param>
         /// <returns>FluentWorkbook instance, supports method chaining</returns>
-        public FluentWorkbook SetupCellStyle(string cellStyleKey, Action<IWorkbook, ICellStyle> styles, string inheritFrom = null)
+        public FluentWorkbook SetupCellStyle(string cellStyleKey, Action<IWorkbook, ICellStyle> styles, string? inheritFrom = null)
         {
             ICellStyle newCellStyle = _workbook.CreateCellStyle();
 
             // If inheritance is specified, copy all properties from parent style first
-            if (!string.IsNullOrEmpty(inheritFrom) && _cellStylesCached.TryGetValue(inheritFrom, out var parentStyle))
+            if (!string.IsNullOrEmpty(inheritFrom) && _cellStylesCached.TryGetValue(inheritFrom!, out var parentStyle))
             {
                 newCellStyle.CloneStyleFrom(parentStyle);
             }
