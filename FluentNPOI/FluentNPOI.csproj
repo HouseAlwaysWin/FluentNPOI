@@ -19,6 +19,7 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.CSharp" />
     <PackageReference Include="NPOI" />
+    <PackageReference Include="System.Text.Encoding.CodePages" />
   </ItemGroup>
 
   <!-- Include README.md in NuGet package -->
