@@ -65,9 +65,6 @@ namespace FluentNPOI.Pdf
 
         private static void BuildTable(IContainer container, ISheet sheet, IWorkbook workbook)
         {
-            // Build merge map
-            var mergeMap = BuildMergeMap(sheet);
-
             // Calculate column count
             int maxCol = 0;
             for (int r = 0; r <= sheet.LastRowNum; r++)
@@ -75,6 +72,15 @@ namespace FluentNPOI.Pdf
                 var row = sheet.GetRow(r);
                 if (row != null && row.LastCellNum > maxCol)
                     maxCol = row.LastCellNum;
+            }
+
+            // Merged regions can extend beyond the populated cells; widen the table so their
+            // column spans stay within the defined columns (QuestPDF validates this).
+            for (int i = 0; i < sheet.NumMergedRegions; i++)
+            {
+                var region = sheet.GetMergedRegion(i);
+                if (region.LastColumn + 1 > maxCol)
+                    maxCol = region.LastColumn + 1;
             }
 
             if (maxCol == 0) return;
@@ -106,7 +112,7 @@ namespace FluentNPOI.Pdf
                             continue;
                         }
 
-                        ICell cell = row?.GetCell(c);
+                        ICell? cell = row?.GetCell(c);
                         var cellStyle = cell?.CellStyle;
 
                         // Calculate span
@@ -201,7 +207,7 @@ namespace FluentNPOI.Pdf
             });
         }
 
-        private static CellRangeAddress GetMergedRegion(ISheet sheet, int row, int col)
+        private static CellRangeAddress? GetMergedRegion(ISheet sheet, int row, int col)
         {
             for (int i = 0; i < sheet.NumMergedRegions; i++)
             {
@@ -275,7 +281,7 @@ namespace FluentNPOI.Pdf
             }
         }
 
-        private static string GetCellText(ICell cell)
+        private static string GetCellText(ICell? cell)
         {
             if (cell == null) return "";
 
@@ -302,7 +308,7 @@ namespace FluentNPOI.Pdf
             }
         }
 
-        private static Color? GetQuestColor(IColor color, short colorIndex, IWorkbook workbook)
+        private static Color? GetQuestColor(IColor? color, short colorIndex, IWorkbook workbook)
         {
             // Try XSSFColor first
             if (color is NPOI.XSSF.UserModel.XSSFColor xColor && xColor.IsRGB)
@@ -353,33 +359,6 @@ namespace FluentNPOI.Pdf
             }
 
             return null;
-        }
-
-        private static bool IsInsideMergedRegion(ISheet sheet, int row, int col, out CellRangeAddress region)
-        {
-            for (int i = 0; i < sheet.NumMergedRegions; i++)
-            {
-                var r = sheet.GetMergedRegion(i);
-                if (row >= r.FirstRow && row <= r.LastRow &&
-                    col >= r.FirstColumn && col <= r.LastColumn)
-                {
-                    region = r;
-                    return true;
-                }
-            }
-            region = null;
-            return false;
-        }
-
-        private static Dictionary<(int, int), CellRangeAddress> BuildMergeMap(ISheet sheet)
-        {
-            var map = new Dictionary<(int, int), CellRangeAddress>();
-            for (int i = 0; i < sheet.NumMergedRegions; i++)
-            {
-                var region = sheet.GetMergedRegion(i);
-                map[(region.FirstRow, region.FirstColumn)] = region;
-            }
-            return map;
         }
 
         // Standard color map (same as HtmlConverter)

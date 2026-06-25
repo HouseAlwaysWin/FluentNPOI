@@ -125,7 +125,7 @@ namespace FluentNPOIConsoleExample
 
             var sheet = fluent.UseSheet("HtmlDemo", true);
 
-            FluentNPOI.Pdf.PdfConverter.ConvertSheetToPdf(sheet.GetSheet(), fluent.GetWorkbook(), pdfPath);
+            FluentNPOI.Pdf.PdfConverter.ConvertSheetToPdf(sheet.GetSheet()!, fluent.GetWorkbook(), pdfPath);
 
             Console.WriteLine($"  ✓ PDF Export Completed: {pdfPath}");
             Console.WriteLine("  > PDF Support: Background Color, Text Color, Bold/Italic, Underline/Strikeout,");

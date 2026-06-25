@@ -46,7 +46,7 @@ namespace FluentNPOI.Streaming.Readers
             // Get all sheet names
             do
             {
-                _sheetNames.Add(_reader.Name);
+                _sheetNames.Add(_reader.Name ?? string.Empty);
             } while (_reader.NextResult());
 
             // Reset to first sheet

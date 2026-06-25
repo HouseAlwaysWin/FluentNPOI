@@ -23,7 +23,7 @@ namespace FluentNPOI.Charts
         public static FluentCell AddBarChart<T>(
             this FluentCell cell,
             IEnumerable<T> data,
-            Action<ChartBuilder<T>> configure,
+            Action<ChartBuilder<T>>? configure,
             int width = 400,
             int height = 300)
         {
@@ -39,7 +39,7 @@ namespace FluentNPOI.Charts
         public static FluentCell AddLineChart<T>(
             this FluentCell cell,
             IEnumerable<T> data,
-            Action<ChartBuilder<T>> configure,
+            Action<ChartBuilder<T>>? configure,
             int width = 400,
             int height = 300)
         {
@@ -55,7 +55,7 @@ namespace FluentNPOI.Charts
         public static FluentCell AddScatterChart<T>(
             this FluentCell cell,
             IEnumerable<T> data,
-            Action<ChartBuilder<T>> configure,
+            Action<ChartBuilder<T>>? configure,
             int width = 400,
             int height = 300)
         {
@@ -71,7 +71,7 @@ namespace FluentNPOI.Charts
         public static FluentCell AddPieChart<T>(
             this FluentCell cell,
             IEnumerable<T> data,
-            Action<ChartBuilder<T>> configure,
+            Action<ChartBuilder<T>>? configure,
             int width = 400,
             int height = 300)
         {

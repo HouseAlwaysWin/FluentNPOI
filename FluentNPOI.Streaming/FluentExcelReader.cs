@@ -12,6 +12,15 @@ namespace FluentNPOI.Streaming
     /// </summary>
     public static class FluentExcelReader
     {
+        static FluentExcelReader()
+        {
+            // ExcelDataReader's configuration resolves codepage 1252 even for .xlsx, which
+            // requires the CodePages provider. Register it once so ReadAsDataTable works
+            // without first constructing an ExcelDataReaderAdapter (whose static ctor also
+            // registers it).
+            System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
+        }
+
         /// <summary>
         /// Read Excel using Header auto-mapping
         /// </summary>
@@ -19,12 +28,12 @@ namespace FluentNPOI.Streaming
         /// <param name="filePath">File path</param>
         /// <param name="sheetName">Sheet name (optional)</param>
         /// <returns>Object enumeration</returns>
-        public static IEnumerable<T> Read<T>(string filePath, string sheetName = null) where T : new()
+        public static IEnumerable<T> Read<T>(string filePath, string? sheetName = null) where T : new()
         {
             using (var reader = new ExcelDataReaderAdapter(filePath))
             {
                 if (!string.IsNullOrEmpty(sheetName))
-                    reader.SelectSheet(sheetName);
+                    reader.SelectSheet(sheetName!);
 
                 // Read Header to create auto Mapping
                 var headers = reader.ReadHeader();
@@ -44,13 +53,13 @@ namespace FluentNPOI.Streaming
         /// <param name="stream">Stream</param>
         /// <param name="sheetName">Sheet name (optional)</param>
         /// <returns>Object enumeration</returns>
-        public static IEnumerable<T> Read<T>(System.IO.Stream stream, string sheetName = null) where T : new()
+        public static IEnumerable<T> Read<T>(System.IO.Stream stream, string? sheetName = null) where T : new()
         {
             // Note: We don't own the stream here so we don't dispose it, but we dispose the adapter wrapper
             using (var reader = new ExcelDataReaderAdapter(stream, ownsStream: false))
             {
                 if (!string.IsNullOrEmpty(sheetName))
-                    reader.SelectSheet(sheetName);
+                    reader.SelectSheet(sheetName!);
 
                 // Read Header to create auto Mapping
                 var headers = reader.ReadHeader();
@@ -72,12 +81,12 @@ namespace FluentNPOI.Streaming
         /// <param name="sheetName">Sheet name (optional)</param>
         /// <param name="skipHeader">Whether to skip the first row (Header) (default is true)</param>
         /// <returns>Object enumeration</returns>
-        public static IEnumerable<T> Read<T>(string filePath, FluentMapping<T> mapping, string sheetName = null, bool skipHeader = true) where T : new()
+        public static IEnumerable<T> Read<T>(string filePath, FluentMapping<T> mapping, string? sheetName = null, bool skipHeader = true) where T : new()
         {
             using (var reader = new ExcelDataReaderAdapter(filePath))
             {
                 if (!string.IsNullOrEmpty(sheetName))
-                    reader.SelectSheet(sheetName);
+                    reader.SelectSheet(sheetName!);
 
                 var pipeline = StreamingPipelineBuilder.CreatePipeline(reader, mapping);
 
@@ -135,7 +144,7 @@ namespace FluentNPOI.Streaming
         /// <param name="sheetName">Sheet name (optional)</param>
         /// <param name="useHeaderRow">Whether to use the first row as column names (default is true)</param>
         /// <returns>DataTable</returns>
-        public static System.Data.DataTable ReadAsDataTable(string filePath, string sheetName = null, bool useHeaderRow = true)
+        public static System.Data.DataTable? ReadAsDataTable(string filePath, string? sheetName = null, bool useHeaderRow = true)
         {
             using (var stream = System.IO.File.Open(filePath, System.IO.FileMode.Open, System.IO.FileAccess.Read, System.IO.FileShare.ReadWrite))
             {
@@ -150,7 +159,7 @@ namespace FluentNPOI.Streaming
         /// <param name="sheetName">Sheet name (optional)</param>
         /// <param name="useHeaderRow">Whether to use the first row as column names (default is true)</param>
         /// <returns>DataTable</returns>
-        public static System.Data.DataTable ReadAsDataTable(System.IO.Stream stream, string sheetName = null, bool useHeaderRow = true)
+        public static System.Data.DataTable? ReadAsDataTable(System.IO.Stream stream, string? sheetName = null, bool useHeaderRow = true)
         {
             using (var reader = ExcelDataReader.ExcelReaderFactory.CreateReader(stream))
             {

@@ -6,6 +6,8 @@
     <PackageTags>FluentNPOI;Excel;NPOI;PDF;Streaming;Charts;Complete</PackageTags>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     
+    <Nullable>enable</Nullable>
+
     <!-- Meta package: no code output -->
     <IncludeBuildOutput>false</IncludeBuildOutput>
     <!-- Suppress NU5128 warning for meta packages -->
