@@ -11,7 +11,7 @@
     <PackageVersion Include="Microsoft.CSharp" Version="4.7.0" />
 
     <!-- Extension module dependencies -->
-    <PackageVersion Include="QuestPDF" Version="2026.6.0" />
+    <PackageVersion Include="QuestPDF" Version="2026.6.1" />
     <PackageVersion Include="ScottPlot" Version="5.1.59" />
     <PackageVersion Include="ExcelDataReader" Version="3.9.0" />
     <PackageVersion Include="ExcelDataReader.DataSet" Version="3.9.0" />
